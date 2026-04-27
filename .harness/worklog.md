@@ -4,6 +4,21 @@
 
 ---
 
+## Session 2026-04-28 00:09 — Phase 0~2 환경 셋업 및 앱 탐색 시작
+
+### 작업 요약
+- 이전 세션 worklog/state/decision 파일 커밋·푸시로 마무리
+- `app.context.md`, `data-dependencies.md`, `test-plan.md` 및 연관 ts 파일 6개 삭제 후 커밋·푸시 (리셋)
+- Phase 0 점검: `tests/critical` 등 디렉터리, `shared/`, `docs/source/` 미생성, `.gitignore` 누락 항목 확인 및 보고
+- Phase 0 누락 항목 셋업 — 디렉터리 생성, `anchor-web-e2e-info.md` 복사, `.gitignore` 보완
+- Phase 1~5 프롬프트 파일 전체 읽기 후 `data-dependencies.md` 생성
+- Phase 2: Playwright MCP로 비로그인 홈 → 로그인 페이지 탐색 시작
+
+### 다음 액션
+- Phase 2: 5개 계정 탐색 계속
+- Phase 3~5 순차 진행
+
+
 ## Session 2026-04-27 22:08 — P0 시나리오 F 테스트 구현 완료 (4/4 통과)
 
 ### 작업 요약

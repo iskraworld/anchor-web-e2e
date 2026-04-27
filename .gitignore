@@ -8,6 +8,9 @@
 .harness/.last-worklog
 .harness/.last-notified
 
+# Playwright MCP session artifacts
+.playwright-mcp/
+
 # Playwright
 node_modules/
 /test-results/

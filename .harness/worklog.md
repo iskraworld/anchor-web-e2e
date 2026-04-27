@@ -4,6 +4,33 @@
 
 ---
 
+## Session 2026-04-27 22:08 — P0 시나리오 F 테스트 구현 완료 (4/4 통과)
+
+### 작업 요약
+- **`playwright.config.ts` 업데이트**
+  - `.env.local` 자동 로드: dotenv 패키지 없이 Node `fs`로 직접 파싱
+  - `baseURL: process.env.ANCHOR_BASE_URL` 설정
+  - `screenshot: 'only-on-failure'` 추가, chromium only (속도 최적화)
+- **`tests/helpers/auth.ts` 생성**
+  - `loginAs(page, email, password)`: 로그인 헬퍼 (`data-testid` selector 기반)
+  - `fillReactInput(page, testId, value)`: React controlled input 우회 (nativeInputValueSetter + input 이벤트)
+- **`tests/scenario-f.spec.ts` 생성** — 4개 테스트 전체 통과 (8.7초)
+  - F-1: 납세자 로그인 → 홈 검색 → "김경국" 검색 → URL 변경 + 결과 검증
+  - F-2: `/search/active-officials/3313` → "추천 세무사" 섹션 + "추천 세무사 N:" 패턴 검증
+  - F-3: 추천 목록에서 박성호 클릭 → UUID URL + 박성호 heading + "전직공무원" 태그 검증
+  - F-Background: 납세자 GNB에 "전직 공무원 찾기" 탭 미노출 검증
+
+### 실패한 시도
+- F-3에서 `page.getByText('가온세무법인')` → 프로필 페이지에 법인명 텍스트 미노출 (사이드바에 "금융분석원" 표시됨) → UUID URL 검증으로 대체
+- F-3에서 `page.getByText('세무조사 대응')` → strict mode violation (4개 요소 매칭) → `getByRole('heading', { name: '박성호' })` + `getByText('전직공무원')`으로 변경
+
+### 다음 액션
+- P1 시나리오 A (전관 세무사 공통 인맥 탐색) 테스트 코드 구현
+- P1 시나리오 B (일반 세무사 공통 인맥 탐색) 테스트 코드 구현
+- P1 시나리오 D·E (세무법인 역량 리포트) 테스트 코드 구현
+
+---
+
 ## Session 2026-04-27 21:58 — staging 자율 탐색 + 테스트 플랜 A-G 작성 완료
 
 ### 작업 요약

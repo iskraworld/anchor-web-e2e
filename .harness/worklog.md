@@ -4,6 +4,25 @@
 
 ---
 
+## Session 2026-04-28 (Phase 2-5 완료) — P0 E2E 테스트 전체 구현 및 통과
+
+### 작업 요약
+- Phase 2: Playwright MCP 탐색 기반 `specs/scenarios-from-exploration.md` 작성 (60 시나리오)
+- Phase 3: `specs/test-plan.md` (P0~P2 분류), `specs/data-validation.md` 작성
+- Phase 4: 5개 계정 인증 셋업 + 시나리오 A-G 테스트 코드 + shared Page Objects 7개
+- Phase 5: 첫 실행 후 9개 실패 진단 및 전부 수정 → 27 passed / 3 skipped / 0 failed
+
+### 주요 디버깅 내용
+- 홈 검색 폼: 소속(청/서) 선택 전 전체 비활성화 → 직접 URL 탐색으로 대체
+- `data-testid=mutual-section` 없음 → heading `/공통 관계망 찾기/` 로 대체
+- 세무이력 리포트 `<main>/<article>` 없음 → 콘텐츠 텍스트 기반 assertion으로 대체
+- strict mode 위반 (중복 텍스트) → `.first()` 추가
+- `test.skip(true, reason)` describe 스코프 사용 → `test.skip(name, fn)` 형식으로 변경
+
+### 다음 액션
+- (선택) Phase 6: CI/GitHub Actions 연동
+- C-1: Anchor 팀 한지희 토글 OFF 원복 후 실행
+
 ## Session 2026-04-28 06:00 — 전관 세무사 계정 로그인 및 UI 구조 파악
 
 ### 작업 요약

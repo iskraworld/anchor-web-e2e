@@ -24,17 +24,24 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  reporter: [['html'], ['list']],
   use: {
     baseURL: process.env.ANCHOR_BASE_URL,
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
 
   projects: [
     {
+      name: 'setup',
+      testMatch: '**/auth.setup.ts',
+    },
+    {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      dependencies: ['setup'],
+      testIgnore: '**/auth.setup.ts',
     },
   ],
 });

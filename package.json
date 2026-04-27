@@ -5,13 +5,21 @@
   "directories": {
     "doc": "docs"
   },
-  "scripts": {},
+  "scripts": {
+    "test:critical": "npx playwright test tests/critical/ --project=chromium",
+    "test:critical:headed": "npx playwright test tests/critical/ --project=chromium --headed",
+    "test:scenarios": "npx playwright test tests/scenarios/ --project=chromium",
+    "test:full": "npx playwright test --project=chromium",
+    "test:setup": "npx playwright test tests/auth.setup.ts --project=setup",
+    "report": "npx playwright show-report"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
     "@playwright/test": "^1.59.1",
-    "@types/node": "^25.6.0"
+    "@types/node": "^25.6.0",
+    "typescript": "^6.0.3"
   }
 }

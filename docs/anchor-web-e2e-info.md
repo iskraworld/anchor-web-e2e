@@ -1,21 +1,5 @@
 # 1. 테스트 계정 정보
 
-### 1.1. 테스트 사이트
-
-- [http://13.125.186.195:3000/](http://13.125.186.195:3000/)
-
-### 1.2. 테스트 ID(이용자 유형별)
-
-- 전관 세무사(공무원 출신): [bagseongho@gaon.com](mailto:bagseongho@gaon.com)
-- 일반 세무사(비공무원 출신): taxhan@theanchor.best
-- 세무법인 소유자: [official@gaon.com](mailto:official@gaon.com)
-- 납세자(유료 구독): ceo.kim@theanchor.best
-- 납세자(무료 구독): choi@theanchor.best
-
-### 1.3. 테스트 패스워드(공통)
-
-- qwer1234!@#$
-
 # 2. 테스트 시나리오
 
 ## 2.1. 세무사/세무법인 시나리오

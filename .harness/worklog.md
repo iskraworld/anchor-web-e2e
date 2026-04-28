@@ -4,6 +4,25 @@
 
 ---
 
+## Session 2026-04-29 00:26 — SPA direct URL 진입 차단 원인 규명
+
+### 작업 요약
+- 진단 spec 3회 재실행: setup timeout → networkidle 미도달 → domcontentloaded 변경 후 최종 5개 출력 파일 생성
+- setup 우회 처리: storageState는 유효하나 서버 로그인 hang 현상으로 setup 의존성 임시 비활성화
+- 전체 deep URL redirect 전수 조사: `/my-info`, `/search/*`, `/tax-history-*`, `/membership` 등 모든 경로가 `/`로 redirect됨 확인
+- 핵심 문제 규명: SPA가 direct URL 진입을 차단하여 `page.goto('/deep-url')`이 홈으로 redirect → selector 미발견으로 실패. 기존 547 PASS는 비로그인 페이지 또는 홈 텍스트 우연 매치였음을 확인
+
+### 실패한 시도
+- setup 5건 전체 timeout으로 실패
+- 진단 spec 1·2차 실패 (networkidle 미도달)
+
+### 다음 액션
+- 아래 3가지 방향 중 결정 필요:
+  - **A**: navigation 전면 재작성 — GNB 클릭 패턴으로 교체 (예상 4~8시간)
+  - **C**: 244 fail 현황 그대로 QA 리포트 생성 (예상 ~30분)
+  - **D**: GNB 클릭 패턴 PoC를 1모듈만 먼저 검증 후 방향 결정
+
+
 ## Session 2026-04-28 22:24 — GO/MY 모듈 E2E 실패 원인 분석
 
 ### 작업 요약

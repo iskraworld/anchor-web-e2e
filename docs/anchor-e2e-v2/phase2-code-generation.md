@@ -1,0 +1,160 @@
+# Phase 2 — 모듈별 테스트 코드 생성
+
+> 목표: qa-automation-map.md 기준으로 모듈별 spec 파일을 생성한다. 모든 TC-ID가 코드에 1:1 매핑된다.
+> 산출물: `tests/qa/{모듈}/` 아래 spec 파일들
+> 예상 소요: 3~4시간
+
+---
+
+## 디렉토리 구조
+
+```
+tests/qa/
+├── auth/
+│   └── auth.spec.ts
+├── ta/
+│   └── ta.spec.ts
+├── eo/
+│   └── eo.spec.ts
+├── tf/
+│   └── tf.spec.ts
+├── sp/
+│   └── sp.spec.ts
+├── ei/
+│   └── ei.spec.ts
+├── er/
+│   └── er.spec.ts
+├── go/
+│   └── go.spec.ts
+├── home-ta/
+│   └── home-ta.spec.ts
+├── home-tp/
+│   └── home-tp.spec.ts
+└── my/
+    └── my.spec.ts
+```
+
+---
+
+## 구현 순서
+
+의존성과 계정 사용 빈도를 고려한 순서:
+
+| 순서 | 모듈 | 필요 계정 | 이유 |
+|---|---|---|---|
+| 1 | AUTH | 전 계정 | 나머지 모든 모듈의 전제 |
+| 2 | MY | 전 계정 | 단순, 계정별 다양한 뷰 확인 |
+| 3 | HOME-TP | 납세자 유료/무료 | 납세자 진입점 |
+| 4 | HOME-TA | 세무사 2종 + 법인 | 세무사 진입점 |
+| 5 | TA | 납세자 유료/무료 | 납세자 핵심 기능 |
+| 6 | EO | 세무사 2종 | 세무사 핵심 기능 |
+| 7 | GO | 전 계정 | 공통 기능 |
+| 8 | EI | 세무사 2종 | 세무사 고급 기능 (TC 119개로 가장 많음) |
+| 9 | ER | 세무사 2종 + 납세자 | EI 리포트 |
+| 10 | TF | 법인 소유자 | 법인 전용 |
+| 11 | SP | 전 계정 | 구독 상태별 확인 |
+
+---
+
+## 코드 작성 규칙
+
+### 1. 테스트 이름 형식
+
+TC-ID를 테스트 이름 맨 앞에 넣는다. 리포트에서 바로 QA 문서와 대조 가능하다.
+
+```typescript
+test('[AUTH-4-4-01] 이메일+비밀번호로 로그인 성공', async ({ page }) => {
+  // ...
+});
+```
+
+### 2. describe 블록 구조
+
+QA 문서의 섹션 구조를 그대로 따른다.
+
+```typescript
+test.describe('AUTH — 로그인/회원가입', () => {
+
+  test.describe('3. 접근 권한', () => {
+    test('[AUTH-3-01] 비로그인 상태에서 홈 접근 시 로그인 유도', async ({ page }) => { ... });
+  });
+
+  test.describe('4-4. 로그인', () => {
+    test('[AUTH-4-4-01] 이메일+비밀번호 로그인 성공', async ({ page }) => { ... });
+    test('[AUTH-4-4-02] 잘못된 비밀번호 입력 시 에러 메시지', async ({ page }) => { ... });
+  });
+
+});
+```
+
+### 3. MANUAL 케이스 처리
+
+`test.skip()`으로 표시하고 이유를 주석으로 명시한다.
+건너뛰지만 TC-ID는 결과에 나타난다.
+
+```typescript
+test.skip('[AUTH-4-6-03] 카카오 소셜 로그인', async ({ page }) => {
+  // MANUAL: OAuth 팝업 — Playwright 자동화 차단
+});
+```
+
+### 4. SKIP 케이스 처리
+
+사람이 수행하는 케이스. 이유를 주석으로 명시한다.
+
+```typescript
+test.skip('[AUTH-4-6-01] 신규 일반 회원가입', async ({ page }) => {
+  // SKIP: 사람이 수행 — 계정 생성 후 삭제 필요, 스테이징 데이터 오염 방지
+});
+```
+
+### 5. 삭제된 TC
+
+QA 문서에서 ~~취소선~~ 처리된 TC는 코드에 포함하지 않는다.
+
+### 6. 계정 픽스처 사용
+
+기존 `shared/fixtures/auth.ts`의 storageState를 재사용한다:
+
+```typescript
+test.use({ storageState: 'tests/.auth/taxpayer-paid.json' });
+```
+
+각 describe 블록에서 필요한 계정으로 설정.
+
+---
+
+## 모듈별 구현 완료 기준
+
+각 모듈 구현 후 단독으로 실행해서 검증:
+
+```bash
+npx playwright test tests/qa/auth/ --project=chromium
+npx playwright test tests/qa/my/ --project=chromium
+# ...
+```
+
+기준:
+- AUTOMATABLE 케이스: PASS 또는 FAIL (실패가 나와도 정상 — 버그 발견)
+- MANUAL / SKIP 케이스: skipped 로 표시되면 정상
+- 에러로 중단되는 케이스 없어야 함 (timeout 제외)
+
+---
+
+## 주의사항
+
+- 데이터 변경 케이스(프로필 저장, 이력 추가 등)는 setUp/tearDown으로 원상복구
+- 스테이징 데이터에 의존하는 케이스는 `test.slow()`로 마킹
+- 한 모듈이 다른 모듈 데이터에 의존하는 경우 주석으로 명시
+
+---
+
+## 완료 기준
+
+- [ ] 11개 모듈 spec 파일 생성
+- [ ] 모든 활성 TC-ID가 코드에 1:1 매핑됨
+- [ ] 삭제된 TC는 코드에 없음
+- [ ] 각 모듈 단독 실행 시 에러 없음 (FAIL은 허용)
+- [ ] `npx playwright test tests/qa/ --project=chromium` 전체 실행 가능
+
+완료 → Phase 3로 이동.

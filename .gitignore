@@ -14,7 +14,10 @@
 # Playwright
 node_modules/
 /test-results/
-/playwright-report/
+/playwright-report/detail/
+/playwright-report/results.json
+/playwright-report/index.html
+/playwright-report/summary.md
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/

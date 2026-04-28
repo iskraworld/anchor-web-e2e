@@ -25,7 +25,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   timeout: 60000,
-  reporter: [['html'], ['list']],
+  reporter: [['html'], ['list'], ['json', { outputFile: 'playwright-report/results.json' }]],
   use: {
     baseURL: process.env.ANCHOR_BASE_URL,
     trace: 'retain-on-failure',

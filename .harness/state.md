@@ -4,20 +4,21 @@
 
 ---
 
-## 마지막 실행: 2026-04-28 15:29
-## 마지막 업데이트: 2026-04-28 15:29
+## 마지막 실행: 2026-04-28 15:59
+## 마지막 업데이트: 2026-04-28 15:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **QA 파이프라인 구축** — `docs/anchor-e2e-v2/` Phase 0~3 완료, 11개 모듈 spec 생성 후 버그 수정 및 전체 재실행 중
+- **QA 테스트 실패 감소** — `tests/qa/` 전체 재실행 후 잔여 실패 항목 확인 및 수정 중 (83→59건 목표)
 
 ### 이어서 할 것
-1. 전체 QA 테스트 재실행 결과 확인 (`tests/qa/` — chromium)
-2. 잔여 실패 케이스 수정 (networkidle → load 교체, TF 셀렉터 수정 완료 여부 확인)
+1. 파싱 스크립트로 잔여 실패 항목 확인 (결과 미확인 상태로 세션 종료됨)
+2. 잔여 실패 케이스 추가 수정 (코드 분석 기반)
 3. 전체 TC-ID 결과 테이블 생성 (PASS/FAIL/수동/스킵 증적)
 
 ### 막힌 것
-- 없음
+- MCP 브라우저 세션 사용 불가 → 코드 분석 기반으로만 수정 진행 중
+- `--reporter` CLI 플래그가 config의 JSON 출력 경로를 덮어쓰는 문제 (stale 결과 파일 주의)
 
 ### 사람 판단 필요
 - D-2/D-3: 법인 리포트 1그룹/2그룹 분류 UI 미출시 — 기능 릴리즈 후 재검토
@@ -52,7 +53,9 @@
 - [x] Phase 1: `docs/qa/` 11개 모듈 분석 → `qa-automation-map.md` 생성 (~644 자동화, ~107 수동, ~51 스킵)
 - [x] Phase 2: 11개 모듈 spec 파일 생성 (`tests/qa/{모듈}/`) — TC-ID 1:1 태깅, MANUAL/SKIP 분류
 - [x] EI/HOME-TP/HOME-TA spec 버그 수정 (force 클릭, PRO 태그 strict mode, networkidle → load)
-- [ ] 전체 QA 테스트 재실행 결과 확인 (진행 중)
+- [x] home-ta, home-tp, ta, go, eo, ei, auth, my, tf 스펙 다수 수정 (force 추가, strict mode, assertion 수정)
+- [x] JSON 결과 파싱 스크립트 작성 및 반복 실행
+- [ ] 잔여 실패 항목 확인 (파싱 결과 미확인 상태 — 세션 종료 시점 기준)
 - [ ] 전체 TC-ID 결과 테이블 생성
 - [ ] CI 스케줄 설정 (백로그)
 - [ ] D-2/D-3 BLOCKED 해제 (UI 출시 후)

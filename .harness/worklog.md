@@ -4,6 +4,25 @@
 
 ---
 
+## Session 2026-04-28 15:59 — Playwright E2E 테스트 실패 수 감소 작업 (83→59건 목표)
+
+### 작업 요약
+- `tests/qa/` 전체 실행 후 JSON 결과 파싱 스크립트 작성 및 반복 실행
+- home-ta, home-tp, ta, go, eo, ei, auth, my, tf 스펙 파일 다수 수정
+  - `force: true` 추가 (viewport 외부 클릭 오류 대응)
+  - strict mode 위반 수정
+  - 헤더 assertion 수정
+  - count 패턴 수정
+
+### 실패한 시도
+- `--reporter` CLI 플래그가 config의 JSON 출력 경로를 덮어써서 결과 파일이 stale 상태로 남는 문제 발생
+- MCP 브라우저 세션 사용 불가로 코드 분석 기반으로만 수정 진행
+
+### 다음 액션
+- 재실행 결과 파싱 스크립트로 잔여 실패 항목 확인 (세션 종료 시점에 미확인 상태)
+- 잔여 실패 건 원인 분석 및 추가 수정
+
+
 ## Session 2026-04-28 15:29 — anchor-e2e-v2 QA 자동화 파이프라인 구축 및 버그 수정
 
 ### 작업 요약

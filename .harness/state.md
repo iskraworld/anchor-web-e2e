@@ -4,16 +4,17 @@
 
 ---
 
-## 마지막 실행: 2026-04-28 13:28
-## 마지막 업데이트: 2026-04-28 13:28
-## 현재 모드: acceptEdits
+## 마지막 실행: 2026-04-28 15:29
+## 마지막 업데이트: 2026-04-28 15:29
+## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **Phase 0~6 완료 + 리포트 인프라 완비** — 77 passed / 2 skipped, HTML 리포트 + Vercel 배포 연동 완료
+- **QA 파이프라인 구축** — `docs/anchor-e2e-v2/` Phase 0~3 완료, 11개 모듈 spec 생성 후 버그 수정 및 전체 재실행 중
 
 ### 이어서 할 것
-1. CI 스케줄 설정 (백로그 — 팀 정책 합의 후)
-2. D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
+1. 전체 QA 테스트 재실행 결과 확인 (`tests/qa/` — chromium)
+2. 잔여 실패 케이스 수정 (networkidle → load 교체, TF 셀렉터 수정 완료 여부 확인)
+3. 전체 TC-ID 결과 테이블 생성 (PASS/FAIL/수동/스킵 증적)
 
 ### 막힌 것
 - 없음
@@ -45,5 +46,13 @@
 - [x] `scripts/generate-report.mjs` — MD + HTML 리포트 자동 생성 (`npm run report:md`)
 - [x] `vercel.json` + `report:deploy` 스크립트 — Vercel 배포 연동
 - [x] `.claude/settings.json` git 추적 해제
+- [x] Vercel 404 수정 — `playwright-report/.vercelignore` 생성, 배포 명령 수정 → 배포 완료 (https://playwright-report-iota.vercel.app)
+- [x] QA 방향 재정의 — 기능명세서+정책서+Figma → AI 스펙 생성 → 사람 검토 → 테스트 실행+결과 테이블
+- [x] `docs/anchor-e2e-v2/` Phase 0~3 문서 4개 작성
+- [x] Phase 1: `docs/qa/` 11개 모듈 분석 → `qa-automation-map.md` 생성 (~644 자동화, ~107 수동, ~51 스킵)
+- [x] Phase 2: 11개 모듈 spec 파일 생성 (`tests/qa/{모듈}/`) — TC-ID 1:1 태깅, MANUAL/SKIP 분류
+- [x] EI/HOME-TP/HOME-TA spec 버그 수정 (force 클릭, PRO 태그 strict mode, networkidle → load)
+- [ ] 전체 QA 테스트 재실행 결과 확인 (진행 중)
+- [ ] 전체 TC-ID 결과 테이블 생성
 - [ ] CI 스케줄 설정 (백로그)
 - [ ] D-2/D-3 BLOCKED 해제 (UI 출시 후)

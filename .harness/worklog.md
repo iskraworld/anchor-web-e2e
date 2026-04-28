@@ -4,6 +4,30 @@
 
 ---
 
+## Session 2026-04-28 15:29 — anchor-e2e-v2 QA 자동화 파이프라인 구축 및 버그 수정
+
+### 작업 요약
+- Vercel 404 원인 파악 및 수정: `playwright-report/detail/`이 `.gitignore`로 배포 누락 → `.vercelignore` 생성 + `vercel.json` 수정으로 배포 정상화 (https://playwright-report-iota.vercel.app)
+- QA 방향성 재정의: 동작 테스트 → QA 명세서 기반 E2E 자동화로 전환
+- `docs/anchor-e2e-v2/` Phase 0~3 문서 4개 작성 (QA 문서 기반 E2E 자동화 프로세스 정의)
+- Phase 1: `docs/qa/` 11개 모듈 분석 → `qa-automation-map.md` 생성 (~644 자동화 / ~107 수동 / ~51 스킵)
+- Phase 2: 11개 모듈 spec 파일 생성 (`tests/qa/{모듈}/`) — TC-ID 1:1 태깅, MANUAL/SKIP 분류
+- Phase 3 버그 수정:
+  - `waitForLoadState('networkidle')` → `load` 교체 (타임아웃 해소)
+  - TF 모듈 `gotoFirmInfo` 셀렉터 수정 (툴팁 텍스트 매칭 오류)
+  - EI spec 사이드바 메뉴 클릭에 `{ force: true }` 추가 (viewport 밖 요소)
+  - HOME-TP / HOME-TA spec PRO 태그 strict mode 오류 수정 (`.first()` 또는 exact 패턴)
+  - HOME-TP / HOME-TA spec GNB 네비게이션 클릭에 `{ force: true }` 추가
+
+### 실패한 시도
+- 1차 전체 QA 테스트 실행: 83개 실패 (networkidle 타임아웃, TF 셀렉터 오류, strict mode 오류 등)
+
+### 다음 액션
+- 버그 수정 후 전체 QA 테스트 재실행 결과 확인 (`npx playwright test tests/qa/ --project=chromium`)
+- 잔여 실패 케이스 분류 및 추가 수정
+- 전체 TC-ID 결과 테이블 생성 (PASS/FAIL/수동/스킵) — 증적 문서화
+
+
 ## Session 2026-04-28 13:28 — HTML 리포트 + Vercel 배포 연동 + 권한 모드 전환
 
 ### 작업 요약

@@ -4,6 +4,26 @@
 
 ---
 
+## Session 2026-04-28 22:24 — GO/MY 모듈 E2E 실패 원인 분석
+
+### 작업 요약
+- 전체 실패 건수 파악: GO 67건, MY 46건이 핵심 실패 모듈로 확인
+- 실패 패턴 두 가지로 분류
+  - **strict mode violation**: `getByText(/구독|공통 관계망|멤버십|현직/)` 등이 복수 노드(~57개)에 매칭되어 에러 발생
+  - **TimeoutError**: click / waitForEvent / fill / assertion 타임아웃 (GO-1-xx, GO-2-xx)
+- `go.spec.ts` 전체 코드 리딩 완료, 수정 방향 도출
+  - strict mode 위반 → `getByRole('heading'/'button', {name})` 또는 `locator.count()` 방식으로 대체 필요
+  - timeout 케이스 → 선택자 정확도 개선 및 타임아웃 조건 재검토 필요
+- `playwright.config.ts` 및 `.env` 설정 확인, `ANCHOR_BASE_URL` 환경변수 구조 파악
+- 실제 브라우저로 `anchor.tax` 및 `/go` 페이지 접속하여 현재 UI 스냅샷 수집
+
+### 다음 액션
+- `go.spec.ts` 수정: strict mode violation 발생 선택자를 `getByRole` 또는 `locator.count()` 기반으로 교체
+- GO-1-xx / GO-2-xx TimeoutError 케이스 선택자 정밀화 및 대기 조건 개선
+- MY 모듈 동일 패턴 분석 후 수정 (`page.getByText(...)` 미매칭 케이스 우선)
+- 수정 후 로컬에서 해당 spec만 선별 실행하여 통과 여부 검증
+
+
 ## Session 2026-04-28 20:23 — E2E 실패 테스트 321→244건 감소 및 추가 디버깅
 
 ### 작업 요약

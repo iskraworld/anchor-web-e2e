@@ -19,6 +19,14 @@ jobs:
       run: npx playwright install --with-deps
     - name: Run Playwright tests
       run: npx playwright test
+      env:
+        ANCHOR_BASE_URL: ${{ secrets.ANCHOR_BASE_URL }}
+        ANCHOR_PASSWORD: ${{ secrets.ANCHOR_PASSWORD }}
+        ANCHOR_EMAIL_TAX_OFFICIAL: ${{ secrets.ANCHOR_EMAIL_TAX_OFFICIAL }}
+        ANCHOR_EMAIL_TAX_GENERAL: ${{ secrets.ANCHOR_EMAIL_TAX_GENERAL }}
+        ANCHOR_EMAIL_FIRM_OWNER: ${{ secrets.ANCHOR_EMAIL_FIRM_OWNER }}
+        ANCHOR_EMAIL_TAXPAYER_PAID: ${{ secrets.ANCHOR_EMAIL_TAXPAYER_PAID }}
+        ANCHOR_EMAIL_TAXPAYER_FREE: ${{ secrets.ANCHOR_EMAIL_TAXPAYER_FREE }}
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:

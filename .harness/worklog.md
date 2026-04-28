@@ -4,6 +4,27 @@
 
 ---
 
+## Session 2026-04-28 09:00 — Phase 6 완료: P1 구현 + C-1 단언 수정
+
+### 작업 요약
+- CI 워크플로 초안 작성 (`docs/ci-templates/daily-monitor.yml`, `weekly-full.yml`)
+- P1 시나리오 29개 구현 (`tests/p1/navigation`, `permissions`, `search`, `forms`, `B-network-detail`)
+- C-1 원인 조사: 한지희 toggle은 이미 OFF였고, 시나리오 원문 재검토 결과 테스트 단언이 잘못된 것으로 판명
+  - 시나리오 의도: "자기 카드는 보이지만 프로필이 빈약한 상태 확인"
+  - 수정 전: `not.toContainText('한지희')` (한지희 완전 미노출)
+  - 수정 후: `getByText('한지희').toBeVisible()` + `not.toContainText('taxhan@theanchor.best')` (카드 보임, 이메일 미노출)
+- 최종: P0 28 passed / 2 skipped, P1 29 passed
+
+### 주요 판단
+- FN-PERM-004: freeUser 세무이력관리 접근 시 URL 리다이렉트 없이 인라인 403 노출 → 단언 수정
+- C-1 단언: 시나리오 원문 "자기만 빈약한 것 확인"에 맞게 존재 확인 + 연락처 미노출 확인으로 변경
+
+### 다음 액션
+- CI 활성화: `.github/workflows/`에 템플릿 복사 + GitHub Actions 환경 변수 등록 (수동)
+- D-2/D-3: Anchor 팀 UI 출시 후 BLOCKED 해제
+
+---
+
 ## Session 2026-04-28 08:00 — Phase 6 진입: CI 연동 및 P1 시나리오 확장 계획 수립
 
 ### 작업 요약

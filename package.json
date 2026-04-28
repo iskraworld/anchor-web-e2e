@@ -10,7 +10,10 @@
     "test:critical:headed": "npx playwright test tests/critical/ --project=chromium --headed",
     "test:scenarios": "npx playwright test tests/scenarios/ --project=chromium",
     "test:p1": "npx playwright test tests/p1/ --project=chromium",
-    "test:full": "npx playwright test tests/critical/ tests/p1/ --project=chromium",
+    "test:p2": "npx playwright test tests/p2/ --project=chromium",
+    "test:visual": "npx playwright test tests/visual/ --project=chromium",
+    "visual:update": "npx playwright test tests/visual/ --project=chromium --update-snapshots",
+    "test:full": "npx playwright test tests/critical/ tests/p1/ tests/p2/ --project=chromium",
     "test:setup": "npx playwright test tests/auth.setup.ts --project=setup",
     "report": "npx playwright show-report"
   },

@@ -4,17 +4,17 @@
 
 ---
 
-## 마지막 실행: 2026-04-28 16:21
-## 마지막 업데이트: 2026-04-28 16:21
+## 마지막 실행: 2026-04-28 18:21
+## 마지막 업데이트: 2026-04-28 18:21
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **QA 자동화 완료** — TC-ID 276건 / PASS 179 / FAIL 0 / 수동 41 / 스킵 56, Vercel 배포 완료
+- **E2E 전면 재구축** — 818개 TC spec 구현 완료, Phase 3 테스트 실행 결과 대기 중 (실패 항목 수정 → 리포트 생성 → Vercel 배포)
 
 ### 이어서 할 것
-1. CI 스케줄 설정 (백로그 — `.github/workflows/`에 `schedule` 트리거 추가)
-2. D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
-3. ER PDF/링크 버튼 테스트 재활성화 (UI 구현 후)
+1. Phase 3 테스트 실행 결과 확인 → 실패 항목 수정
+2. QA 리포트 생성 및 Vercel 배포
+3. CI 스케줄 설정 (백로그 — `.github/workflows/`에 `schedule` 트리거 추가)
 
 ### 막힌 것
 - 없음
@@ -49,14 +49,14 @@
 - [x] `.claude/settings.json` git 추적 해제
 - [x] Vercel 404 수정 — `playwright-report/.vercelignore` 생성, 배포 명령 수정 → 배포 완료 (https://playwright-report-iota.vercel.app)
 - [x] QA 방향 재정의 — 기능명세서+정책서+Figma → AI 스펙 생성 → 사람 검토 → 테스트 실행+결과 테이블
-- [x] `docs/anchor-e2e-v2/` Phase 0~3 문서 4개 작성
-- [x] Phase 1: `docs/qa/` 11개 모듈 분석 → `qa-automation-map.md` 생성 (~644 자동화, ~107 수동, ~51 스킵)
-- [x] Phase 2: 11개 모듈 spec 파일 생성 (`tests/qa/{모듈}/`) — TC-ID 1:1 태깅, MANUAL/SKIP 분류
-- [x] EI/HOME-TP/HOME-TA spec 버그 수정 (force 클릭, PRO 태그 strict mode, networkidle → load)
-- [x] home-ta, home-tp, ta, go, eo, ei, auth, my, tf 스펙 다수 수정 (force 추가, strict mode, assertion 수정)
-- [x] JSON 결과 파싱 스크립트 작성 및 반복 실행
-- [x] QA 테스트 전체 통과 — 245 passed / 0 failed / 107 skipped
-- [x] QA 리포트 생성 및 Vercel 배포 (TC-ID 276건 / PASS 179 / FAIL 0)
+- [x] `docs/anchor-e2e-v2/` Phase 0~3 문서 4개 작성 (TC 수 검증, SKIP 기준 강화 반영)
+- [x] Phase 1: `docs/qa/` 11개 모듈 분석 → `qa-automation-map.md` 생성 (805개 active TC)
+- [x] 이전 결과물 삭제 (`tests/qa/`, `qa-automation-map.md`, `qa-report.html`)
+- [x] Phase 2: 11개 모듈 spec 파일 전면 재구축 — 총 818개 TC (AUTH 91, MY 48, GO 69, EI 110, ER 64, HOME-TP 95, HOME-TA 95, TF 58, SP 54, TA 65, EO 69)
+- [x] TypeScript 에러 없음 확인
+- [x] TC_RE 정규식 수정 — HOME-TA/HOME-TP 복합 prefix 매칭 오류 수정
+- [ ] Phase 3: 전체 테스트 실행 결과 확인 및 실패 항목 수정
+- [ ] QA 리포트 생성 및 Vercel 배포
 - [ ] CI 스케줄 설정 (백로그)
 - [ ] D-2/D-3 BLOCKED 해제 (UI 출시 후)
 - [ ] ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)

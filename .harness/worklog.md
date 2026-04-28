@@ -4,6 +4,24 @@
 
 ---
 
+## Session 2026-04-28 18:21 — E2E 전면 재구축 (818개 TC 구현 완료)
+
+### 작업 요약
+- `docs/anchor-e2e-v2` phase 1~3 문서 수정 (TC 수 검증, SKIP 기준 강화)
+- 이전 결과물 삭제 (`tests/qa/`, `qa-automation-map.md`, `qa-report.html`)
+- **Phase 1**: `docs/qa` 11개 문서 파싱 → `qa-automation-map.md` 생성 (805개 active TC)
+- **Phase 2**: 11개 모듈을 6개 병렬 에이전트로 spec 구현 완료 → 총 818개 TC
+  - AUTH 91, MY 48, GO 69, EI 110, ER 64, HOME-TP 95, HOME-TA 95, TF 58, SP 54, TA 65, EO 69
+- TC_RE 정규식이 HOME-TA/HOME-TP 복합 prefix를 매칭 못하는 버그 수정
+- TypeScript 에러 없음 확인
+- **Phase 3**: 전체 테스트 실행 시작 (`npx playwright test tests/qa/`)
+
+### 다음 액션
+- Phase 3 실행 결과 확인 후 실패 항목 수정
+- QA 리포트 생성 (`qa-report.html`)
+- Vercel 배포
+
+
 ## Session 2026-04-28 16:21 — QA 테스트 실패 0건 달성 + 리포트 생성 및 Vercel 배포
 
 ### 작업 요약

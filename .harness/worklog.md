@@ -4,6 +4,18 @@
 
 ---
 
+## Session 2026-04-28 12:03 — Markdown 테스트 리포트 자동 생성기 추가
+
+### 작업 요약
+- `anchor-e2e-prompts/` 문서 기준 Phase 3(시나리오 통합) 누락 항목 처리: README.md 작성 + test-plan.md C-1 BLOCKED → 완료 상태로 수정
+- 전체 테스트 77개(P0+P1+P2+VR) 실행 → `playwright.config.ts` timeout 30s → 60s 상향 후 77/77 통과
+- `scripts/generate-report.mjs` 작성: Playwright JSON 출력 파싱 → P0/P1/P2/VR 그룹별 Markdown 요약표 자동 생성 (`npm run report:md`)
+- 결과물: `playwright-report/summary.md` — 파일명+테스트명 단위로 검증 내용을 한눈에 파악 가능
+
+### 실패한 시도
+- Playwright JSON 구조를 잘못 예상해 `file` 필드 위치 및 스펙 이름 파싱 로직을 두 번 수정
+
+
 ## Session 2026-04-28 10:02 — P0~P2 테스트 완성 + CI 환경 구축
 
 ### 작업 요약

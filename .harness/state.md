@@ -4,17 +4,17 @@
 
 ---
 
-## 마지막 실행: 2026-04-28 (Phase 5 완료)
-## 마지막 업데이트: 2026-04-28
+## 마지막 실행: 2026-04-28 08:00
+## 마지막 업데이트: 2026-04-28 08:00
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **Phase 5 완료** — P0 전체 테스트 통과 (27 passed, 3 skipped, 0 failed)
+- **Phase 6 진행 중** — CI 연동 + P1 시나리오 확장 + BLOCKED 항목 해제 대기
 
 ### 이어서 할 것
-1. (선택) Phase 6: CI/GitHub Actions 연동
-2. (선택) P1 테스트 구현 (시나리오 B-detail, C-2 확장 등)
-3. C-1 재실행 조건: Anchor 팀이 한지희 토글 OFF 원복 후
+1. CI 연동: GitHub Actions 워크플로 작성
+2. C-1 재실행: Anchor 팀 한지희 토글 OFF 원복 확인 후 진행
+3. P1 시나리오 24개 추가 구현 (B-detail, C-2 확장 등)
 
 ### 막힌 것
 - 없음
@@ -38,3 +38,7 @@
 - [x] Phase 4: 인증 셋업 + 시나리오 A-G 테스트 코드 + 공유 Page Objects
 - [x] Phase 5: 전체 테스트 실행 및 디버깅 완료 — 27 passed / 3 skipped
 - [x] 커밋·푸시 완료 (`aaf1bf2`)
+- [ ] Phase 6: CI 연동 (GitHub Actions)
+- [ ] Phase 6: P1 시나리오 24개 구현
+- [ ] Phase 6: C-1 재실행 (한지희 토글 OFF 원복 후)
+- [ ] Phase 6: D-2/D-3 BLOCKED 해제 (UI 출시 후)

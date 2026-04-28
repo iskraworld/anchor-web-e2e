@@ -14,9 +14,11 @@
     "test:visual": "npx playwright test tests/visual/ --project=chromium",
     "visual:update": "npx playwright test tests/visual/ --project=chromium --update-snapshots",
     "test:full": "npx playwright test tests/critical/ tests/p1/ tests/p2/ --project=chromium",
+    "test:qa": "npx playwright test tests/qa/ --project=chromium",
     "test:setup": "npx playwright test tests/auth.setup.ts --project=setup",
     "report": "npx playwright show-report playwright-report/detail",
     "report:md": "node scripts/generate-report.mjs",
+    "report:qa": "node scripts/generate-qa-report.mjs",
     "report:deploy": "node scripts/generate-report.mjs",
     "deploy": "vercel deploy playwright-report --prod"
   },

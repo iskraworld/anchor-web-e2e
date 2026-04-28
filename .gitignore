@@ -19,6 +19,8 @@ node_modules/
 /playwright-report/results.json
 /playwright-report/index.html
 /playwright-report/summary.md
+/playwright-report/data/
+/playwright-report/trace/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/

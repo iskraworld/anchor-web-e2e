@@ -1,0 +1,3644 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anchor QA 결과 리포트</title>
+<style>
+  :root {
+    --pass: #16a34a; --fail: #dc2626; --manual: #d97706; --skip: #6b7280;
+    --pass-bg: #f0fdf4; --fail-bg: #fef2f2; --manual-bg: #fffbeb; --skip-bg: #f9fafb;
+    --border: #e5e7eb; --text: #111827; --muted: #6b7280; --code-bg: #f3f4f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         color: var(--text); background: #fff; line-height: 1.6; }
+  .container { max-width: 1080px; margin: 0 auto; padding: 32px 24px; }
+
+  header { display: flex; align-items: flex-start; justify-content: space-between;
+           margin-bottom: 32px; flex-wrap: wrap; gap: 12px; }
+  header h1 { font-size: 1.7rem; font-weight: 800; }
+  .meta { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+  .badge-status { padding: 6px 16px; border-radius: 9999px; font-size: 0.85rem;
+                  font-weight: 700; letter-spacing: 0.05em; }
+  .badge-status.PASS { background: var(--pass-bg); color: var(--pass); border: 1px solid var(--pass); }
+  .badge-status.FAIL { background: var(--fail-bg); color: var(--fail); border: 1px solid var(--fail); }
+  .header-links { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .detail-link { display: inline-flex; align-items: center; gap: 6px;
+                 padding: 6px 14px; background: #1e40af; color: #fff;
+                 border-radius: 6px; text-decoration: none; font-size: 0.82rem;
+                 font-weight: 500; }
+
+  .big-numbers { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
+  .big-num { flex: 1; min-width: 120px; padding: 16px 20px; border-radius: 10px;
+             border: 1px solid var(--border); text-align: center; }
+  .big-num .num { font-size: 2.2rem; font-weight: 800; line-height: 1; }
+  .big-num .lbl { font-size: 0.78rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .big-num.pass { background: var(--pass-bg); border-color: #86efac; }
+  .big-num.pass .num { color: var(--pass); }
+  .big-num.fail { background: var(--fail-bg); border-color: #fca5a5; }
+  .big-num.fail .num { color: var(--fail); }
+  .big-num.manual { background: var(--manual-bg); border-color: #fcd34d; }
+  .big-num.manual .num { color: var(--manual); }
+  .big-num.skip { background: var(--skip-bg); }
+  .big-num.skip .num { color: var(--skip); }
+
+  .module-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 28px; }
+  .module-nav a { padding: 4px 12px; border: 1px solid var(--border); border-radius: 20px;
+                  text-decoration: none; color: var(--text); font-size: 0.8rem; }
+  .module-nav a:hover { background: var(--code-bg); }
+
+  .summary-wrap { overflow-x: auto; margin-bottom: 36px; }
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  .summary-table th { padding: 9px 12px; text-align: left; color: var(--muted);
+                      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;
+                      background: var(--code-bg); border-bottom: 2px solid var(--border); }
+  .summary-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  .summary-table td a { color: inherit; text-decoration: none; font-weight: 600; }
+  .summary-table td a:hover { text-decoration: underline; }
+  .summary-table tr.fail td { background: #fff5f5; }
+  .summary-table tr.fail td:first-child { border-left: 3px solid var(--fail); }
+  .summary-table tr.pass td:first-child { border-left: 3px solid var(--pass); }
+  .summary-table tfoot td { font-weight: 700; background: var(--code-bg); }
+  .num { text-align: right; }
+  .pass-cell { color: var(--pass); font-weight: 600; }
+  .fail-cell { color: var(--fail); font-weight: 600; }
+  .manual-cell { color: var(--manual); }
+  .skip-cell { color: var(--skip); }
+
+  section { margin-bottom: 36px; }
+  .module-header { display: flex; align-items: center; justify-content: space-between;
+                   padding: 12px 16px; border-radius: 8px 8px 0 0;
+                   border: 1px solid var(--border); border-bottom: none; }
+  .module-header.fail { background: var(--fail-bg); border-color: #fca5a5; }
+  .module-header.pass { background: var(--pass-bg); border-color: #86efac; }
+  .module-header h2 { font-size: 1rem; font-weight: 700; }
+  .module-meta { font-size: 0.8rem; color: var(--muted); }
+  section h2 { font-size: 1rem; font-weight: 700; padding: 12px 16px;
+               background: var(--code-bg); border: 1px solid var(--border);
+               border-bottom: none; border-radius: 8px 8px 0 0; }
+  .manual-note { font-size: 0.82rem; color: var(--muted); padding: 10px 16px;
+                 background: var(--manual-bg); border: 1px solid #fcd34d;
+                 border-bottom: none; }
+
+  .tc-table { width: 100%; border-collapse: collapse; font-size: 0.85rem;
+              border: 1px solid var(--border); border-radius: 0 0 8px 8px;
+              overflow: hidden; }
+  .module-header + .tc-table { border-top: 1px solid var(--border); }
+  .tc-table th { padding: 8px 12px; text-align: left; background: #fafafa;
+                 font-size: 0.75rem; color: var(--muted); text-transform: uppercase;
+                 letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+  .tc-table td { padding: 8px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+  .tc-table tr:last-child td { border-bottom: none; }
+  .tc-table tr.result-fail td { background: #fff5f5; }
+  .tc-table tr.result-skip td, .tc-table tr.result-manual td { color: var(--muted); }
+  .tc-table tr.group-header td { background: #f3f4f6; font-size: 0.78rem; font-weight: 600;
+                                  color: var(--muted); padding: 6px 12px; }
+  .tc-id-cell { width: 130px; }
+  .result-cell { width: 100px; white-space: nowrap; }
+  .reason-cell { font-size: 0.8rem; color: #374151; max-width: 320px; }
+  .title-cell { }
+  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem;
+         background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+  .error-msg { font-size: 0.78rem; color: var(--fail); margin-top: 4px;
+               font-family: 'SF Mono', monospace; word-break: break-all; }
+
+  .result-badge { display: inline-block; padding: 2px 8px; border-radius: 4px;
+                  font-size: 0.75rem; font-weight: 600; }
+  .result-pass   { background: var(--pass-bg); color: var(--pass); }
+  .result-fail   { background: var(--fail-bg); color: var(--fail); }
+  .result-manual { background: var(--manual-bg); color: var(--manual); }
+  .result-skip   { background: var(--skip-bg); color: var(--skip); }
+
+  .fail-section h2 { background: var(--fail-bg); border-color: #fca5a5; }
+  .fail-section .tc-table { border-color: #fca5a5; }
+  hr.section-divider { border: none; border-top: 2px solid var(--border); margin: 40px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div>
+      <h1>Anchor QA 결과 리포트</h1>
+      <div class="meta">실행일시: 2026. 04. 28. PM 05:42 &nbsp;|&nbsp; 자동화 236건 / 수동 46건 / 스킵 59건</div>
+      <div class="meta">docs/qa 기준 872건 중 341건 구현 (커버리지 39%)</div>
+    </div>
+    <div class="header-links">
+      <span class="badge-status PASS">PASS ✓</span>
+      <a href="./index.html" class="detail-link">📋 E2E 리포트</a>
+      <a href="./detail/index.html" class="detail-link" target="_blank">🔍 Playwright 리포트</a>
+    </div>
+  </header>
+
+  <div class="big-numbers">
+    <div class="big-num pass"><div class="num">236</div><div class="lbl">✅ PASS</div></div>
+    <div class="big-num skip"><div class="num">0</div><div class="lbl">❌ FAIL</div></div>
+    <div class="big-num manual"><div class="num">46</div><div class="lbl">⏭️ 수동 검증 필요</div></div>
+    <div class="big-num skip"><div class="num">59</div><div class="lbl">👤 스킵</div></div>
+  </div>
+
+  <div class="module-nav">
+    <a href="#coverage">📊 커버리지</a>
+    <a href="#module-AUTH">AUTH</a><a href="#module-MY">MY</a><a href="#module-HOME-TP">HOME-TP</a><a href="#module-HOME-TA">HOME-TA</a><a href="#module-TA">TA</a><a href="#module-GO">GO</a><a href="#module-EO">EO</a><a href="#module-EI">EI</a><a href="#module-ER">ER</a><a href="#module-SP">SP</a><a href="#module-TF">TF</a>
+    <a href="#manual-checks">⏭️ 수동</a>
+    <a href="#skip-list">👤 스킵</a>
+    
+  </div>
+
+  <section id="coverage">
+    <h2 style="font-size:1rem;font-weight:700;padding:12px 16px;background:#f3f4f6;border:1px solid #e5e7eb;border-bottom:none;border-radius:8px 8px 0 0;">
+      📊 자동화 커버리지 — docs/qa 기준 872건 중 341건 구현 (39%)
+    </h2>
+    <div style="padding:10px 16px;font-size:0.82rem;color:#6b7280;background:#fffbeb;border:1px solid #fcd34d;border-bottom:none;">
+      ⚠️ 미구현 531건은 docs/qa에 정의되어 있으나 아직 자동화 스펙 파일에 구현되지 않은 TC입니다. 우선순위에 따라 순차 구현 예정입니다.
+    </div>
+    <table class="tc-table" style="border-radius:0 0 8px 8px;">
+      <thead>
+        <tr><th>모듈</th><th class="num">docs 총계</th><th class="num">구현</th><th class="num">미구현</th><th>커버리지</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+      <td><a href="#module-AUTH">AUTH</a></td>
+      <td class="num">104</td>
+      <td class="num pass-cell">57</td>
+      <td class="num skip-cell">47</td>
+      <td class="num">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+            <div style="width:55%;height:100%;background:#d97706;"></div>
+          </div>
+          <span style="font-size:0.75rem;color:#d97706;font-weight:600;">55%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><a href="#module-MY">MY</a></td>
+      <td class="num">50</td>
+      <td class="num pass-cell">26</td>
+      <td class="num skip-cell">24</td>
+      <td class="num">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+            <div style="width:52%;height:100%;background:#d97706;"></div>
+          </div>
+          <span style="font-size:0.75rem;color:#d97706;font-weight:600;">52%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><a href="#module-HOME-TP">HOME-TP</a></td>
+      <td class="num">96</td>
+      <td class="num pass-cell">34</td>
+      <td class="num skip-cell">62</td>
+      <td class="num">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+            <div style="width:35%;height:100%;background:#dc2626;"></div>
+          </div>
+          <span style="font-size:0.75rem;color:#dc2626;font-weight:600;">35%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><a href="#module-HOME-TA">HOME-TA</a></td>
+      <td class="num">97</td>
+      <td class="num pass-cell">31</td>
+      <td class="num skip-cell">66</td>
+      <td class="num">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+            <div style="width:32%;height:100%;background:#dc2626;"></div>
+          </div>
+          <span style="font-size:0.75rem;color:#dc2626;font-weight:600;">32%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><a href="#module-TA">TA</a></td>
+      <td class="num">65</td>
+      <td class="num pass-cell">27</td>
+      <td class="num skip-cell">38</td>
+      <td class="num">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+            <div style="width:42%;height:100%;background:#d97706;"></div>
+          </div>
+          <span style="font-size:0.75rem;color:#d97706;font-weight:600;">42%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><a href="#module-GO">GO</a></td>
+      <td class="num">73</td>
+      <td class="num pass-cell">22</td>
+      <td class="num skip-cell">51</td>
+      <td class="num">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+            <div style="width:30%;height:100%;background:#dc2626;"></div>
+          </div>
+          <span style="font-size:0.75rem;color:#dc2626;font-weight:600;">30%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><a href="#module-EO">EO</a></td>
+      <td class="num">69</td>
+      <td class="num pass-cell">19</td>
+      <td class="num skip-cell">50</td>
+      <td class="num">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+            <div style="width:28%;height:100%;background:#dc2626;"></div>
+          </div>
+          <span style="font-size:0.75rem;color:#dc2626;font-weight:600;">28%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><a href="#module-EI">EI</a></td>
+      <td class="num">119</td>
+      <td class="num pass-cell">33</td>
+      <td class="num skip-cell">86</td>
+      <td class="num">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+            <div style="width:28%;height:100%;background:#dc2626;"></div>
+          </div>
+          <span style="font-size:0.75rem;color:#dc2626;font-weight:600;">28%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><a href="#module-ER">ER</a></td>
+      <td class="num">67</td>
+      <td class="num pass-cell">19</td>
+      <td class="num skip-cell">48</td>
+      <td class="num">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+            <div style="width:28%;height:100%;background:#dc2626;"></div>
+          </div>
+          <span style="font-size:0.75rem;color:#dc2626;font-weight:600;">28%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><a href="#module-SP">SP</a></td>
+      <td class="num">69</td>
+      <td class="num pass-cell">18</td>
+      <td class="num skip-cell">51</td>
+      <td class="num">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+            <div style="width:26%;height:100%;background:#dc2626;"></div>
+          </div>
+          <span style="font-size:0.75rem;color:#dc2626;font-weight:600;">26%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><a href="#module-TF">TF</a></td>
+      <td class="num">63</td>
+      <td class="num pass-cell">55</td>
+      <td class="num skip-cell">8</td>
+      <td class="num">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+            <div style="width:87%;height:100%;background:#16a34a;"></div>
+          </div>
+          <span style="font-size:0.75rem;color:#16a34a;font-weight:600;">87%</span>
+        </div>
+      </td>
+    </tr>
+      </tbody>
+      <tfoot>
+        <tr style="font-weight:700;background:#f9fafb;">
+          <td>합계</td>
+          <td class="num">872</td>
+          <td class="num pass-cell">341</td>
+          <td class="num skip-cell">531</td>
+          <td><span style="font-size:0.8rem;font-weight:700;color:#d97706;">39%</span></td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+
+  <hr class="section-divider">
+
+  <div class="summary-wrap">
+    <table class="summary-table">
+      <thead>
+        <tr><th>모듈</th><th class="num">전체</th><th class="num">✅ PASS</th><th class="num">❌ FAIL</th><th class="num">⏭️ 수동</th><th class="num">👤 스킵</th></tr>
+      </thead>
+      <tbody>
+        <tr class="pass">
+      <td><a href="#module-AUTH">AUTH</a></td>
+      <td class="num">57</td>
+      <td class="num pass-cell">26</td>
+      <td class="num ">—</td>
+      <td class="num manual-cell">11</td>
+      <td class="num skip-cell">20</td>
+    </tr>
+<tr class="pass">
+      <td><a href="#module-MY">MY</a></td>
+      <td class="num">26</td>
+      <td class="num pass-cell">16</td>
+      <td class="num ">—</td>
+      <td class="num manual-cell">4</td>
+      <td class="num skip-cell">6</td>
+    </tr>
+<tr class="pass">
+      <td><a href="#module-HOME-TP">HOME-TP</a></td>
+      <td class="num">34</td>
+      <td class="num pass-cell">29</td>
+      <td class="num ">—</td>
+      <td class="num manual-cell">3</td>
+      <td class="num skip-cell">2</td>
+    </tr>
+<tr class="pass">
+      <td><a href="#module-HOME-TA">HOME-TA</a></td>
+      <td class="num">31</td>
+      <td class="num pass-cell">28</td>
+      <td class="num ">—</td>
+      <td class="num manual-cell">2</td>
+      <td class="num skip-cell">1</td>
+    </tr>
+<tr class="pass">
+      <td><a href="#module-TA">TA</a></td>
+      <td class="num">27</td>
+      <td class="num pass-cell">21</td>
+      <td class="num ">—</td>
+      <td class="num manual-cell">1</td>
+      <td class="num skip-cell">5</td>
+    </tr>
+<tr class="pass">
+      <td><a href="#module-GO">GO</a></td>
+      <td class="num">22</td>
+      <td class="num pass-cell">20</td>
+      <td class="num ">—</td>
+      <td class="num manual-cell">—</td>
+      <td class="num skip-cell">2</td>
+    </tr>
+<tr class="pass">
+      <td><a href="#module-EO">EO</a></td>
+      <td class="num">19</td>
+      <td class="num pass-cell">15</td>
+      <td class="num ">—</td>
+      <td class="num manual-cell">—</td>
+      <td class="num skip-cell">4</td>
+    </tr>
+<tr class="pass">
+      <td><a href="#module-EI">EI</a></td>
+      <td class="num">33</td>
+      <td class="num pass-cell">22</td>
+      <td class="num ">—</td>
+      <td class="num manual-cell">3</td>
+      <td class="num skip-cell">8</td>
+    </tr>
+<tr class="pass">
+      <td><a href="#module-ER">ER</a></td>
+      <td class="num">19</td>
+      <td class="num pass-cell">14</td>
+      <td class="num ">—</td>
+      <td class="num manual-cell">—</td>
+      <td class="num skip-cell">5</td>
+    </tr>
+<tr class="pass">
+      <td><a href="#module-SP">SP</a></td>
+      <td class="num">18</td>
+      <td class="num pass-cell">13</td>
+      <td class="num ">—</td>
+      <td class="num manual-cell">4</td>
+      <td class="num skip-cell">1</td>
+    </tr>
+<tr class="pass">
+      <td><a href="#module-TF">TF</a></td>
+      <td class="num">55</td>
+      <td class="num pass-cell">32</td>
+      <td class="num ">—</td>
+      <td class="num manual-cell">18</td>
+      <td class="num skip-cell">5</td>
+    </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td>합계</td>
+          <td class="num">341</td>
+          <td class="num pass-cell">236</td>
+          <td class="num ">—</td>
+          <td class="num manual-cell">46</td>
+          <td class="num skip-cell">59</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  
+
+  <hr class="section-divider">
+
+  <section id="module-AUTH">
+    <div class="module-header pass">
+      <h2>AUTH — 로그인/회원가입</h2>
+      <div class="module-meta">
+        자동화 26건 &nbsp;|&nbsp;
+        ✅ 26 &nbsp;
+        
+      </div>
+    </div>
+    <table class="tc-table">
+      <thead>
+        <tr><th>TC-ID</th><th>결과</th><th>설명</th></tr>
+      </thead>
+      <tbody><tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-3-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">비로그인 홈 접근 시 서비스 소개 또는 로그인 유도 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-3-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">비로그인 상태 회원정보 페이지 접근 → 로그인 리다이렉트</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-3-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">비로그인 상태 세무사 찾기 접근 → 필터 표시됨</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-3-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">비로그인 상태 세무 이력 관리 접근 → 로그인 또는 에러</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-3-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">비로그인 상태 현직 공무원 탐색 접근 → 로그인 또는 에러</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-3-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">비로그인 상태 전직 공무원 찾기 접근 → 로그인 또는 에러</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-1-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">로그인 버튼 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-1-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">서비스 소개 영역 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-1-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 찾기 필터 비로그인 접근 가능</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-1-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">회원 가입 버튼 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-1-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">로고 클릭 시 홈 유지</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-1-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 찾기 검색 결과 노출 (비로그인)</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-1-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 프로필 상세 접근 (비로그인)</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-1-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">멤버십 안내 CTA 표시 (비로그인)</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-4-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">이메일+비밀번호 로그인 성공 → 홈 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-4-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">잘못된 비밀번호 → 에러 메시지 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-4-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">존재하지 않는 이메일 → 에러 메시지 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-4-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">이메일 미입력 → 버튼 비활성 또는 에러</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-4-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">비밀번호 미입력 → 버튼 비활성 또는 에러</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-4-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">유효하지 않은 이메일 형식 → 에러</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>AUTH-4-4-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">소셜 로그인 (카카오)</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>AUTH-4-4-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">소셜 로그인 (구글)</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-4-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 계정 로그인 → 세무사 홈 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-4-10</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">로그인 후 GNB 사용자 아이콘 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-4-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">비밀번호 보기/숨기기 토글</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-4-12</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">비밀번호 찾기 링크 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-5-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">회원가입 페이지 접근 → 유형 선택 화면 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-5-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">납세자 유형 선택 가능</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-5-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 유형 선택 가능</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>AUTH-4-5-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무법인 유형 선택 가능</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>AUTH-4-5-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">이메일 인증 발송 확인</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-6-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">신규 일반 개인 회원가입 전체 플로우</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>AUTH-4-6-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">소셜 로그인 (카카오) 가입</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>AUTH-4-6-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">소셜 로그인 (구글) 가입</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-6-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">이메일 중복 확인 — 이미 사용중인 이메일 에러</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-6-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">비밀번호 유효성 규칙 미충족 → 에러</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-6-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">비밀번호 확인 불일치 → 에러</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>AUTH-4-6-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">본인인증 SMS 수신 확인</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-6-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">신규 가입 완료 후 홈 이동</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-6-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">약관 동의 화면 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-6-10</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">필수 약관 미동의 → 버튼 비활성</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-7-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">세무사 신규 회원가입 전체 플로우</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>AUTH-4-7-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">소셜 로그인 (카카오) 세무사 가입</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-7-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">세무사 등록번호 입력</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>AUTH-4-7-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">세무사 이메일 인증 링크 확인</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-7-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">세무사 가입 완료 후 세무사 홈 이동</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-7-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">세무사 약관 동의 화면</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-8-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">세무법인 신규 회원가입 전체 플로우</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>AUTH-4-8-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">소셜 로그인 (카카오) 법인 가입</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-8-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">법인명/사업자번호 입력</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>AUTH-4-8-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">법인 이메일 인증 링크 확인</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-8-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">법인 가입 완료 후 홈 이동</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-8-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">법인 약관 동의 화면</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-8-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">법인 대표자 정보 입력</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-8-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">세무사 소속 연결</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>AUTH-4-8-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">사업자등록번호 인증</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>AUTH-4-8-10</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">법인 구성원 초대 발송</td>
+    </tr></tbody>
+    </table>
+  </section>
+<section id="module-MY">
+    <div class="module-header pass">
+      <h2>MY — 내 정보</h2>
+      <div class="module-meta">
+        자동화 16건 &nbsp;|&nbsp;
+        ✅ 16 &nbsp;
+        
+      </div>
+    </div>
+    <table class="tc-table">
+      <thead>
+        <tr><th>TC-ID</th><th>결과</th><th>설명</th></tr>
+      </thead>
+      <tbody><tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-0-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">납세자 내 정보 진입 — 계정 정보 영역 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-0-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 내 정보 진입 — 세무사 정보 + 계정 정보 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-0-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 소유자 법인 정보 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-1-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">계정 기본 정보 조회 — 이메일/이름 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-1-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">이메일 변경 버튼 표시</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>MY-1-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">이메일 변경 처리 — 인증 완료</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-1-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">이메일 변경 취소 → 모달 닫힘</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-1-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">비밀번호 변경 버튼/모달 표시</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>MY-1-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">비밀번호 변경 처리 완료</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>MY-1-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">비밀번호 변경 취소 → 모달 닫힘</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>MY-1-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">휴대폰 변경 — 본인인증 모달</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>MY-1-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">휴대폰 재인증 처리</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>MY-1-10</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">휴대폰 변경 취소</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-1-14-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">전화번호 미입력 상태 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-1-17</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">회원탈퇴 링크/버튼 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>MY-1-18</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">회원탈퇴 처리</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>MY-1-19</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">회원탈퇴 취소 → 팝업 닫힘</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-1-23</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 번호 읽기 전용 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-1-24</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">이름 읽기 전용 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-1-25</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">본인인증 완료 상태 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-1-28</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">납세자 주소·전화 항목 없음 (세무사)</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>MY-1-33</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">잘못된 인증번호 입력 → 에러 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-1-34</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">비밀번호 유효성 규칙 미충족 → 에러</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-1-35</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">주소 미입력 상태 — 공란 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>MY-1-37</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">전화번호 미입력 — 공란 + 변경 버튼 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>MY-1-38</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">이메일 유효성 검증</td>
+    </tr></tbody>
+    </table>
+  </section>
+<section id="module-HOME-TP">
+    <div class="module-header pass">
+      <h2>HOME-TP — 홈·GNB·알림 (납세자)</h2>
+      <div class="module-meta">
+        자동화 29건 &nbsp;|&nbsp;
+        ✅ 29 &nbsp;
+        
+      </div>
+    </div>
+    <table class="tc-table">
+      <thead>
+        <tr><th>TC-ID</th><th>결과</th><th>설명</th></tr>
+      </thead>
+      <tbody><tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-0-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">미구독 홈 — 세무사 찾기 기본 / 배너 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-0-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">Pro 홈 — 모든 탭 접근 가능</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-0-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">미구독 GNB — PRO 태그 미표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-0-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">Pro GNB — PRO 태그 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">홈 기본 로딩 — 세무사 찾기 탭 기본 선택</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 찾기 탭 — 필터 영역 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">현직 공무원 탐색 탭 — 필터 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">미구독 — 현직 공무원 탭 구독 유도</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>HOME-TP-1-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">세무법인 자동완성 — 입력 시 목록 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">DB 없는 법인명 — 자동완성 미제공</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-10</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 검색 — 결과 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-15</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">필터 초기화 버튼 동작</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-16</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">최근 조회 카드 클릭 → 프로필 상세 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-17</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">최근 조회 전체보기 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-20</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">구독 배너 클릭 → 멤버십 안내 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-22</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">알림 레드닷 — 새 알림 시 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-24</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">TOP10 영역 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-26</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">인사말 표시 — 사용자 이름 + 안내 문구</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-31</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">최근 조회 0건 — 빈 상태 안내</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-1-32</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 필터 미입력 — 검색 버튼 비활성</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-2-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">GNB 메뉴 오픈</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-2-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">내 정보 메뉴 → 내 정보 화면 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-2-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">구독 관리 메뉴 → 구독 관리 화면 이동</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>HOME-TP-2-10</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">로그아웃 → 즉시 로그아웃</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-2-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">Pro 태그 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-2-16</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">미구독 정보 — 태그 미표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-3-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">알림 목록 오픈</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>HOME-TP-3-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">법인 소속 초대 승인</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>HOME-TP-3-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">법인 소속 초대 거부</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-3-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">알림 정렬 순서 — 새로운 알림 상위</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>HOME-TP-3-13</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">알림 자동 삭제 (1주 경과 후)</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-3-21</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">알림 0건 — 빈 상태 안내</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-4-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">전체보기 목록 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TP-4-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">뒤로가기 → 홈 복귀</td>
+    </tr></tbody>
+    </table>
+  </section>
+<section id="module-HOME-TA">
+    <div class="module-header pass">
+      <h2>HOME-TA — 홈·GNB·알림 (세무사)</h2>
+      <div class="module-meta">
+        자동화 28건 &nbsp;|&nbsp;
+        ✅ 28 &nbsp;
+        
+      </div>
+    </div>
+    <table class="tc-table">
+      <thead>
+        <tr><th>TC-ID</th><th>결과</th><th>설명</th></tr>
+      </thead>
+      <tbody><tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-0-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">Pro 세무사 홈 — 모든 탭 이용 가능</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-0-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 소유자 홈 — TOP10 세무법인 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-0-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">Pro GNB — PRO 태그 / 세무 이력 메뉴 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-0-10</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 소유자 GNB — TEAM 태그 / 법인명 / 멤버 관리</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-1-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">홈 로딩 — 세무사 찾기 탭 기본 선택</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-1-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">현직 공무원 탐색 탭 선택 → 필터 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-1-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">전직 공무원 찾기 탭 → 필터 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-1-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">현직 공무원 검색 → 목록 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-1-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 검색 → 목록 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-1-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">인사말 — 세무사 계정 &quot;{이름} 세무사님&quot; 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-1-14</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">알림 레드닷 — 새 알림 시 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-1-16</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">Pro 배너 미표시 (Pro 구독자)</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-1-18</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">상위 필터 미선택 → 하위 필터 비활성</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-1-22</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">현직 공무원 검색 0건 — 빈 상태 안내</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-1-24</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 검색 0건 — 빈 상태 안내</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-1-26</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">필터 미입력 → 검색 버튼 비활성</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-2-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">GNB 메뉴 오픈</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-2-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무 이력 관리 → 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-2-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무 이력 리포트 → 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-2-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">내 정보 → 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-2-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">구독 정보 → 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-2-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 멤버 관리 → 이동</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>HOME-TA-2-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">로그아웃 → 로그인 화면</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-2-17</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">미구독 → 세무 이력 메뉴 미표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-3-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">알림 목록 오픈</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>HOME-TA-3-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">법인 소속 초대 승인</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>HOME-TA-3-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">법인 소속 초대 거부</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-3-21</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">알림 0건 — 빈 상태 안내</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-3-22</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">새 알림 없음 → 레드닷 미표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-4-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">전체보기 목록 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>HOME-TA-4-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">뒤로가기 → 홈 복귀</td>
+    </tr></tbody>
+    </table>
+  </section>
+<section id="module-TA">
+    <div class="module-header pass">
+      <h2>TA — 세무대리인 찾기</h2>
+      <div class="module-meta">
+        자동화 21건 &nbsp;|&nbsp;
+        ✅ 21 &nbsp;
+        
+      </div>
+    </div>
+    <table class="tc-table">
+      <thead>
+        <tr><th>TC-ID</th><th>결과</th><th>설명</th></tr>
+      </thead>
+      <tbody><tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-0-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">비로그인 — 세무사 찾기 접근 가능</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-0-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">납세자 유료 — 세무사 찾기 전체 기능 접근</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-0-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">납세자 무료 — 세무사 찾기 접근</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-0-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 계정 — 세무사 찾기 접근 가능</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-1-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">목록 기본 접근 — 필터 영역 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-1-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">지역 선택 — 검색 결과 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-1-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인명 검색 — 결과 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-1-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">검색 결과 없음 — 빈 상태 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>TA-1-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">세무사 카드 클릭 → 프로필 상세 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-1-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">필터 초기화 버튼 동작</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>TA-1-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">공무원 출신 여부 필터 선택</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-1-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">전문 분야 필터 선택 — 상속·증여</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>TA-1-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">현직 공무원 탐색 탭 전환</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>TA-1-10</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">전직 공무원 찾기 탭 전환</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-1-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">검색 결과 페이지네이션 기본 — 10건</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>TA-1-12</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">필터 미입력 — 검색 버튼 비활성</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-1-13</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">결과 건수 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-2-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 프로필 기본 정보 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-2-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">이름/소속/지역/전문분야 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-2-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">전문 영역 태그 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-2-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">공무원 출신 여부 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-2-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">추천 세무사 — 공무원 출신 납세자 세무사 연결 정보</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-2-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">무료 납세자 — 프로필 기본 정보 접근 가능</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-2-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">근무 이력 섹션 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-2-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">실적 요약 섹션 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TA-2-21</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 0건 결과 — 에러 없이 빈 상태</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TA-2-22</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">구독 유도 팝업 (미구독 계정)</td>
+    </tr></tbody>
+    </table>
+  </section>
+<section id="module-GO">
+    <div class="module-header pass">
+      <h2>GO — 현직 공무원 탐색</h2>
+      <div class="module-meta">
+        자동화 20건 &nbsp;|&nbsp;
+        ✅ 20 &nbsp;
+        
+      </div>
+    </div>
+    <table class="tc-table">
+      <thead>
+        <tr><th>TC-ID</th><th>결과</th><th>설명</th></tr>
+      </thead>
+      <tbody><tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-0-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">미구독 — 현직 공무원 탐색 구독 유도</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-0-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">납세자 Pro — 현직 공무원 찾기 접근 / 공통 관계망 미제공</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-0-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 Pro — 현직 공무원 찾기 / 공통 관계망 제공</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-0-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 소유자 세무사 — 현직 공무원 탐색 접근</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-1-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">목록 초기 상태 — 필터 초기화 / 빈 결과</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-1-12</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">필터 입력 후 검색 — 조건 맞는 목록 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>GO-1-13</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">필터 초기화 버튼 동작</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-1-14</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">공무원 행 클릭 → 프로필 상세</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-1-24</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">전직 공무원 탭 전환 → 전직 공무원 화면</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-1-25</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 찾기 탭 전환 → 세무사 화면</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-1-31</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">페이지네이션 — 10건 기본</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-1-35</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">결과 건수 정확성 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-1-37</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">탐색 탭 — 현직 공무원 탭 활성 상태</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>GO-1-42</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">GNB 로고 클릭 → 홈 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-1-51</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">존재하지 않는 이름 검색 — 빈 상태 안내</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-1-54</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">납세자 Pro — 공통 관계망 미제공</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-2-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">공무원 프로필 상세 오픈</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-2-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">공무원 출신 세무사 — 관계망 찾기 버튼 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-2-15</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">추천 세무사 카드 정보 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-2-16</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">추천 세무사 건수 정확성</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-2-17</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">프로필 GNB 헤더 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>GO-2-22</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">추천 세무사 0건 — 빈 상태 또는 0건 표시</td>
+    </tr></tbody>
+    </table>
+  </section>
+<section id="module-EO">
+    <div class="module-header pass">
+      <h2>EO — 전직 공무원 찾기</h2>
+      <div class="module-meta">
+        자동화 15건 &nbsp;|&nbsp;
+        ✅ 15 &nbsp;
+        
+      </div>
+    </div>
+    <table class="tc-table">
+      <thead>
+        <tr><th>TC-ID</th><th>결과</th><th>설명</th></tr>
+      </thead>
+      <tbody><tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-0-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">미구독 — 전직 공무원 찾기 구독 유도</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-0-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">납세자 Pro — 전직 공무원 목록 접근</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-0-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 Pro — 전직 공무원 찾기 전체 기능</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-0-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">일반 세무사 Pro — 전직 공무원 찾기 접근</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-0-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 소유자 — 전직 공무원 찾기 접근</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-1-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">목록 기본 접근 — 필터 영역 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-1-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">이름으로 검색 — 결과 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-1-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">존재하지 않는 이름 검색 — 빈 상태 안내</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>EO-1-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">전직 공무원 행 클릭 → 프로필 상세</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>EO-1-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">필터 초기화 버튼 동작</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-1-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">소속 청서 필터 선택</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-1-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">필터 미입력 — 검색 버튼 비활성</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-1-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">결과 건수 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>EO-1-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">현직 공무원 탭 전환</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-1-10</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 찾기 탭 전환</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-1-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">페이지네이션 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>EO-2-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">전직 공무원 프로필 기본 정보 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-2-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">공통 관계망 분석 접근 (공무원 출신 세무사)</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EO-2-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">납세자 — 세무사 추천 정보 표시</td>
+    </tr></tbody>
+    </table>
+  </section>
+<section id="module-EI">
+    <div class="module-header pass">
+      <h2>EI — 전문 이력 관리</h2>
+      <div class="module-meta">
+        자동화 22건 &nbsp;|&nbsp;
+        ✅ 22 &nbsp;
+        
+      </div>
+    </div>
+    <table class="tc-table">
+      <thead>
+        <tr><th>TC-ID</th><th>결과</th><th>설명</th></tr>
+      </thead>
+      <tbody><tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-0-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">납세자 — 세무 이력 관리 접근 불가 (403)</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-0-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 Pro — 전문 이력 관리 전체 접근</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-0-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">일반 세무사 Pro — 전문 이력 관리 접근</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-1-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">기본 정보 탭 진입 — 화면 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-1-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">좌측 메뉴 — 기본 정보 활성 상태</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-1-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 자격증 번호 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-1-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">소개 메시지 입력 필드 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-1-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">전문 영역 선택 UI 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-1-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">납세자 노출 토글 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-1-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">근무지 지역 선택 UI 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-1-10</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">학력 사항 입력 UI 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>EI-1-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">소개 메시지 최대 글자 제한</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-1-12</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">좌측 메뉴 근무 이력 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-1-13</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">좌측 메뉴 실적 사례 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-1-14</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">좌측 메뉴 대외 전문 활동 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-2-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">근무 이력 탭 진입 — 세무사 근무 탭 기본 활성</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-2-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">일반 근무 업로드 버튼 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-2-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 근무 탭 / 국세 공무 탭 존재</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>EI-2-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">검증 진행중 탭 선택 → 목록 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>EI-2-31</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">10MB 초과 파일 업로드 → 에러</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>EI-2-32</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">허용되지 않는 형식 파일 → 에러</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-2-33</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">모든 탭 제출 건 없음 — 빈 상태 화면</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-3-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">실적 사례 탭 진입 — 세무조사 대응 탭 기본 활성</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>EI-3-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">조세불복 탭 선택 → 전환</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>EI-3-21</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">제목 50자 초과 입력 제한</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-4-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">대외 전문 활동 탭 진입 — 조세심판원 기본 활성</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>EI-4-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">국가 공인 자격 탭 선택</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>EI-4-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">강의 이력 탭 선택</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-4-31</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">모든 유형 제출 없음 — 빈 상태</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>EI-5-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">증빙 제출 직후 검증 대기 상태 전환</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>EI-5-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">반려 항목 재제출 후 검증 진행중 전환</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>EI-5-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">이의신청 제출 → 검토중 전환</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>EI-5-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">검증 상태 변경 알림 — 알림 목록에서 확인</td>
+    </tr></tbody>
+    </table>
+  </section>
+<section id="module-ER">
+    <div class="module-header pass">
+      <h2>ER — 전문 이력 리포트</h2>
+      <div class="module-meta">
+        자동화 14건 &nbsp;|&nbsp;
+        ✅ 14 &nbsp;
+        
+      </div>
+    </div>
+    <table class="tc-table">
+      <thead>
+        <tr><th>TC-ID</th><th>결과</th><th>설명</th></tr>
+      </thead>
+      <tbody><tr class="result-pass">
+      <td class="tc-id-cell"><code>ER-0-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 Pro — 개인 리포트 조회 가능</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>ER-0-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 소유자 세무사 — 개인+법인 리포트 탭 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>ER-0-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">팀 구성원 세무사 — 개인 리포트 접근</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>ER-0-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">납세자 — 세무 이력 리포트 메뉴 미노출/차단</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>ER-1-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">개인 리포트 기본 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>ER-1-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">PDF 저장 버튼 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>ER-1-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">링크 추출 버튼 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>ER-1-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">리포트 제목 — &quot;{이름} 프로필 리포트&quot; 형식</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>ER-1-12</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">업데이트 일시 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>ER-1-13</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무법인 미소속 세무사 — 개인 리포트 탭만</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>ER-1-15</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">기본 정보 섹션 콘텐츠 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>ER-2-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 리포트 기본 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>ER-2-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">법인 PDF 저장 버튼 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>ER-2-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">법인 링크 추출 버튼 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>ER-2-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 리포트 제목 — &quot;{법인명} 프로필 리포트&quot;</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>ER-2-13</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 기본 정보 섹션 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>ER-3-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">공유 링크 생성 후 URL 접근 — 리포트 콘텐츠 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>ER-3-21</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">유효하지 않은 공유 링크 접근 — 안내 화면</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>ER-3-22</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">비로그인 공유 링크 접근 — 리포트 표시</td>
+    </tr></tbody>
+    </table>
+  </section>
+<section id="module-SP">
+    <div class="module-header pass">
+      <h2>SP — 구독 관리</h2>
+      <div class="module-meta">
+        자동화 13건 &nbsp;|&nbsp;
+        ✅ 13 &nbsp;
+        
+      </div>
+    </div>
+    <table class="tc-table">
+      <thead>
+        <tr><th>TC-ID</th><th>결과</th><th>설명</th></tr>
+      </thead>
+      <tbody><tr class="result-pass">
+      <td class="tc-id-cell"><code>SP-0-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">납세자 유료 — 구독 관리 접근</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>SP-0-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">납세자 무료 — 구독 페이지 접근 (구독 유도)</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>SP-0-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사 Pro — 구독 관리 접근</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>SP-1-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">구독 현황 화면 — 현재 구독 정보 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>SP-1-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">현재 구독 플랜 이름 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>SP-1-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">구독 만료일 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>SP-1-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">구독 취소 버튼 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>SP-1-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">구독 취소 확인 팝업 → 취소 버튼으로 닫기</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>SP-1-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">구독 취소 처리 완료</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>SP-1-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">결제 내역 섹션 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>SP-1-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">결제 내역 건수 및 항목 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>SP-1-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">미구독 — 구독 유도 배너/버튼 표시</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>SP-1-12</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">구독 결제 처리 — 구독 시작</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>SP-2-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">멤버십 안내 페이지 접근</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>SP-2-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">멤버십 플랜 비교 표시</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>SP-2-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">구독 결제 화면 진행</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>SP-2-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">구독 결제 완료 후 Pro 상태 전환</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>SP-2-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">현재 구독 중 — 멤버십 배너 미표시</td>
+    </tr></tbody>
+    </table>
+  </section>
+<section id="module-TF">
+    <div class="module-header pass">
+      <h2>TF — 법인&amp;팀연동관리</h2>
+      <div class="module-meta">
+        자동화 32건 &nbsp;|&nbsp;
+        ✅ 32 &nbsp;
+        
+      </div>
+    </div>
+    <table class="tc-table">
+      <thead>
+        <tr><th>TC-ID</th><th>결과</th><th>설명</th></tr>
+      </thead>
+      <tbody><tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-0-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 소유자 세무사 — 연동 관리 탭 + 나의연동+멤버연동 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-0-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 소유자 비세무사 — 법인 멤버 관리 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-0-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무법인 관리자 세무사 — 연동관리+그룹관리 가능</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-0-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무법인 구성원 세무사 — 나의 연동 상태만 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-0-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">일반 이용자 — 법인 멤버 관리 메뉴 미노출</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-1-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">연동 관리 탭 활성 — 나의연동+멤버연동 표시</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>TF-1-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">초대 폼 — 이름·이메일 직접 입력</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-1-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">배정 그룹 드롭다운 — 그룹 목록 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-1-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">권한 선택 — 일반/관리자 선택 가능</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-1-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">초대 버튼 — 수락 대기중 상태 추가</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>TF-1-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">이름/이메일 검색 — 결과+초기화 버튼</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-1-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">연동 해제 — 해제 확인 모달 + 기본 플랜 전환</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-1-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">관리자 권한 회수 — 회수 확인 모달</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-1-10</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">전체 연동 해제 — 모든 멤버 접근 정지</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-1-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">나의 연동 영역 — 법인명·이름·역할 최상단 고정</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-1-12</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">페이지네이션 — 10명씩 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-1-13</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">초대 직후 수락 대기중 상태 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-1-14</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">미구독 소유자 — Team 플랜 구독 유도 안내 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-1-15</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">구독 취소 소유자 — 그룹 관리 비활성+초대 제거</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-1-21</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">미가입 이메일 초대 시도 — 초대 불가 안내</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-1-22</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">관리자가 소유자 연동 해제 시도 — 차단</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-1-23</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">미구독 소유자 — 구독하러 가기 → 구독 관리 이동</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-1-24</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">기구독 이메일 초대 — Team Plan 우선 적용</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>TF-2-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">그룹 관리 탭 — 법인 전체 선택 + 전체 멤버+그룹 트리 표시</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-2-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">그룹 추가 — 그룹명 입력 모달 + 트리 반영</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-2-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">하위 그룹 추가 — 상위 그룹 선택 + 모달</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-2-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">그룹명 변경 — 즉시 반영</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-2-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">그룹 삭제 — 하위 전부 삭제 + 멤버 미분류 전환</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-2-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">특정 그룹 선택 — 해당 그룹 소속 멤버 목록 표시</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-2-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">멤버 이동 — 이동 대상 그룹 선택 + 완료</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-2-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">이름/이메일 검색 — 그룹 내 결과 표시</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-2-09</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">멤버 소속 그룹 직접 변경</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-2-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">그룹 트리 순서 — 생성 시간순(오래된 것 상위)</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-2-12</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 전체 선택 — 멤버 정렬 확인</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-2-13</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">세무사/비세무사 혼재 — 세무사 태그+역할 구분 표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-2-14</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 전체 vs 그룹 선택 — 하단 버튼 구분</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-2-21</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">그룹 0개 — 빈 상태 안내</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-2-22</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">멤버 없는 그룹 선택 — 빈 상태 안내</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-2-23</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">동일 위계 내 같은 이름 그룹 추가 — 중복 불가 에러</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-2-24</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">3단계 하위 그룹에서 추가 시도 — 불가/버튼 미표시</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-3-01</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 정보 화면 — 기본 정보+계정 정보 표시</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-3-02</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">검색 노출 토글 ON/OFF — 노출/비노출</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-3-03</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">대표 번호/주소 변경 후 반영</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-3-04</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">대표 이미지 변경/삭제</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-3-05</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">대표 세무사 설정 — 법인 소속 세무사 목록 표시</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-3-06</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">이메일 변경 — 인증번호 입력 후 변경</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-3-07</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">비밀번호 변경</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-3-08</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">휴대폰 번호 변경 — 본인 인증 후 변경</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>TF-3-10</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">법인 계정 삭제 — 탈퇴 처리</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-3-11</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">수정 불가 필드 — 법인명·등록번호·개업일자</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-3-13</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">비세무사 소유자 — 대표 세무사 후보에 본인 미포함</td>
+    </tr>
+<tr class="result-manual">
+      <td class="tc-id-cell"><code>TF-3-21</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-manual">⏭️ 수동</span>
+      </td>
+      <td class="title-cell">잘못된 인증번호 입력 — 불일치 에러</td>
+    </tr>
+<tr class="result-skip">
+      <td class="tc-id-cell"><code>TF-3-22</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-skip">👤 스킵</span>
+      </td>
+      <td class="title-cell">유효하지 않은 비밀번호 입력 — 유효성 에러</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-3-23</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">법인 세무사 0명 — 대표 세무사 빈 상태 안내</td>
+    </tr>
+<tr class="result-pass">
+      <td class="tc-id-cell"><code>TF-3-24</code></td>
+      <td class="result-cell">
+        <span class="result-badge result-pass">✅ PASS</span>
+      </td>
+      <td class="title-cell">대표 이미지 미등록 — 빈 상태 안내</td>
+    </tr></tbody>
+    </table>
+  </section>
+
+  <hr class="section-divider">
+
+  <section id="manual-checks">
+    <h2>⏭️ 수동 검증 필요 목록 (46건)</h2>
+    <p class="manual-note">아래 항목은 OAuth, 이메일 인증, SMS, PG 결제, PDF 내용 등 자동화가 불가능하거나 권장되지 않는 케이스입니다. 사람이 직접 확인해야 합니다.</p>
+    <table class="tc-table">
+      <thead><tr><th>TC-ID</th><th>설명</th><th>수동 검증 이유</th></tr></thead>
+      <tbody>
+    <tr>
+      <td><code>AUTH-4-4-07</code></td>
+      <td>소셜 로그인 (카카오)</td>
+      <td class="reason-cell">OAuth 팝업 — Playwright 자동화 차단</td>
+    </tr>
+
+    <tr>
+      <td><code>AUTH-4-4-08</code></td>
+      <td>소셜 로그인 (구글)</td>
+      <td class="reason-cell">OAuth 팝업 — Playwright 자동화 차단</td>
+    </tr>
+
+    <tr>
+      <td><code>AUTH-4-5-05</code></td>
+      <td>이메일 인증 발송 확인</td>
+      <td class="reason-cell">외부 이메일 수신 확인 불가</td>
+    </tr>
+
+    <tr>
+      <td><code>AUTH-4-6-02</code></td>
+      <td>소셜 로그인 (카카오) 가입</td>
+      <td class="reason-cell">OAuth 팝업 차단</td>
+    </tr>
+
+    <tr>
+      <td><code>AUTH-4-6-03</code></td>
+      <td>소셜 로그인 (구글) 가입</td>
+      <td class="reason-cell">OAuth 팝업 차단</td>
+    </tr>
+
+    <tr>
+      <td><code>AUTH-4-6-07</code></td>
+      <td>본인인증 SMS 수신 확인</td>
+      <td class="reason-cell">SMS 수신 불가</td>
+    </tr>
+
+    <tr>
+      <td><code>AUTH-4-7-02</code></td>
+      <td>소셜 로그인 (카카오) 세무사 가입</td>
+      <td class="reason-cell">OAuth 팝업 차단</td>
+    </tr>
+
+    <tr>
+      <td><code>AUTH-4-7-04</code></td>
+      <td>세무사 이메일 인증 링크 확인</td>
+      <td class="reason-cell">외부 이메일 수신 불가</td>
+    </tr>
+
+    <tr>
+      <td><code>AUTH-4-8-02</code></td>
+      <td>소셜 로그인 (카카오) 법인 가입</td>
+      <td class="reason-cell">OAuth 팝업 차단</td>
+    </tr>
+
+    <tr>
+      <td><code>AUTH-4-8-04</code></td>
+      <td>법인 이메일 인증 링크 확인</td>
+      <td class="reason-cell">외부 이메일 수신 불가</td>
+    </tr>
+
+    <tr>
+      <td><code>AUTH-4-8-09</code></td>
+      <td>사업자등록번호 인증</td>
+      <td class="reason-cell">외부 인증 API 연동 확인 불가</td>
+    </tr>
+
+    <tr>
+      <td><code>EI-5-01</code></td>
+      <td>증빙 제출 직후 검증 대기 상태 전환</td>
+      <td class="reason-cell">관리자 검증 처리 필요</td>
+    </tr>
+
+    <tr>
+      <td><code>EI-5-03</code></td>
+      <td>반려 항목 재제출 후 검증 진행중 전환</td>
+      <td class="reason-cell">반려 상태 데이터 및 관리자 액션 필요</td>
+    </tr>
+
+    <tr>
+      <td><code>EI-5-04</code></td>
+      <td>이의신청 제출 → 검토중 전환</td>
+      <td class="reason-cell">반려 상태 필요</td>
+    </tr>
+
+    <tr>
+      <td><code>HOME-TA-3-06</code></td>
+      <td>법인 소속 초대 승인</td>
+      <td class="reason-cell">초대 알림이 실제 존재해야 하며, 계정 상태 변경됨</td>
+    </tr>
+
+    <tr>
+      <td><code>HOME-TA-3-07</code></td>
+      <td>법인 소속 초대 거부</td>
+      <td class="reason-cell">초대 알림이 실제 존재해야 함</td>
+    </tr>
+
+    <tr>
+      <td><code>HOME-TP-3-02</code></td>
+      <td>법인 소속 초대 승인</td>
+      <td class="reason-cell">초대 알림이 존재해야 하며, 현재 계정 상태 변경됨</td>
+    </tr>
+
+    <tr>
+      <td><code>HOME-TP-3-03</code></td>
+      <td>법인 소속 초대 거부</td>
+      <td class="reason-cell">초대 알림이 존재해야 함</td>
+    </tr>
+
+    <tr>
+      <td><code>HOME-TP-3-13</code></td>
+      <td>알림 자동 삭제 (1주 경과 후)</td>
+      <td class="reason-cell">시간 경과 조건 자동화 불가</td>
+    </tr>
+
+    <tr>
+      <td><code>MY-1-03</code></td>
+      <td>이메일 변경 처리 — 인증 완료</td>
+      <td class="reason-cell">외부 이메일 수신 확인 불가</td>
+    </tr>
+
+    <tr>
+      <td><code>MY-1-06</code></td>
+      <td>비밀번호 변경 처리 완료</td>
+      <td class="reason-cell">실제 비밀번호 변경 시 테스트 계정 손상 위험</td>
+    </tr>
+
+    <tr>
+      <td><code>MY-1-08</code></td>
+      <td>휴대폰 변경 — 본인인증 모달</td>
+      <td class="reason-cell">SMS 인증 수신 불가</td>
+    </tr>
+
+    <tr>
+      <td><code>MY-1-09</code></td>
+      <td>휴대폰 재인증 처리</td>
+      <td class="reason-cell">SMS 수신 불가</td>
+    </tr>
+
+    <tr>
+      <td><code>SP-1-06</code></td>
+      <td>구독 취소 처리 완료</td>
+      <td class="reason-cell">실제 구독 취소 처리 — PG 연동 및 계정 상태 변경</td>
+    </tr>
+
+    <tr>
+      <td><code>SP-1-12</code></td>
+      <td>구독 결제 처리 — 구독 시작</td>
+      <td class="reason-cell">PG 결제 연동 필요</td>
+    </tr>
+
+    <tr>
+      <td><code>SP-2-03</code></td>
+      <td>구독 결제 화면 진행</td>
+      <td class="reason-cell">PG 결제 연동 필요</td>
+    </tr>
+
+    <tr>
+      <td><code>SP-2-04</code></td>
+      <td>구독 결제 완료 후 Pro 상태 전환</td>
+      <td class="reason-cell">PG 결제 완료 처리</td>
+    </tr>
+
+    <tr>
+      <td><code>TA-2-22</code></td>
+      <td>구독 유도 팝업 (미구독 계정)</td>
+      <td class="reason-cell">구독 구매 처리 — PG 연동 필요</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-1-06</code></td>
+      <td>초대 버튼 — 수락 대기중 상태 추가</td>
+      <td class="reason-cell">초대 처리 후 대기 상태 검증 — 데이터 변경 포함</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-1-08</code></td>
+      <td>연동 해제 — 해제 확인 모달 + 기본 플랜 전환</td>
+      <td class="reason-cell">실제 연동 해제 — 데이터 변경 포함</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-1-09</code></td>
+      <td>관리자 권한 회수 — 회수 확인 모달</td>
+      <td class="reason-cell">권한 변경 — 데이터 변경 포함</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-1-10</code></td>
+      <td>전체 연동 해제 — 모든 멤버 접근 정지</td>
+      <td class="reason-cell">전체 데이터 변경 — 위험 작업</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-2-02</code></td>
+      <td>그룹 추가 — 그룹명 입력 모달 + 트리 반영</td>
+      <td class="reason-cell">그룹 데이터 변경 포함</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-2-03</code></td>
+      <td>하위 그룹 추가 — 상위 그룹 선택 + 모달</td>
+      <td class="reason-cell">그룹 데이터 변경 포함</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-2-04</code></td>
+      <td>그룹명 변경 — 즉시 반영</td>
+      <td class="reason-cell">그룹 데이터 변경 포함</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-2-05</code></td>
+      <td>그룹 삭제 — 하위 전부 삭제 + 멤버 미분류 전환</td>
+      <td class="reason-cell">그룹 삭제 — 데이터 변경 포함</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-2-07</code></td>
+      <td>멤버 이동 — 이동 대상 그룹 선택 + 완료</td>
+      <td class="reason-cell">멤버 이동 — 데이터 변경 포함</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-2-09</code></td>
+      <td>멤버 소속 그룹 직접 변경</td>
+      <td class="reason-cell">멤버 그룹 변경 — 데이터 변경 포함</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-2-23</code></td>
+      <td>동일 위계 내 같은 이름 그룹 추가 — 중복 불가 에러</td>
+      <td class="reason-cell">그룹 생성 시도 — 데이터 변경 포함</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-3-02</code></td>
+      <td>검색 노출 토글 ON/OFF — 노출/비노출</td>
+      <td class="reason-cell">토글 변경 후 검색 노출 상태 검증 — 데이터 변경 포함</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-3-03</code></td>
+      <td>대표 번호/주소 변경 후 반영</td>
+      <td class="reason-cell">데이터 변경 포함</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-3-04</code></td>
+      <td>대표 이미지 변경/삭제</td>
+      <td class="reason-cell">파일 업로드 — 데이터 변경 포함</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-3-06</code></td>
+      <td>이메일 변경 — 인증번호 입력 후 변경</td>
+      <td class="reason-cell">이메일 인증 — 외부 메일함 접근 필요</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-3-07</code></td>
+      <td>비밀번호 변경</td>
+      <td class="reason-cell">계정 정보 변경 포함</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-3-08</code></td>
+      <td>휴대폰 번호 변경 — 본인 인증 후 변경</td>
+      <td class="reason-cell">SMS 인증 필요</td>
+    </tr>
+
+    <tr>
+      <td><code>TF-3-21</code></td>
+      <td>잘못된 인증번호 입력 — 불일치 에러</td>
+      <td class="reason-cell">이메일 인증 흐름 필요</td>
+    </tr></tbody>
+    </table>
+  </section>
+
+  <section id="skip-list">
+    <h2>👤 스킵 목록 (59건)</h2>
+    <p class="manual-note">명시적 스킵은 현재 기능 미구현, 세션 파괴 위험, 환경 불안정 등의 이유로 비활성화된 케이스입니다. 조건부 스킵은 실행 시점에 UI 요소가 없을 경우 자동으로 건너뛰는 케이스입니다.</p>
+    <table class="tc-table">
+      <thead><tr><th>TC-ID</th><th>설명</th><th>스킵 이유</th></tr></thead>
+      <tbody><tr class="group-header"><td colspan="3">📌 명시적 스킵 (24건) — 테스트 자체가 비활성화됨</td></tr>
+      <tr>
+        <td><code>AUTH-4-6-01</code></td>
+        <td>신규 일반 개인 회원가입 전체 플로우</td>
+        <td class="reason-cell">사람이 수행 — 신규 계정 생성 후 정리 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-6-08</code></td>
+        <td>신규 가입 완료 후 홈 이동</td>
+        <td class="reason-cell">신규 계정 생성 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-6-09</code></td>
+        <td>약관 동의 화면 표시</td>
+        <td class="reason-cell">가입 플로우 진행 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-6-10</code></td>
+        <td>필수 약관 미동의 → 버튼 비활성</td>
+        <td class="reason-cell">가입 플로우 진행 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-7-01</code></td>
+        <td>세무사 신규 회원가입 전체 플로우</td>
+        <td class="reason-cell">신규 계정 생성 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-7-03</code></td>
+        <td>세무사 등록번호 입력</td>
+        <td class="reason-cell">신규 가입 플로우 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-7-05</code></td>
+        <td>세무사 가입 완료 후 세무사 홈 이동</td>
+        <td class="reason-cell">신규 계정 생성 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-7-06</code></td>
+        <td>세무사 약관 동의 화면</td>
+        <td class="reason-cell">가입 플로우 진행 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-8-01</code></td>
+        <td>세무법인 신규 회원가입 전체 플로우</td>
+        <td class="reason-cell">신규 계정 생성 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-8-03</code></td>
+        <td>법인명/사업자번호 입력</td>
+        <td class="reason-cell">신규 가입 플로우 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-8-05</code></td>
+        <td>법인 가입 완료 후 홈 이동</td>
+        <td class="reason-cell">신규 계정 생성 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-8-06</code></td>
+        <td>법인 약관 동의 화면</td>
+        <td class="reason-cell">가입 플로우 진행 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-8-07</code></td>
+        <td>법인 대표자 정보 입력</td>
+        <td class="reason-cell">신규 가입 플로우 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-8-08</code></td>
+        <td>세무사 소속 연결</td>
+        <td class="reason-cell">신규 가입 플로우 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-8-10</code></td>
+        <td>법인 구성원 초대 발송</td>
+        <td class="reason-cell">초대 이메일 발송으로 스테이징 오염 가능</td>
+      </tr>
+
+      <tr>
+        <td><code>ER-1-05</code></td>
+        <td>PDF 저장 버튼 표시</td>
+        <td class="reason-cell">UI에 PDF 버튼 미구현 — 릴리즈 후 재확인 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>ER-1-06</code></td>
+        <td>링크 추출 버튼 표시</td>
+        <td class="reason-cell">UI에 링크 공유 버튼 미구현 — 릴리즈 후 재확인 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>ER-2-05</code></td>
+        <td>법인 PDF 저장 버튼 표시</td>
+        <td class="reason-cell">UI에 PDF 버튼 미구현 — 릴리즈 후 재확인 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>ER-2-06</code></td>
+        <td>법인 링크 추출 버튼 표시</td>
+        <td class="reason-cell">UI에 링크 공유 버튼 미구현 — 릴리즈 후 재확인 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>HOME-TA-2-08</code></td>
+        <td>로그아웃 → 로그인 화면</td>
+        <td class="reason-cell">실제 로그아웃 시 다른 테스트 계정 세션 무효화 위험</td>
+      </tr>
+
+      <tr>
+        <td><code>HOME-TP-1-06</code></td>
+        <td>세무법인 자동완성 — 입력 시 목록 표시</td>
+        <td class="reason-cell">자동완성 드롭다운 동작 불안정 — 수동 확인 필요</td>
+      </tr>
+
+      <tr>
+        <td><code>HOME-TP-2-10</code></td>
+        <td>로그아웃 → 즉시 로그아웃</td>
+        <td class="reason-cell">실제 로그아웃 시 다른 테스트 계정 세션 무효화 위험</td>
+      </tr>
+
+      <tr>
+        <td><code>MY-1-18</code></td>
+        <td>회원탈퇴 처리</td>
+        <td class="reason-cell">계정 영구 삭제 위험</td>
+      </tr>
+
+      <tr>
+        <td><code>TF-3-10</code></td>
+        <td>법인 계정 삭제 — 탈퇴 처리</td>
+        <td class="reason-cell">계정 삭제 — 되돌릴 수 없는 작업</td>
+      </tr><tr class="group-header"><td colspan="3">🔀 조건부 스킵 (35건) — UI 요소 미노출 등 런타임 조건에 따라 스킵됨</td></tr>
+      <tr>
+        <td><code>AUTH-4-4-11</code></td>
+        <td>비밀번호 보기/숨기기 토글</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-5-02</code></td>
+        <td>납세자 유형 선택 가능</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-6-04</code></td>
+        <td>이메일 중복 확인 — 이미 사용중인 이메일 에러</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-6-05</code></td>
+        <td>비밀번호 유효성 규칙 미충족 → 에러</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>AUTH-4-6-06</code></td>
+        <td>비밀번호 확인 불일치 → 에러</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>EI-1-11</code></td>
+        <td>소개 메시지 최대 글자 제한</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>EI-2-09</code></td>
+        <td>검증 진행중 탭 선택 → 목록 표시</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>EI-2-31</code></td>
+        <td>10MB 초과 파일 업로드 → 에러</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>EI-2-32</code></td>
+        <td>허용되지 않는 형식 파일 → 에러</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>EI-3-03</code></td>
+        <td>조세불복 탭 선택 → 전환</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>EI-3-21</code></td>
+        <td>제목 50자 초과 입력 제한</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>EI-4-03</code></td>
+        <td>국가 공인 자격 탭 선택</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>EI-4-04</code></td>
+        <td>강의 이력 탭 선택</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>EO-1-04</code></td>
+        <td>전직 공무원 행 클릭 → 프로필 상세</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>EO-1-05</code></td>
+        <td>필터 초기화 버튼 동작</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>EO-1-09</code></td>
+        <td>현직 공무원 탭 전환</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>EO-2-01</code></td>
+        <td>전직 공무원 프로필 기본 정보 표시</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>ER-3-01</code></td>
+        <td>공유 링크 생성 후 URL 접근 — 리포트 콘텐츠 표시</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>GO-1-13</code></td>
+        <td>필터 초기화 버튼 동작</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>GO-1-42</code></td>
+        <td>GNB 로고 클릭 → 홈 이동</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>MY-1-07</code></td>
+        <td>비밀번호 변경 취소 → 모달 닫힘</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>MY-1-10</code></td>
+        <td>휴대폰 변경 취소</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>MY-1-19</code></td>
+        <td>회원탈퇴 취소 → 팝업 닫힘</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>MY-1-33</code></td>
+        <td>잘못된 인증번호 입력 → 에러 표시</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>MY-1-38</code></td>
+        <td>이메일 유효성 검증</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>SP-1-05</code></td>
+        <td>구독 취소 확인 팝업 → 취소 버튼으로 닫기</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>TA-1-05</code></td>
+        <td>세무사 카드 클릭 → 프로필 상세 이동</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>TA-1-07</code></td>
+        <td>공무원 출신 여부 필터 선택</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>TA-1-09</code></td>
+        <td>현직 공무원 탐색 탭 전환</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>TA-1-10</code></td>
+        <td>전직 공무원 찾기 탭 전환</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>TA-1-12</code></td>
+        <td>필터 미입력 — 검색 버튼 비활성</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>TF-1-03</code></td>
+        <td>초대 폼 — 이름·이메일 직접 입력</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>TF-1-07</code></td>
+        <td>이름/이메일 검색 — 결과+초기화 버튼</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>TF-2-01</code></td>
+        <td>그룹 관리 탭 — 법인 전체 선택 + 전체 멤버+그룹 트리 표시</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr>
+
+      <tr>
+        <td><code>TF-3-22</code></td>
+        <td>유효하지 않은 비밀번호 입력 — 유효성 에러</td>
+        <td class="reason-cell">조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵</td>
+      </tr></tbody>
+    </table>
+  </section>
+
+</div>
+</body>
+</html>

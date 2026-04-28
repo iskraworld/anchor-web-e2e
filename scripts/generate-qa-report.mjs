@@ -5,8 +5,8 @@
  * 사용: node scripts/generate-qa-report.mjs [결과 파일 경로]
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { resolve, dirname } from 'path';
+import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
+import { resolve, dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
@@ -23,10 +23,57 @@ if (!existsSync(jsonPath)) {
 
 const data = JSON.parse(readFileSync(jsonPath, 'utf-8'));
 
-// ── TC-ID 파서 ────────────────────────────────────────────────────────────────
+// ── docs/qa 기준 총 TC-ID 수 (실제 파일 파싱 기준) ────────────────────────────
+const DOCS_COUNTS = {
+  'AUTH': 104, 'EI': 119, 'EO': 69, 'ER': 67, 'GO': 73,
+  'HOME-TA': 97, 'HOME-TP': 96, 'MY': 50, 'SP': 69, 'TA': 65, 'TF': 63,
+};
+const DOCS_TOTAL = Object.values(DOCS_COUNTS).reduce((a, b) => a + b, 0);
 
-// [TC-ID], [TC-ID][M], [TC-ID][S] 형태에서 TC-ID 추출
-const TC_RE = /^\[([A-Z][A-Z0-9]+-[\d-]+)\](\[M\]|\[S\])?/;
+// ── spec 파일 파싱 — test.skip() 이유 추출 ───────────────────────────────────
+
+function parseSpecReasons(specDir) {
+  const reasons = new Map(); // tcId → reason string
+
+  function readDir(dir) {
+    if (!existsSync(dir)) return;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) readDir(full);
+      else if (entry.name.endsWith('.spec.ts')) parseSpec(full);
+    }
+  }
+
+  function parseSpec(filePath) {
+    const lines = readFileSync(filePath, 'utf-8').split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      // Match: test.skip('[TC-ID...] title', — handles HOME-TA/HOME-TP compound prefixes
+      const m = line.match(/test\.skip\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\][^'"]*)['"]/);
+      if (!m) continue;
+      const tcId = m[2];
+      // Look for first // comment in next 6 lines (inside body)
+      let reason = '';
+      for (let j = i + 1; j < Math.min(i + 7, lines.length); j++) {
+        if (lines[j].includes('});') || lines[j].match(/^\s*}\s*\);\s*$/)) break;
+        const cm = lines[j].match(/\/\/\s*(.+)/);
+        if (cm) { reason = cm[1].trim(); break; }
+      }
+      // Clean MANUAL:/SKIP: prefixes
+      reason = reason.replace(/^MANUAL:\s*/i, '').replace(/^SKIP:\s*/i, '');
+      reasons.set(tcId, reason || '사유 미기재');
+    }
+  }
+
+  readDir(specDir);
+  return reasons;
+}
+
+const specReasons = parseSpecReasons(resolve(root, 'tests/qa'));
+
+// ── TC-ID 파서 ────────────────────────────────────────────────────────────────
+// HOME-TA / HOME-TP 같은 복합 prefix 지원 — (?:-[A-Z]+)* 추가
+const TC_RE = /^\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d-]+)\](\[M\]|\[S\])?/;
 
 function parseTcId(title) {
   const m = title.match(TC_RE);
@@ -34,9 +81,10 @@ function parseTcId(title) {
   return { id: m[1], tag: m[2] ?? '' };
 }
 
-// 모듈명 추출 (AUTH-4-4-01 → AUTH)
 function moduleOf(tcId) {
-  return tcId.split('-')[0];
+  // HOME-TA / HOME-TP 먼저 체크 (단순 split 시 HOME만 남음)
+  const m = tcId.match(/^(HOME-TA|HOME-TP|[A-Z]+)/);
+  return m ? m[1] : tcId.split('-')[0];
 }
 
 // ── 결과 수집 ─────────────────────────────────────────────────────────────────
@@ -61,21 +109,20 @@ const allSpecs = [];
 
 for (const fileSuite of data.suites ?? []) {
   const file = fileSuite.file ?? fileSuite.title ?? '';
-  // qa 테스트만 처리
   if (!file.includes('qa/') && !file.includes('qa\\')) continue;
-  const specs = collectSpecs(fileSuite, file);
-  allSpecs.push(...specs);
+  allSpecs.push(...collectSpecs(fileSuite, file));
 }
 
 // ── TC-ID 매핑 ────────────────────────────────────────────────────────────────
 
-const tcMap = new Map(); // tcId → { id, tag, title, status, error, file }
+const tcMap = new Map();
 
 for (const spec of allSpecs) {
   const parsed = parseTcId(spec.title);
   if (!parsed) continue;
   const { id, tag } = parsed;
-  tcMap.set(id, { id, tag, title: spec.title, status: spec.status, error: spec.error, file: spec.file });
+  const reason = specReasons.get(id) ?? '';
+  tcMap.set(id, { id, tag, title: spec.title, status: spec.status, error: spec.error, file: spec.file, reason });
 }
 
 // ── 모듈별 그룹화 ─────────────────────────────────────────────────────────────
@@ -104,7 +151,6 @@ for (const [, tc] of tcMap) {
   byModule.get(mod).push(tc);
 }
 
-// 모듈 내 TC-ID 정렬
 for (const [, tcs] of byModule) {
   tcs.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true, sensitivity: 'base' }));
 }
@@ -128,6 +174,13 @@ function resultLabel(result) {
   return { pass: 'PASS', fail: 'FAIL', manual: '수동', skip: '스킵', unknown: '?' }[result] ?? '?';
 }
 
+// 스킵 이유 분류
+function skipReasonLabel(tc) {
+  if (tc.reason) return tc.reason;
+  if (tc.status === 'skipped') return '조건부 스킵 — UI 요소 미노출 또는 기능 미제공 시 자동 스킵';
+  return '사유 미기재';
+}
+
 // ── 집계 ──────────────────────────────────────────────────────────────────────
 
 const now = new Date().toLocaleString('ko-KR', {
@@ -144,8 +197,9 @@ const totalManual = allTcs.filter(t => classifyResult(t) === 'manual').length;
 const totalSkip   = allTcs.filter(t => classifyResult(t) === 'skip').length;
 const autoTotal   = totalAll - totalManual - totalSkip;
 const overallStatus = totalFail > 0 ? 'FAIL' : 'PASS';
+const coveragePct = Math.round((totalAll / DOCS_TOTAL) * 100);
 
-// ── HTML 생성 ─────────────────────────────────────────────────────────────────
+// ── HTML 생성 헬퍼 ────────────────────────────────────────────────────────────
 
 function escHtml(str) {
   if (!str) return '';
@@ -157,9 +211,64 @@ function escHtml(str) {
 }
 
 function shortTitle(title) {
-  // TC-ID 및 태그 부분 제거, 설명만 남기기
   return title.replace(/^\[[^\]]+\](\[M\]|\[S\])?\s*/, '');
 }
+
+// ── 커버리지 표 ───────────────────────────────────────────────────────────────
+
+function coverageTable() {
+  const rows = moduleOrder.map(mod => {
+    const tcs = byModule.get(mod) ?? [];
+    const docsTotal = DOCS_COUNTS[mod] ?? 0;
+    const impl = tcs.length;
+    const notImpl = Math.max(0, docsTotal - impl);
+    const pct = docsTotal > 0 ? Math.round((impl / docsTotal) * 100) : 0;
+    const barColor = pct >= 70 ? '#16a34a' : pct >= 40 ? '#d97706' : '#dc2626';
+    return `<tr>
+      <td><a href="#module-${mod}">${mod}</a></td>
+      <td class="num">${docsTotal}</td>
+      <td class="num pass-cell">${impl}</td>
+      <td class="num skip-cell">${notImpl > 0 ? notImpl : '—'}</td>
+      <td class="num">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
+            <div style="width:${pct}%;height:100%;background:${barColor};"></div>
+          </div>
+          <span style="font-size:0.75rem;color:${barColor};font-weight:600;">${pct}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('\n');
+
+  const totalNotImpl = DOCS_TOTAL - totalAll;
+  return `<section id="coverage">
+    <h2 style="font-size:1rem;font-weight:700;padding:12px 16px;background:#f3f4f6;border:1px solid #e5e7eb;border-bottom:none;border-radius:8px 8px 0 0;">
+      📊 자동화 커버리지 — docs/qa 기준 ${DOCS_TOTAL}건 중 ${totalAll}건 구현 (${coveragePct}%)
+    </h2>
+    <div style="padding:10px 16px;font-size:0.82rem;color:#6b7280;background:#fffbeb;border:1px solid #fcd34d;border-bottom:none;">
+      ⚠️ 미구현 ${totalNotImpl}건은 docs/qa에 정의되어 있으나 아직 자동화 스펙 파일에 구현되지 않은 TC입니다. 우선순위에 따라 순차 구현 예정입니다.
+    </div>
+    <table class="tc-table" style="border-radius:0 0 8px 8px;">
+      <thead>
+        <tr><th>모듈</th><th class="num">docs 총계</th><th class="num">구현</th><th class="num">미구현</th><th>커버리지</th></tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+      <tfoot>
+        <tr style="font-weight:700;background:#f9fafb;">
+          <td>합계</td>
+          <td class="num">${DOCS_TOTAL}</td>
+          <td class="num pass-cell">${totalAll}</td>
+          <td class="num skip-cell">${totalNotImpl}</td>
+          <td><span style="font-size:0.8rem;font-weight:700;color:${coveragePct >= 70 ? '#16a34a' : '#d97706'};">${coveragePct}%</span></td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>`;
+}
+
+// ── 모듈 요약 표 행 ──────────────────────────────────────────────────────────
 
 function summaryRows() {
   return moduleOrder.map(mod => {
@@ -181,6 +290,8 @@ function summaryRows() {
   }).join('\n');
 }
 
+// ── 모듈별 TC 상세 섹션 ───────────────────────────────────────────────────────
+
 function moduleSection(mod) {
   const tcs = byModule.get(mod) ?? [];
   if (!tcs.length) return '';
@@ -193,7 +304,7 @@ function moduleSection(mod) {
   const rows = tcs.map(tc => {
     const result = classifyResult(tc);
     const icon = resultIcon(result);
-    const label = resultLabel(result);
+    const lbl = resultLabel(result);
     const rowCls = `result-${result}`;
     const errorHtml = tc.error
       ? `<div class="error-msg">${escHtml(tc.error)}</div>`
@@ -201,7 +312,7 @@ function moduleSection(mod) {
     return `<tr class="${rowCls}">
       <td class="tc-id-cell"><code>${escHtml(tc.id)}</code></td>
       <td class="result-cell">
-        <span class="result-badge result-${result}">${icon} ${label}</span>
+        <span class="result-badge result-${result}">${icon} ${lbl}</span>
       </td>
       <td class="title-cell">${escHtml(shortTitle(tc.title))}${errorHtml}</td>
     </tr>`;
@@ -225,6 +336,8 @@ function moduleSection(mod) {
   </section>`;
 }
 
+// ── 수동 검증 필요 목록 ───────────────────────────────────────────────────────
+
 function manualTable() {
   const manuals = allTcs.filter(t => classifyResult(t) === 'manual');
   if (!manuals.length) return '';
@@ -232,16 +345,58 @@ function manualTable() {
     <tr>
       <td><code>${escHtml(tc.id)}</code></td>
       <td>${escHtml(shortTitle(tc.title))}</td>
+      <td class="reason-cell">${escHtml(tc.reason || '수동 검증 필요 — 자동화 불가 영역')}</td>
     </tr>`).join('\n');
   return `<section id="manual-checks">
     <h2>⏭️ 수동 검증 필요 목록 (${manuals.length}건)</h2>
     <p class="manual-note">아래 항목은 OAuth, 이메일 인증, SMS, PG 결제, PDF 내용 등 자동화가 불가능하거나 권장되지 않는 케이스입니다. 사람이 직접 확인해야 합니다.</p>
     <table class="tc-table">
-      <thead><tr><th>TC-ID</th><th>설명</th></tr></thead>
+      <thead><tr><th>TC-ID</th><th>설명</th><th>수동 검증 이유</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
   </section>`;
 }
+
+// ── 스킵 목록 ─────────────────────────────────────────────────────────────────
+
+function skipTable() {
+  const skips = allTcs.filter(t => classifyResult(t) === 'skip');
+  if (!skips.length) return '';
+
+  // 분류: 명시적 스킵 vs 조건부 스킵
+  const explicit = skips.filter(t => t.reason);
+  const conditional = skips.filter(t => !t.reason);
+
+  function skipRows(tcs, defaultReason) {
+    return tcs.map(tc => `
+      <tr>
+        <td><code>${escHtml(tc.id)}</code></td>
+        <td>${escHtml(shortTitle(tc.title))}</td>
+        <td class="reason-cell">${escHtml(tc.reason || defaultReason)}</td>
+      </tr>`).join('\n');
+  }
+
+  let body = '';
+  if (explicit.length) {
+    body += `<tr class="group-header"><td colspan="3">📌 명시적 스킵 (${explicit.length}건) — 테스트 자체가 비활성화됨</td></tr>`;
+    body += skipRows(explicit, '');
+  }
+  if (conditional.length) {
+    body += `<tr class="group-header"><td colspan="3">🔀 조건부 스킵 (${conditional.length}건) — UI 요소 미노출 등 런타임 조건에 따라 스킵됨</td></tr>`;
+    body += skipRows(conditional, '조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵');
+  }
+
+  return `<section id="skip-list">
+    <h2>👤 스킵 목록 (${skips.length}건)</h2>
+    <p class="manual-note">명시적 스킵은 현재 기능 미구현, 세션 파괴 위험, 환경 불안정 등의 이유로 비활성화된 케이스입니다. 조건부 스킵은 실행 시점에 UI 요소가 없을 경우 자동으로 건너뛰는 케이스입니다.</p>
+    <table class="tc-table">
+      <thead><tr><th>TC-ID</th><th>설명</th><th>스킵 이유</th></tr></thead>
+      <tbody>${body}</tbody>
+    </table>
+  </section>`;
+}
+
+// ── 실패 상세 ─────────────────────────────────────────────────────────────────
 
 function failDetails() {
   const failed = allTcs.filter(t => classifyResult(t) === 'fail');
@@ -261,6 +416,8 @@ function failDetails() {
   </section>`;
 }
 
+// ── HTML 전체 ─────────────────────────────────────────────────────────────────
+
 const html = `<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -278,7 +435,6 @@ const html = `<!DOCTYPE html>
          color: var(--text); background: #fff; line-height: 1.6; }
   .container { max-width: 1080px; margin: 0 auto; padding: 32px 24px; }
 
-  /* header */
   header { display: flex; align-items: flex-start; justify-content: space-between;
            margin-bottom: 32px; flex-wrap: wrap; gap: 12px; }
   header h1 { font-size: 1.7rem; font-weight: 800; }
@@ -293,7 +449,6 @@ const html = `<!DOCTYPE html>
                  border-radius: 6px; text-decoration: none; font-size: 0.82rem;
                  font-weight: 500; }
 
-  /* big numbers */
   .big-numbers { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
   .big-num { flex: 1; min-width: 120px; padding: 16px 20px; border-radius: 10px;
              border: 1px solid var(--border); text-align: center; }
@@ -308,13 +463,11 @@ const html = `<!DOCTYPE html>
   .big-num.skip { background: var(--skip-bg); }
   .big-num.skip .num { color: var(--skip); }
 
-  /* nav */
   .module-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 28px; }
   .module-nav a { padding: 4px 12px; border: 1px solid var(--border); border-radius: 20px;
                   text-decoration: none; color: var(--text); font-size: 0.8rem; }
   .module-nav a:hover { background: var(--code-bg); }
 
-  /* summary table */
   .summary-wrap { overflow-x: auto; margin-bottom: 36px; }
   .summary-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
   .summary-table th { padding: 9px 12px; text-align: left; color: var(--muted);
@@ -333,7 +486,6 @@ const html = `<!DOCTYPE html>
   .manual-cell { color: var(--manual); }
   .skip-cell { color: var(--skip); }
 
-  /* module section */
   section { margin-bottom: 36px; }
   .module-header { display: flex; align-items: center; justify-content: space-between;
                    padding: 12px 16px; border-radius: 8px 8px 0 0;
@@ -342,8 +494,6 @@ const html = `<!DOCTYPE html>
   .module-header.pass { background: var(--pass-bg); border-color: #86efac; }
   .module-header h2 { font-size: 1rem; font-weight: 700; }
   .module-meta { font-size: 0.8rem; color: var(--muted); }
-  section#fail-details { }
-  section#manual-checks { }
   section h2 { font-size: 1rem; font-weight: 700; padding: 12px 16px;
                background: var(--code-bg); border: 1px solid var(--border);
                border-bottom: none; border-radius: 8px 8px 0 0; }
@@ -351,7 +501,6 @@ const html = `<!DOCTYPE html>
                  background: var(--manual-bg); border: 1px solid #fcd34d;
                  border-bottom: none; }
 
-  /* tc table */
   .tc-table { width: 100%; border-collapse: collapse; font-size: 0.85rem;
               border: 1px solid var(--border); border-radius: 0 0 8px 8px;
               overflow: hidden; }
@@ -363,15 +512,17 @@ const html = `<!DOCTYPE html>
   .tc-table tr:last-child td { border-bottom: none; }
   .tc-table tr.result-fail td { background: #fff5f5; }
   .tc-table tr.result-skip td, .tc-table tr.result-manual td { color: var(--muted); }
+  .tc-table tr.group-header td { background: #f3f4f6; font-size: 0.78rem; font-weight: 600;
+                                  color: var(--muted); padding: 6px 12px; }
   .tc-id-cell { width: 130px; }
   .result-cell { width: 100px; white-space: nowrap; }
+  .reason-cell { font-size: 0.8rem; color: #374151; max-width: 320px; }
   .title-cell { }
   code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem;
          background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
   .error-msg { font-size: 0.78rem; color: var(--fail); margin-top: 4px;
                font-family: 'SF Mono', monospace; word-break: break-all; }
 
-  /* result badge */
   .result-badge { display: inline-block; padding: 2px 8px; border-radius: 4px;
                   font-size: 0.75rem; font-weight: 600; }
   .result-pass   { background: var(--pass-bg); color: var(--pass); }
@@ -379,11 +530,8 @@ const html = `<!DOCTYPE html>
   .result-manual { background: var(--manual-bg); color: var(--manual); }
   .result-skip   { background: var(--skip-bg); color: var(--skip); }
 
-  /* fail section */
   .fail-section h2 { background: var(--fail-bg); border-color: #fca5a5; }
   .fail-section .tc-table { border-color: #fca5a5; }
-
-  /* divider */
   hr.section-divider { border: none; border-top: 2px solid var(--border); margin: 40px 0; }
 </style>
 </head>
@@ -394,6 +542,7 @@ const html = `<!DOCTYPE html>
     <div>
       <h1>Anchor QA 결과 리포트</h1>
       <div class="meta">실행일시: ${now} &nbsp;|&nbsp; 자동화 ${autoTotal}건 / 수동 ${totalManual}건 / 스킵 ${totalSkip}건</div>
+      <div class="meta">docs/qa 기준 ${DOCS_TOTAL}건 중 ${totalAll}건 구현 (커버리지 ${coveragePct}%)</div>
     </div>
     <div class="header-links">
       <span class="badge-status ${overallStatus}">${overallStatus} ${overallStatus === 'PASS' ? '✓' : '✗'}</span>
@@ -402,7 +551,6 @@ const html = `<!DOCTYPE html>
     </div>
   </header>
 
-  <!-- 요약 숫자 -->
   <div class="big-numbers">
     <div class="big-num pass"><div class="num">${totalPass}</div><div class="lbl">✅ PASS</div></div>
     <div class="big-num ${totalFail > 0 ? 'fail' : 'skip'}"><div class="num">${totalFail}</div><div class="lbl">❌ FAIL</div></div>
@@ -410,14 +558,18 @@ const html = `<!DOCTYPE html>
     <div class="big-num skip"><div class="num">${totalSkip}</div><div class="lbl">👤 스킵</div></div>
   </div>
 
-  <!-- 모듈 바로가기 -->
   <div class="module-nav">
+    <a href="#coverage">📊 커버리지</a>
     ${moduleOrder.map(m => byModule.get(m)?.length ? `<a href="#module-${m}">${m}</a>` : '').join('')}
     ${totalManual > 0 ? '<a href="#manual-checks">⏭️ 수동</a>' : ''}
+    ${totalSkip > 0 ? '<a href="#skip-list">👤 스킵</a>' : ''}
     ${totalFail > 0 ? '<a href="#fail-details">❌ 실패</a>' : ''}
   </div>
 
-  <!-- 모듈 요약 표 -->
+  ${coverageTable()}
+
+  <hr class="section-divider">
+
   <div class="summary-wrap">
     <table class="summary-table">
       <thead>
@@ -443,12 +595,13 @@ const html = `<!DOCTYPE html>
 
   <hr class="section-divider">
 
-  <!-- 모듈별 TC-ID 결과 표 -->
   ${moduleOrder.map(mod => moduleSection(mod)).join('\n')}
 
   <hr class="section-divider">
 
   ${manualTable()}
+
+  ${skipTable()}
 
 </div>
 </body>
@@ -457,4 +610,6 @@ const html = `<!DOCTYPE html>
 writeFileSync(htmlOut, html, 'utf-8');
 
 console.log(`✅ QA 리포트 → ${htmlOut}`);
-console.log(`   TC-ID 총 ${totalAll}건: PASS ${totalPass} | FAIL ${totalFail} | 수동 ${totalManual} | 스킵 ${totalSkip}`);
+console.log(`   TC-ID 총 ${totalAll}건 (docs/qa ${DOCS_TOTAL}건 기준 커버리지 ${coveragePct}%)`);
+console.log(`   PASS ${totalPass} | FAIL ${totalFail} | 수동 ${totalManual} | 스킵 ${totalSkip}`);
+console.log(`   미구현 ${DOCS_TOTAL - totalAll}건 — 순차 구현 필요`);

@@ -140,8 +140,8 @@ test.describe('ER — 전문이력리포트', () => {
       }
     });
 
-    test.skip('[ER-1-05][M] PDF 저장 버튼 선택 — PDF 파일 저장', async ({ page }) => {
-      // MANUAL: PDF 다운로드 동작은 자동화 검증 어려움 — 릴리즈 후 수동 확인 필요
+    test.skip('[ER-1-05][B] PDF 저장 버튼 선택 — PDF 파일 저장', async ({ page }) => {
+      // BLOCKED: PDF 저장 버튼 UI 미출시 — 출시 후 page.waitForEvent('download')로 자동화 가능
     });
 
     test('[ER-1-06] 링크 추출 버튼 선택 — 공유 링크 생성, 클립보드 복사', async ({ page }) => {
@@ -238,16 +238,16 @@ test.describe('ER — 전문이력리포트', () => {
       await expect(page.locator('body')).toBeVisible();
     });
 
-    test.skip('[ER-1-26][M] PDF 저장 — 업로드 자료보기 버튼 영역 제거', async ({ page }) => {
-      // MANUAL: PDF 내용 확인은 자동화 검증 어려움 — 릴리즈 후 수동 확인 필요
+    test.skip('[ER-1-26][B] PDF 저장 — 업로드 자료보기 버튼 영역 제거', async ({ page }) => {
+      // BLOCKED: PDF UI 미출시 — 출시 후 다운로드 트리거 자동화 가능
     });
 
     test.skip('[ER-1-27][M] PDF — 잘리는 그래프 다음 페이지 이동', async ({ page }) => {
-      // MANUAL: PDF 렌더링 확인은 자동화 검증 어려움 — 릴리즈 후 수동 확인 필요
+      // MANUAL: PDF/이미지 시각 렌더링 검증 — 자동화 도구 한계
     });
 
     test.skip('[ER-1-28][M] PDF — 긴 텍스트 잘리는 그대로 노출', async ({ page }) => {
-      // MANUAL: PDF 렌더링 확인은 자동화 검증 어려움 — 릴리즈 후 수동 확인 필요
+      // MANUAL: PDF/이미지 시각 렌더링 검증 — 자동화 도구 한계
     });
   });
 
@@ -286,8 +286,8 @@ test.describe('ER — 전문이력리포트', () => {
       await expect(page.locator('body')).toBeVisible();
     });
 
-    test.skip('[ER-2-05][M] PDF 저장 버튼 선택', async ({ page }) => {
-      // MANUAL: PDF 다운로드 동작은 자동화 검증 어려움 — 릴리즈 후 수동 확인 필요
+    test.skip('[ER-2-05][B] PDF 저장 버튼 선택', async ({ page }) => {
+      // BLOCKED: PDF 저장 버튼 UI 미출시 — 출시 후 다운로드 트리거 자동화 가능
     });
 
     test('[ER-2-06] 파일 업로드(링크 추출) 버튼 선택', async ({ page }) => {
@@ -388,12 +388,12 @@ test.describe('ER — 전문이력리포트', () => {
       await expect(page.locator('body')).toBeVisible();
     });
 
-    test.skip('[ER-2-35][M] PDF 저장 — 업로드/프로필 보기 버튼 영역 제거', async ({ page }) => {
-      // MANUAL: PDF 내용 확인은 자동화 검증 어려움 — 릴리즈 후 수동 확인 필요
+    test.skip('[ER-2-35][B] PDF 저장 — 업로드/프로필 보기 버튼 영역 제거', async ({ page }) => {
+      // BLOCKED: PDF UI 미출시 — 출시 후 다운로드 트리거 자동화 가능
     });
 
     test.skip('[ER-2-36][M] PDF — 잘리는 그래프 다음 페이지 이동', async ({ page }) => {
-      // MANUAL: PDF 렌더링 확인은 자동화 검증 어려움 — 릴리즈 후 수동 확인 필요
+      // MANUAL: PDF/이미지 시각 렌더링 검증 — 자동화 도구 한계
     });
 
     test('[ER-2-37] 관계사 없는 법인 — 관계사 영역 미노출', async ({ page }) => {

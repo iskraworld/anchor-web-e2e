@@ -3,14 +3,34 @@
  * QA 리포트 생성기
  * Playwright results.json → TC-ID 매핑 QA 결과 HTML 생성
  * 사용: node scripts/generate-qa-report.mjs [결과 파일 경로]
+ *
+ * 프로젝트별 설정은 루트의 qa-report.config.mjs에서 읽는다.
  */
 
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'fs';
 import { resolve, dirname, join } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const root   = resolve(__dir, '..');
+
+// ── 프로젝트 설정 로드 ────────────────────────────────────────────────────────
+const configPath = resolve(root, 'qa-report.config.mjs');
+if (!existsSync(configPath)) {
+  console.error(`❌ 설정 파일 없음: ${configPath}`);
+  console.error('   프로젝트 루트에 qa-report.config.mjs를 작성하세요.');
+  console.error('   샘플: docs/anchor-e2e-v2/qa-report-setup.md');
+  process.exit(1);
+}
+const CONFIG = (await import(pathToFileURL(configPath).href)).default;
+
+const BRAND = CONFIG.brand ?? { name: 'QA', subtitle: 'Report', initial: 'Q' };
+const LINKS = CONFIG.links ?? { e2e: './index.html', playwright: './detail/index.html' };
+const MODULES = CONFIG.modules ?? [];
+if (!MODULES.length) {
+  console.error('❌ qa-report.config.mjs의 modules 배열이 비어있습니다.');
+  process.exit(1);
+}
 
 const jsonPath = process.argv[2] ?? resolve(root, 'playwright-report/results.json');
 const htmlOut  = resolve(root, 'playwright-report/qa-report.html');
@@ -188,20 +208,9 @@ for (const tc of collectAllSpecTcs(resolve(root, 'tests/qa'))) {
 
 // ── 모듈별 그룹화 ─────────────────────────────────────────────────────────────
 
-const moduleOrder = ['AUTH', 'MY', 'HOME-TP', 'HOME-TA', 'TA', 'GO', 'EO', 'EI', 'ER', 'SP', 'TF'];
-const moduleLabels = {
-  'AUTH':    'AUTH — 로그인/회원가입',
-  'MY':      'MY — 내 정보',
-  'HOME-TP': 'HOME-TP — 홈·GNB·알림 (납세자)',
-  'HOME-TA': 'HOME-TA — 홈·GNB·알림 (세무사)',
-  'TA':      'TA — 세무대리인 찾기',
-  'GO':      'GO — 현직 공무원 탐색',
-  'EO':      'EO — 전직 공무원 찾기',
-  'EI':      'EI — 전문 이력 관리',
-  'ER':      'ER — 전문 이력 리포트',
-  'SP':      'SP — 구독 관리',
-  'TF':      'TF — 법인&팀연동관리',
-};
+// config.modules에서 추출 — 순서/라벨 모두 설정 파일이 source of truth.
+const moduleOrder = MODULES.map(m => m.id);
+const moduleLabels = Object.fromEntries(MODULES.map(m => [m.id, `${m.id} — ${m.label}`]));
 
 const byModule = new Map();
 for (const mod of moduleOrder) byModule.set(mod, []);
@@ -638,7 +647,7 @@ const html = `<!doctype html>
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Anchor QA 결과 리포트</title>
+<title>${escHtml(BRAND.name)} QA 결과 리포트</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -889,8 +898,8 @@ const html = `<!doctype html>
 
   <div class="topbar">
     <div class="brand">
-      <div class="brand-mark">A</div>
-      <div class="brand-name">Anchor <span class="brand-sep">/</span> <span class="brand-sub">QA Report</span></div>
+      <div class="brand-mark">${escHtml(BRAND.initial ?? BRAND.name?.[0] ?? '?')}</div>
+      <div class="brand-name">${escHtml(BRAND.name)} <span class="brand-sep">/</span> <span class="brand-sub">${escHtml(BRAND.subtitle ?? 'QA Report')}</span></div>
     </div>
     <div class="top-meta">
       <div><span class="dot"></span>실행 <b>${escHtml(now)}</b></div>
@@ -898,8 +907,8 @@ const html = `<!doctype html>
     </div>
     <div class="top-actions">
       ${totalFail > 0 ? `<a class="btn" href="#fail-details"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--fail)"></span>FAIL ${totalFail}</a>` : ''}
-      <a class="btn" href="./index.html">📋 E2E</a>
-      <a class="btn" href="./detail/index.html">🔍 Playwright</a>
+      <a class="btn" href="${escHtml(LINKS.e2e)}">📋 E2E</a>
+      <a class="btn" href="${escHtml(LINKS.playwright)}">🔍 Playwright</a>
     </div>
   </div>
 
@@ -987,11 +996,11 @@ const html = `<!doctype html>
   ${moduleOrder.map((mod, i) => moduleSection(mod, i + 7)).join('\n')}
 
   <footer>
-    <div>Anchor QA · 자동 생성 리포트 · ${escHtml(now)}</div>
+    <div>${escHtml(BRAND.name)} QA · 자동 생성 리포트 · ${escHtml(now)}</div>
     <div>
-      <a href="./index.html">E2E</a>
+      <a href="${escHtml(LINKS.e2e)}">E2E</a>
       <span style="margin:0 8px;color:var(--ink-4)">·</span>
-      <a href="./detail/index.html">Playwright</a>
+      <a href="${escHtml(LINKS.playwright)}">Playwright</a>
     </div>
   </footer>
 

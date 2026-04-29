@@ -22,7 +22,8 @@
     "report:deploy": "node scripts/generate-report.mjs",
     "deploy": "vercel deploy playwright-report --prod",
     "verify:coverage": "node scripts/verify-coverage.mjs",
-    "verify:coverage:audit": "node scripts/verify-coverage.mjs --audit"
+    "verify:coverage:audit": "node scripts/verify-coverage.mjs --audit",
+    "diff:regression": "node scripts/diff-regression.mjs"
   },
   "keywords": [],
   "author": "",

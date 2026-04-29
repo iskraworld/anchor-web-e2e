@@ -13,15 +13,21 @@ scripts/
 qa-report.config.mjs         # ★ 프로젝트별 설정 — 수정 필요
 ```
 
-`package.json`에 두 줄 추가:
+`package.json`에 4줄 추가:
 ```json
 {
   "scripts": {
     "report:qa": "node scripts/generate-qa-report.mjs",
-    "verify:coverage": "node scripts/verify-coverage.mjs"
+    "verify:coverage": "node scripts/verify-coverage.mjs",
+    "verify:coverage:audit": "node scripts/verify-coverage.mjs --audit",
+    "diff:regression": "node scripts/diff-regression.mjs"
   }
 }
 ```
+
+추가 복사 파일:
+- `scripts/diff-regression.mjs` — 회귀 자동 감지
+- `tests/qa/_shared/helpers.ts` — 공통 헬퍼 (모든 spec이 import)
 
 ---
 

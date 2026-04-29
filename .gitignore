@@ -17,6 +17,7 @@ node_modules/
 /test-results/
 /playwright-report/detail/
 /playwright-report/results.json
+/playwright-report/results.prev.json
 /playwright-report/index.html
 /playwright-report/summary.md
 /playwright-report/data/

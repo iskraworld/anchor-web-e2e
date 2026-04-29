@@ -53,11 +53,25 @@ function collectDocsTcIds(docsDir) {
 // test('[ID]...') 또는 test.skip('[ID]...')
 
 const SPEC_TC_RE = /test(?:\.skip)?\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\][^'"]*)['"]/g;
-const SPEC_M_RE = /test\.skip\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\]\[M\][^'"]*)['"]/g;
+
+// 한 test() 블록의 본문을 추출 — fake-pass 검출용
+const TEST_BODY_RE = /\btest\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\][^'"]+)['"][^{]*\{([\s\S]*?)\n\s{2,4}\}\s*\)\s*;/g;
 
 function collectSpecTcIds(specDir) {
   const ids = new Set();
-  const manualItems = []; // [M] 항목과 그 사유
+  const manualItems = [];      // [M]
+  const blockedItems = [];     // [B]
+  const deprecatedItems = [];  // [D]
+  const activeTests = [];      // test() — fake-pass 검출용
+
+  function reasonAfter(lines, i, prefix) {
+    for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
+      const cm = lines[j].match(new RegExp(`\\/\\/\\s*${prefix}:\\s*(.+)`, 'i'));
+      if (cm) return cm[1].trim();
+      if (lines[j].includes('});')) break;
+    }
+    return '';
+  }
 
   function walk(dir) {
     if (!existsSync(dir)) return;
@@ -70,27 +84,37 @@ function collectSpecTcIds(specDir) {
         let m;
         while ((m = SPEC_TC_RE.exec(content)) !== null) ids.add(m[2]);
         SPEC_TC_RE.lastIndex = 0;
-        // [M] 항목 — 라인 단위로 사유까지 수집
+
+        // 태그별 항목 수집 ([M]/[B]/[D])
         for (let i = 0; i < lines.length; i++) {
-          const mm = lines[i].match(/test\.skip\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\]\[M\][^'"]*)['"]/);
-          if (!mm) continue;
-          let reason = '';
-          for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
-            const cm = lines[j].match(/\/\/\s*MANUAL:\s*(.+)/i);
-            if (cm) { reason = cm[1].trim(); break; }
-            if (lines[j].includes('});')) break;
-          }
-          manualItems.push({ id: mm[2], reason });
+          const tagMatch = lines[i].match(/test\.skip\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\](\[M\]|\[B\]|\[D\])[^'"]*)['"]/);
+          if (!tagMatch) continue;
+          const id = tagMatch[2];
+          const tag = tagMatch[3];
+          if (tag === '[M]') manualItems.push({ id, reason: reasonAfter(lines, i, 'MANUAL') });
+          else if (tag === '[B]') blockedItems.push({ id, reason: reasonAfter(lines, i, 'BLOCKED') });
+          else if (tag === '[D]') deprecatedItems.push({ id, reason: reasonAfter(lines, i, 'DEPRECATED') });
         }
+
+        // active test() — fake-pass 검출용 단언 추출
+        let mm;
+        while ((mm = TEST_BODY_RE.exec(content)) !== null) {
+          const body = mm[3];
+          const expects = (body.match(/\bexpect\s*\([^)]+\)[^;]*/g) ?? []).map(s => s.trim());
+          activeTests.push({ id: mm[2], expects });
+        }
+        TEST_BODY_RE.lastIndex = 0;
       }
     }
   }
 
   walk(specDir);
-  return { ids, manualItems };
+  return { ids, manualItems, blockedItems, deprecatedItems, activeTests };
 }
 
-// [M] 사유 화이트리스트 — phase2-code-generation.md와 동기화
+// ── 화이트리스트 ─────────────────────────────────────────────────────
+// phase2-code-generation.md와 동기화. 사유가 화이트리스트에 부합하지 않으면 audit 경고.
+
 const MANUAL_WHITELIST = [
   /본인.*인증|OAuth|SMS|PASS|KMC|소셜.*로그인/i,
   /PG.*결제|실거래|실결제|카드.*결제|계좌.*차감/i,
@@ -99,9 +123,39 @@ const MANUAL_WHITELIST = [
   /CAPTCHA|봇.*차단|사람.*입력/i,
 ];
 
-function isWhitelistedManualReason(reason) {
+const BLOCKED_WHITELIST = [
+  /UI.*미출시|UI.*미구현|기능.*미배포|관련.*미구현|출시.*대기|릴리즈.*대기/i,
+  /의존.*기능.*미배포|선행.*UI.*필요/i,
+];
+
+const DEPRECATED_WHITELIST = [
+  /요구사항.*변경|기능.*제거|기능.*삭제|정책.*변경|진입점.*제거|UI.*제거/i,
+  /구조.*변경|미사용|deprecated/i,
+  /옵션.*제거|필터.*단순화|흐름.*변경|안내.*제거|단계.*제거/i,
+  /필드.*제거|영역.*제거|버튼.*제거|메뉴.*제거|화면.*제거|진입.*제거/i,
+];
+
+function matches(whitelist, reason) {
   if (!reason) return false;
-  return MANUAL_WHITELIST.some(re => re.test(reason));
+  return whitelist.some(re => re.test(reason));
+}
+
+// ── Fake PASS 검출 ───────────────────────────────────────────────────
+// 단언이 body.toBeVisible() 또는 toHaveURL 단독이면 의심.
+// docs 기대 결과를 검증하지 않는 약한 PASS는 리포트 신뢰도를 떨어뜨림.
+
+function isFakePassExpect(expr) {
+  return /expect\s*\(\s*page\.locator\(\s*['"]body['"]\s*\)\s*\)\.toBeVisible/.test(expr) ||
+         /expect\s*\(\s*page\s*\)\.toHaveURL/.test(expr);
+}
+
+function detectFakePass(activeTest) {
+  const expects = activeTest.expects;
+  if (!expects.length) return { kind: 'no-assert', detail: '단언 0개' };
+  // 모든 단언이 fake-pass 패턴이면 의심
+  const allFake = expects.every(isFakePassExpect);
+  if (!allFake) return null;
+  return { kind: 'body-only', detail: `단언 ${expects.length}개 모두 body/url만` };
 }
 
 // ── 3. 대조 ───────────────────────────────────────────────────────────────────
@@ -109,7 +163,7 @@ function isWhitelistedManualReason(reason) {
 const auditMode = process.argv.includes('--audit');
 
 const { active: docIds, deleted: deletedIds } = collectDocsTcIds(resolve(root, 'docs/qa'));
-const { ids: specIds, manualItems } = collectSpecTcIds(resolve(root, 'tests/qa'));
+const { ids: specIds, manualItems, blockedItems, deprecatedItems, activeTests } = collectSpecTcIds(resolve(root, 'tests/qa'));
 
 // docs 활성 TC 중 spec에 없는 것 → 누락
 const missing = [...docIds].filter(id => !specIds.has(id)).sort();
@@ -136,38 +190,84 @@ console.log(`  docs/qa  활성: ${docIds.size}건  삭제됨: ${deletedIds.size}
 console.log(`  tests/qa 구현: ${specIds.size}건`);
 console.log('');
 
-// audit 모드: [M] 비율과 사유 화이트리스트 검증
+// audit 모드: [M]/[B]/[D] 사유 화이트리스트 + fake-pass 검출 + 비율 임계치
 let auditWarnings = 0;
 if (auditMode) {
   const totalActive = docIds.size;
-  const manualCount = manualItems.length;
-  const manualPct = totalActive > 0 ? (manualCount / totalActive * 100) : 0;
   const THRESHOLD_PCT = 5;
 
-  console.log('━━ AUDIT 모드 ━━');
-  console.log(`  [M] 항목: ${manualCount}건 / docs 활성 ${totalActive}건 = ${manualPct.toFixed(1)}%`);
-  console.log(`  임계치: ${THRESHOLD_PCT}%`);
+  console.log('━━ AUDIT 모드 ━━\n');
 
+  // 1) [M] 비율 임계치
+  const manualPct = totalActive > 0 ? (manualItems.length / totalActive * 100) : 0;
+  console.log(`▸ [M] 비율: ${manualItems.length}건 / docs 활성 ${totalActive}건 = ${manualPct.toFixed(1)}% (임계 ${THRESHOLD_PCT}%)`);
   if (manualPct > THRESHOLD_PCT) {
-    console.log(`  ⚠️  [M] 비율이 ${THRESHOLD_PCT}%를 초과 — 분류 재검토 필요\n`);
+    console.log(`  ⚠️  [M] 비율 초과 — 분류 재검토 필요`);
     auditWarnings++;
   } else {
-    console.log(`  ✅ 임계치 이내\n`);
+    console.log(`  ✅ 임계치 이내`);
+  }
+  console.log('');
+
+  // 2) [M] 사유 화이트리스트
+  const suspM = manualItems.filter(it => !matches(MANUAL_WHITELIST, it.reason));
+  if (suspM.length > 0) {
+    console.log(`▸ [M] 화이트리스트 외 사유 ${suspM.length}건 — 자동화 가능성 재검토:`);
+    console.log('   허용: 본인인증 / PG 실거래 / PDF 시각검증 / 외부시스템(관리자 승인) / CAPTCHA');
+    for (const it of suspM) console.log(`  ${it.id.padEnd(15)} "${it.reason || '(사유 미기재)'}"`);
+    console.log('   → automation-patterns.md 참고 후 재분류\n');
+    auditWarnings += suspM.length;
+  } else {
+    console.log('▸ [M] 사유 화이트리스트 부합 ✅\n');
   }
 
-  // 화이트리스트 외 사유 검출
-  const suspicious = manualItems.filter(it => !isWhitelistedManualReason(it.reason));
-  if (suspicious.length > 0) {
-    console.log(`⚠️  화이트리스트 외 [M] 사유 ${suspicious.length}건 — 자동화 가능성 재검토:`);
-    console.log('   허용 카테고리: 본인인증 / PG 실거래 / PDF 시각검증 / 외부시스템 / CAPTCHA\n');
-    for (const it of suspicious) {
-      console.log(`  ${it.id.padEnd(15)} 사유: "${it.reason || '(사유 미기재)'}"`);
-    }
-    console.log('\n   → docs/anchor-e2e-v2/automation-patterns.md 참고 후 재분류\n');
-    auditWarnings += suspicious.length;
-  } else {
-    console.log('✅ 모든 [M] 사유가 화이트리스트에 부합\n');
+  // 3) [B] 사유 화이트리스트
+  const suspB = blockedItems.filter(it => !matches(BLOCKED_WHITELIST, it.reason));
+  if (suspB.length > 0) {
+    console.log(`▸ [B] 화이트리스트 외 사유 ${suspB.length}건 — 의도 불명확:`);
+    console.log('   허용: UI 미출시 / 기능 미배포 / 출시 대기');
+    for (const it of suspB) console.log(`  ${it.id.padEnd(15)} "${it.reason || '(사유 미기재)'}"`);
+    console.log('');
+    auditWarnings += suspB.length;
+  } else if (blockedItems.length > 0) {
+    console.log(`▸ [B] 사유 화이트리스트 부합 ✅ (${blockedItems.length}건)\n`);
   }
+
+  // 4) [D] 사유 화이트리스트
+  const suspD = deprecatedItems.filter(it => !matches(DEPRECATED_WHITELIST, it.reason));
+  if (suspD.length > 0) {
+    console.log(`▸ [D] 화이트리스트 외 사유 ${suspD.length}건 — 삭제 사유 불명확:`);
+    console.log('   허용: 요구사항 변경 / 기능 제거 / 정책 변경 / 진입점 제거');
+    for (const it of suspD) console.log(`  ${it.id.padEnd(15)} "${it.reason || '(사유 미기재)'}"`);
+    console.log('');
+    auditWarnings += suspD.length;
+  } else if (deprecatedItems.length > 0) {
+    console.log(`▸ [D] 사유 화이트리스트 부합 ✅ (${deprecatedItems.length}건)\n`);
+  }
+
+  // 5) Fake PASS 검출 — 단언이 body.toBeVisible() 또는 toHaveURL 단독인 active test
+  const fakes = activeTests.map(t => ({ ...t, fake: detectFakePass(t) })).filter(t => t.fake);
+  const fakePct = activeTests.length > 0 ? (fakes.length / activeTests.length * 100) : 0;
+  console.log(`▸ Fake PASS 검출: ${fakes.length}건 / active test ${activeTests.length}건 = ${fakePct.toFixed(1)}%`);
+  if (fakes.length > 0) {
+    console.log('   docs 기대 결과 미검증 — body/url 단독 단언만 있는 약한 PASS:');
+    const byMod = {};
+    for (const f of fakes) {
+      const mod = f.id.match(/^(HOME-TA|HOME-TP|[A-Z]+)/)?.[1] ?? '?';
+      (byMod[mod] ??= []).push(f.id);
+    }
+    for (const [mod, list] of Object.entries(byMod).sort()) {
+      console.log(`  ${mod.padEnd(10)} (${String(list.length).padStart(3)}건)  ${list.slice(0, 5).join(', ')}${list.length > 5 ? ` ... +${list.length - 5}` : ''}`);
+    }
+    console.log('   → automation-patterns.md / phase2-code-generation.md §단언 패턴 카탈로그 참고\n');
+    auditWarnings += fakes.length;
+  } else {
+    console.log('   ✅ 모든 active test가 docs 기대 결과 단언 보유\n');
+  }
+
+  // 6) 에이전트 위임 시 안전장치 알림 (D)
+  console.log('▸ 에이전트 위임 결과는 위 모든 항목이 0건이어야 머지 허용 (phase2 §위임 프로토콜)');
+  console.log('');
 }
 
 if (missing.length === 0 && unknown.length === 0 && auditWarnings === 0) {

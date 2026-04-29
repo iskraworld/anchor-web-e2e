@@ -34,11 +34,49 @@
 
 ### 패턴이 확정될 때까지 다른 모듈 생성 금지
 
-PoC 모듈이 **0 fail (intentional skip만 허용)** 될 때까지 나머지 10개 모듈은 시작하지 않는다. 패턴이 확정되면:
-- 헬퍼 함수(navigateTo, isVisibleSoft, safeClick 등)를 모듈간 공유 위치(예: 각 spec 상단 또는 별도 helper)에 정의
-- 나머지 모듈은 같은 헬퍼·같은 패턴으로 일괄 생성
+PoC 모듈이 **0 fail (intentional skip만 허용)** 될 때까지 나머지 10개 모듈은 시작하지 않는다.
 
-**확정된 패턴 = automation-patterns.md 0~9번 항목 + 모듈 공통 헬퍼.** Phase 2.0 완료 후에야 Phase 2 본 작업으로 진입.
+### 공통 헬퍼 강제화 — `tests/qa/_shared/helpers.ts`
+
+PoC 단계에서 헬퍼는 **반드시 `tests/qa/_shared/helpers.ts`에 정의**한다. 각 모듈 파일에 인라인으로 중복 정의하지 않는다 (한 번 버그 발견 시 11곳 수정 필요).
+
+**필수 글로벌 헬퍼**:
+```typescript
+// tests/qa/_shared/helpers.ts
+export async function isVisibleSoft(locator, timeout = 2000): Promise<boolean>
+export async function safeClick(locator, timeout = 5000): Promise<boolean>
+export async function safeFill(locator, value, timeout = 5000): Promise<boolean>
+export async function is404(page): Promise<boolean>
+export async function navigateViaGnb(page, gnbLabel, options): Promise<boolean>  // SPA pattern
+```
+
+**모든 spec에서 import 강제**:
+```typescript
+import { isVisibleSoft, safeClick, navigateViaGnb } from '../_shared/helpers';
+```
+
+모듈별 특화 헬퍼(예: `navigateToSubscription`)는 각 모듈 spec 또는 `tests/qa/{module}/helpers.ts`에 둔다 — 글로벌 헬퍼와 분리.
+
+**확정된 패턴 = automation-patterns.md 0~9번 + `_shared/helpers.ts`.** Phase 2.0 완료 후에야 Phase 2 본 작업으로 진입.
+
+### 단언 패턴 카탈로그 — Fake PASS 방지
+
+⚠️ **PoC 단계에서 가장 중요한 체크: "단언이 docs 기대 결과를 검증하는가?"**
+
+`expect(page.locator('body')).toBeVisible()`만 있으면 **Fake PASS**. docs 기대 결과 유형별 단언 패턴:
+
+| docs 기대 결과 | spec 단언 패턴 |
+|---|---|
+| "X 화면으로 이동" | `await expect(page).toHaveURL(/x-page/)` |
+| "X 노출/표시" | `await expect(page.getByTestId('x')).toBeVisible()` 또는 `toHaveText` |
+| "X 미노출" | `await expect(page.getByTestId('x')).not.toBeVisible()` |
+| "조건에 따른 결과 필터링" | 적용 전 row count 캐시 → 적용 후 행 수 변화 또는 특정 조건 일치 검증 |
+| "호버 시 텍스트/툴팁 노출" | `await locator.hover(); await expect(tooltip).toBeVisible()` |
+| "총 N건 표시" | `await expect(page.getByTestId('total-count')).toHaveText('10건')` |
+| "버튼 비활성화" | `await expect(button).toBeDisabled()` |
+| "데이터 X 포함" | `await expect(cell).toContainText('홍길동')` |
+
+`verify:coverage:audit`에 **fake-pass 검출 룰** 자동 동작 — body/url 단독 단언만 있는 active test를 의심 항목으로 출력. PoC 모듈에서 fake-pass 0건이어야 패턴 확정.
 
 ---
 

@@ -64,6 +64,15 @@ playwright-report/
 - [automation-patterns.md](./automation-patterns.md) — Playwright 자동화 패턴 모음 ([M] 처리 전 필독)
 - [qa-report-setup.md](./qa-report-setup.md) — 다른 프로젝트로 가져갈 때 셋업 가이드
 
+### 자동화 스크립트
+
+| 스크립트 | 용도 | 사용 시점 |
+|---|---|---|
+| `npm run verify:coverage` | docs/qa vs spec 1:1 대조 (누락 검출) | Phase 2 종료 시 |
+| `npm run verify:coverage:audit` | [M]/[B]/[D] 사유 화이트리스트 + Fake PASS 검출 | Phase 2.0 PoC 후 / Phase 3 전 |
+| `npm run report:qa` | 결과 리포트 HTML 생성 | Phase 3 §2 |
+| `npm run diff:regression` | 직전 결과와 비교 — 회귀 자동 감지 | Phase 3 후 (CI에서 매 실행) |
+
 ---
 
 ## 전체 QA 규모

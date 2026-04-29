@@ -277,7 +277,7 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
         const comboboxes = page.getByRole('combobox');
         const count = await comboboxes.count();
         if (count > 0) {
-          try { await comboboxes.first().selectOption({ index: 1 }); } catch { /* ignore */ }
+          try { await comboboxes.first().selectOption({ index: 1 }, { timeout: 3000 }); } catch { /* ignore */ }
         }
       }
       await expect(page.getByTestId('home-search-greeting')).toBeVisible();
@@ -290,7 +290,7 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
         const comboboxes = page.getByRole('combobox');
         const count = await comboboxes.count();
         for (let i = 0; i < Math.min(2, count); i++) {
-          try { await comboboxes.nth(i).selectOption({ index: 1 }); } catch { /* ignore */ }
+          try { await comboboxes.nth(i).selectOption({ index: 1 }, { timeout: 3000 }); } catch { /* ignore */ }
         }
       }
       await expect(page.getByTestId('home-search-greeting')).toBeVisible();
@@ -303,10 +303,10 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
         const comboboxes = page.getByRole('combobox');
         const count = await comboboxes.count();
         if (count >= 1) {
-          try { await comboboxes.nth(0).selectOption({ index: 1 }); } catch { /* ignore */ }
+          try { await comboboxes.nth(0).selectOption({ index: 1 }, { timeout: 3000 }); } catch { /* ignore */ }
         }
         if (count >= 2) {
-          try { await comboboxes.nth(1).selectOption({ index: 0 }); } catch { /* ignore */ }
+          try { await comboboxes.nth(1).selectOption({ index: 0 }, { timeout: 3000 }); } catch { /* ignore */ }
         }
       }
       await expect(page.getByTestId('home-search-greeting')).toBeVisible();
@@ -319,7 +319,7 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
         const comboboxes = page.getByRole('combobox');
         const count = await comboboxes.count();
         for (let i = 0; i < Math.min(3, count); i++) {
-          try { await comboboxes.nth(i).selectOption({ index: 1 }); } catch { /* ignore */ }
+          try { await comboboxes.nth(i).selectOption({ index: 1 }, { timeout: 3000 }); } catch { /* ignore */ }
         }
       }
       await expect(page.getByTestId('home-search-greeting')).toBeVisible();
@@ -332,10 +332,10 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
         const comboboxes = page.getByRole('combobox');
         const count = await comboboxes.count();
         for (let i = 0; i < Math.min(2, count); i++) {
-          try { await comboboxes.nth(i).selectOption({ index: 1 }); } catch { /* ignore */ }
+          try { await comboboxes.nth(i).selectOption({ index: 1 }, { timeout: 3000 }); } catch { /* ignore */ }
         }
         if (count >= 3) {
-          try { await comboboxes.nth(2).selectOption({ index: 0 }); } catch { /* ignore */ }
+          try { await comboboxes.nth(2).selectOption({ index: 0 }, { timeout: 3000 }); } catch { /* ignore */ }
         }
       }
       await expect(page.getByTestId('home-search-greeting')).toBeVisible();
@@ -347,7 +347,7 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
       if (ok) {
         const comboboxes = page.getByRole('combobox');
         if (await isVisibleSoft(comboboxes.first(), 2000)) {
-          try { await comboboxes.first().selectOption({ index: 1 }); } catch { /* ignore */ }
+          try { await comboboxes.first().selectOption({ index: 1 }, { timeout: 3000 }); } catch { /* ignore */ }
         }
         await safeClick(page.getByTestId('search-submit-btn'), 5000);
       }
@@ -359,7 +359,7 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
       await selectExpertTab(page);
       const regionSelect = page.getByTestId('search-region-select');
       if (await isVisibleSoft(regionSelect, 3000)) {
-        try { await regionSelect.selectOption({ index: 1 }); } catch { /* ignore */ }
+        try { await regionSelect.selectOption({ index: 1 }, { timeout: 3000 }); } catch { /* ignore */ }
       }
       await safeClick(page.getByTestId('search-reset-btn'), 5000);
       await expect(page.getByTestId('home-tax-expert-info')).toBeVisible();
@@ -507,7 +507,7 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
       await selectExpertTab(page);
       const regionSelect = page.getByTestId('search-region-select');
       if (await isVisibleSoft(regionSelect, 3000)) {
-        try { await regionSelect.selectOption({ index: 1 }); } catch { /* ignore */ }
+        try { await regionSelect.selectOption({ index: 1 }, { timeout: 3000 }); } catch { /* ignore */ }
       }
       await safeClick(page.getByTestId('search-submit-btn'), 5000);
       await expect(page.getByTestId('home-search-greeting')).toBeVisible();
@@ -519,7 +519,7 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
       if (ok) {
         const comboboxes = page.getByRole('combobox');
         if (await isVisibleSoft(comboboxes.first(), 2000)) {
-          try { await comboboxes.first().selectOption({ index: 1 }); } catch { /* ignore */ }
+          try { await comboboxes.first().selectOption({ index: 1 }, { timeout: 3000 }); } catch { /* ignore */ }
         }
         await safeClick(page.getByTestId('search-submit-btn'), 5000);
       }

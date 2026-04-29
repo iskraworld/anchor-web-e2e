@@ -4,6 +4,35 @@
 
 ---
 
+## Session 2026-04-29 11:36 — 리포트 카테고리 정비, [D] 도입, verify-coverage 스크립트화
+
+### 작업 요약
+- 리포트 숫자 불일치 분석: `classifyResult`가 `timedOut` 미처리 → 11 BLOCKED 누락. fail로 분류하도록 수정 (curl 합계 803 → 814 정상화)
+- 테이블 열 정렬 수정: 모든 tc-table에 `overflow-x: auto` 래퍼 + `<colgroup>`으로 폭 고정
+- `scripts/verify-coverage.mjs` 신규 작성: docs/qa 활성 TC vs spec TC 1:1 대조, 누락 시 exit(1)
+- `scripts/generate-qa-report.mjs` DOCS_COUNTS 하드코딩 → docs/qa 동적 파싱
+- 검증 실행: 누락 3건 발견 → AUTH-8-01 docs strikethrough 누락, GO-2-11_normal/data 정규식 미매치, TF-3-08 주석만 존재 — 모두 수정
+- `[D]` deprecated 카테고리 신규 도입:
+  * 56건 누락 TC를 9개 spec 파일에 보강 (28 [D] + 28 [M])
+  * AUTH 13[D] / GO 5[D] / TF 4[D] / SP 3[D]+12[M] / EI 3[D]+6[M] / ER 3[M] / HOME-TA/TP 각 2[M] / MY 3[M]
+  * 리포트에 🗑️ 삭제 카테고리 추가 (보라색)
+  * 섹션 순서 변경: 실패 → 수동 → 삭제 → 스킵 → 모듈 상세
+  * spec 직접 파싱 추가 — results.json 외에도 [D]/[M] 정적 분류 처리
+- `package.json`에 `verify:coverage` 스크립트 추가
+- `phase2-code-generation.md`에 검증 단계 명시
+- 최종 집계: PASS 771 + FAIL 13 + 삭제 28 + 수동 44 + 스킵 16 = **872 (커버리지 100%)**
+
+### 실패한 시도
+- 1차 DOCS_COUNTS 동적화 시 활성만 카운트 (803) → TA 116%, EO 106% 등 음수 미구현 발생 → 활성+삭제 모두 카운트로 재수정
+- "10건 미구현 → 781 PASS" 사용자 기대 ≠ 실제: 해당 10건이 UI 미출시 상태라 test()로 구현 불가, 모두 [M] 처리
+
+### 다음 액션
+- HOME staging BLOCKED 11건 재테스트 (staging 회복 후)
+- D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
+- ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
+
+---
+
 ## Session 2026-04-29 10:06 — 244→0 실패 달성, QA 리포트 생성, Vercel 배포 완료
 
 ### 작업 요약

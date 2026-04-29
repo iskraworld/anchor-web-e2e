@@ -4,91 +4,56 @@
 
 ---
 
-## 마지막 실행: 2026-04-29 18:01
-## 마지막 업데이트: 2026-04-29 18:01
+## 마지막 실행: 2026-04-29 19:32
+## 마지막 업데이트: 2026-04-29 19:32
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **Fake PASS 전량 제거 완료 (274→0)** — 가드 체계 보강 + 에이전트 9개 병렬 위임으로 271건 단언 보강. 최종 739 pass / 55 fail / 80 skip. AMBIGUOUS_DOC 156건 리뷰 대기.
+- **Fake PASS 검출 도구 + AMBIGUOUS_DOC 자동 분류 흐름 정착 완료** — 다음 프로젝트 영구 자산 확보. 이번 프로젝트 코드 회귀(130건+)는 다음 사이클로 이월.
 
 ### 이어서 할 것
-1. AMBIGUOUS_DOC 156건 일괄 리뷰
-2. 55건 fail 원인 분류 및 수정
-3. 회귀 분석 결과 확인 (diff-regression.mjs)
+1. **AMBIGUOUS_DOC 156건 일괄 리뷰** — Eugene 30분 작업, 명확화 가능 결정 + anchor 팀 docs 명확화 요청
+2. **풀 테스트 회귀 130건+ 점진 디버깅** — EI 78건부터, 모듈별 1주 사이클로 진행
+3. **다음 프로젝트에 도구+가이드 적용** — qa-report-setup.md 따라 5개 파일 복사
 
 ### 막힌 것
-- **AMBIGUOUS_DOC 156건**: Eugene 리뷰 필요 (AI 자동 분류 완료, 최종 판단 대기)
-- **setup hang 재발 가능성**: storageState JWT 만료 주기 ~12시간
+- **풀 테스트 회귀 130건+**: 일괄 보강(257건) 후 발생. 단독 PASS / 풀 FAIL 패턴. 보강 단언이 staging UI/데이터에 strict해 false fail 다수. 다음 사이클 점진 디버깅 필요
+- **HOME staging BLOCKED 11건**: 소속 드롭다운 검색 API 500 — staging 회복 시 재테스트
 
 ### 사람 판단 필요
-- D-2/D-3: 법인 리포트 1그룹/2그룹 분류 UI 미출시 — 기능 릴리즈 후 재검토
-- ER-1-05/1-06/2-05/2-06: PDF·링크 버튼 UI 미구현 — 릴리즈 후 `test.skip()` 해제
-- 다음 QA 프로젝트 진행 시 `docs/anchor-e2e-v2/` + `scripts/verify-coverage.mjs` + `qa-report.config.mjs` 복사하면 동일 정합성·리포트 보장됨
-- AI가 기술적으로 할 수 있는 작업이 막힐 경우, Anchor 팀에 바로 넘기지 말고 승인 형식으로 사람에게 먼저 물어볼 것
-- AMBIGUOUS_DOC 156건 일괄 리뷰 — AI 자동 분류 완료, Eugene 최종 판단 필요
+- AMBIGUOUS_DOC 156건 일괄 리뷰 (옵션 A/B/C 결정)
+  - A. 이 프로젝트 마무리 트랙 (3~4주 점진 디버깅)
+  - B. 다음 프로젝트 이동 트랙 (이 프로젝트 동결)
+  - C. 하이브리드 (1주: AMBIGUOUS 리뷰 + EI/MY만 디버깅) ⭐ 추천
+- D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
+- ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
 
 ### 백로그 요약
-- 대기 중: 3개
-- 최근 추가: 2026-04-28 — ER PDF·링크 버튼 테스트 재활성화
+- 대기 중: 5개
+- 최근 추가: 2026-04-29 — AMBIGUOUS_DOC 156건 일괄 리뷰 + 풀 테스트 회귀 130건 디버깅
 
 ### 진행 상황
-- [x] 하네스 초기화 완료
-- [x] GitHub 리포 생성 및 초기 커밋 푸시
-- [x] Phase 2: `specs/scenarios-from-exploration.md` 작성 (60 시나리오)
-- [x] Phase 3: `specs/test-plan.md`, `specs/data-validation.md` 작성
-- [x] Phase 4: 인증 셋업 + 시나리오 A-G 테스트 코드 + 공유 Page Objects
-- [x] Phase 5: 전체 테스트 실행 및 디버깅 완료
-- [x] Phase 6: P1 시나리오 24개 + CI 워크플로 초안
-- [x] P0: 26 passed / 2 skipped (D-2/D-3 BLOCKED)
-- [x] CI Secrets 7개 설정 + 수동 실행 전환
-- [x] P2 15개 + Visual Regression 베이스라인 10개
-- [x] `playwright.config.ts` timeout 60s — P0+P1+P2+VR 77/77 통과
-- [x] `scripts/generate-report.mjs` + Vercel 배포 연동
-- [x] QA v2 — `docs/anchor-e2e-v2/` Phase 0~3 문서 4개
-- [x] Phase 1: `docs/qa/` 11개 모듈 분석 → `qa-automation-map.md` (805 active TC)
-- [x] Phase 2: 11개 모듈 spec 전면 재구축 (818 TC → 최종 872 TC)
-- [x] 4개 병렬 에이전트 1차 수정 (321 → 244 fail)
-- [x] MY/TA/EI/HOME-TP/HOME-TA/SP/AUTH/GO/EO/ER 모듈 셀렉터 수정 → 244 → 0 unintentional fail
-- [x] storageState JWT 만료 → auth setup 재실행 (5.8s)
-- [x] GO-1-32 + MY-1-24 수정 후 0 FAIL
-- [x] Full final run: 774 pass / 30 skip / 11 fail (HOME staging BLOCKED 11건)
-- [x] `tests/_diag/` `.gitignore` 처리, `.harness/fix-progress.md` 커밋
-- [x] 리포트 timedOut → fail 분류 수정 (집계 누락 11건 해결)
-- [x] 모든 tc-table에 `overflow-x: auto` 래퍼 + `<colgroup>` 추가
-- [x] `scripts/verify-coverage.mjs` 신규 — docs/qa vs spec 1:1 대조
-- [x] `package.json`에 `verify:coverage` 스크립트 + `phase2-code-generation.md` 검증 단계 명시
-- [x] AUTH-8-01 docs strikethrough 누락 수정 + GO-2-11 형식 정정 + TF-3-08 [M] 정식 등록
-- [x] `[D]` deprecated 카테고리 도입 — 56건 누락 TC를 28[D] + 28[M]으로 9개 spec에 보강
-- [x] DOCS_COUNTS 동적 파싱 (활성+삭제 합산) → 872건 기준 100% 커버리지
-- [x] 리포트 섹션 순서 변경: 실패 → 수동 → 삭제 → 스킵 → 모듈 상세
-- [x] 리포트 spec 직접 파싱 추가 — results.json 외 [D]/[M] 정적 분류 처리
-- [x] 최종 리포트 PASS 771 + FAIL 13 + 삭제 28 + 수동 44 + 스킵 16 = 872 (100%)
-- [x] Claude Design 핸드오프 번들 다운로드 + README 지침대로 분석
-- [x] QA 리포트 전면 재디자인 (Pretendard, 도넛 커버리지, 5종 KPI, 카드형 실패, 분포 미니바)
-- [x] ANSI 컬러 코드 자동 제거(cleanAnsi) + 반응형 880px 미디어쿼리
-- [x] React/Babel/Tweaks 패널 의도적 미구현 (디자인 README 지침대로 시각만 매칭)
-- [x] Vercel 배포 완료 (https://playwright-report-iota.vercel.app/qa-report.html)
-- [x] 워크로그 기록 및 커밋·푸시
-- [x] QA 리포트 디자인 v2 핸드오프 번들 6가지 수정 적용 (도넛 정렬, KPI 톤, 셀 색상, 라벨 nowrap, `.fail` 범위, Top FAIL 톤)
-- [x] `qa-report.config.mjs` 분리 + `generate-qa-report.mjs` config 기반 리팩토링 (방법 B)
-- [x] `docs/anchor-e2e-v2/qa-report-setup.md` 재사용 가이드 신규
-- [x] [B] BLOCKED 카테고리 도입 — 5개 spec(EI/ER/HOME-TA/HOME-TP/MY)에서 13건 [M]→[B] 재분류
-- [x] 리포트에 [B] 인식 + 6번째 KPI 박스 + blockedTable() 섹션 + 색상 토큰 추가
-- [x] [M] 오분류 재발 방지 가드 4종: phase2 판단 트리, 사유 화이트리스트 5종, `automation-patterns.md` 9패턴, `verify:coverage:audit` 스크립트
-- [x] 빠졌던 14건 실제 변환: SP 5건 + HOME 자동완성 2건 → `test()` 변환 PASS, ER PDF 4건 → [B] 재분류, 시각검증 3건만 [M] 유지
-- [x] audit 화이트리스트에 "관리자 승인" 패턴 추가 (EI 자격인증 정당화)
-- [x] 풀 QA 스위트 재실행 → 최종 PASS 781 / FAIL 11 / 삭제 28 / 대기 17 / 수동 20 / 스킵 15 = 872, [M] 비율 2.5%
-- [x] 커밋 `309e339` 푸시 + Vercel prod 배포 완료
-- [x] e2e-v2 가드 체계 4종 추가 (Phase 0 storageState mtime, Phase 2.0 PoC, automation-patterns SPA, Phase 3.0 진단 spec)
-- [x] `verify-coverage.mjs` 통합 강화 (Fake PASS 검출 + [B]/[D] 화이트리스트 + 에이전트 위임 audit)
-- [x] `tests/qa/_shared/helpers.ts` 공통 헬퍼 + phase2 단언 패턴 카탈로그
-- [x] `scripts/diff-regression.mjs` 회귀 분석 스크립트 (Telegram 알림 포함)
-- [x] Fake PASS 274건 전량 제거 (에이전트 9개 병렬 위임으로 271건 단언 보강)
-- [x] AMBIGUOUS_DOC 카테고리 도입 + AI 자동 분류 156건
-- [x] 풀 테스트 재실행 → 739 pass / 55 fail / 80 skip
-- [ ] AMBIGUOUS_DOC 156건 일괄 리뷰
-- [ ] 55건 fail 원인 분류 및 수정
+- [x] Phase 0~3 e2e-v2 가이드 완성
+- [x] 11개 모듈 spec 전면 재구축 (818 TC → 최종 872 TC)
+- [x] 244 fail → 0 unintentional fail
+- [x] QA 리포트 디자인 재작성 + Vercel 배포
+- [x] qa-report.config.mjs로 다중 프로젝트 재사용 설계
+- [x] [B] BLOCKED 카테고리 신설 (UI 미출시 13건)
+- [x] [M] 오분류 14건 → test() / [B] 재분류
+- [x] verify-coverage.mjs --audit 모드 — [M]/[B]/[D] 화이트리스트 + Fake PASS 검출 + AMBIGUOUS_DOC
+- [x] tests/qa/_shared/helpers.ts — 공통 헬퍼 강제화
+- [x] scripts/diff-regression.mjs — 회귀 자동 분석 + Telegram 알림
+- [x] phase 2.0 PoC 단계 + phase 3.0 진단 spec + automation-patterns.md 9패턴
+- [x] AMBIGUOUS_DOC 자동 분류 흐름 — Full QA 무인 원칙
+- [x] phase2 §일괄 보강의 리스크 + automation-patterns §⚡ 가드 결합 패턴
+- [x] phase3 §0-2 회귀 검증 단계 (보강 후 풀 테스트 + diff:regression 필수)
+- [x] PoC 14건 fake-pass 보강 (GO 3 + MY 11) — 모두 PASS
+- [x] 9개 모듈 일괄 보강 257건 — audit Fake PASS 274 → 0건
+- [x] 6개 모듈 가드 결합 보강 (TF/GO/EO/TA/HOME-TA/HOME-TP)
+- [x] 풀 테스트 결과 분석 — 보강 단언 staging 충돌로 회귀 130건+ 발견
+- [x] 일괄 보강 리스크 e2e-v2에 명문화 (영구 자산)
+- [ ] AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰
+- [ ] 풀 테스트 회귀 130건+ 점진 디버깅 (EI 78건 우선)
 - [ ] HOME staging BLOCKED 11건 재테스트 (staging 회복 후)
-- [ ] CI 스케줄 설정 (백로그)
 - [ ] D-2/D-3 BLOCKED 해제 (UI 출시 후)
 - [ ] ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)

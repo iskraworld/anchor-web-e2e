@@ -4,6 +4,32 @@
 
 ## 대기 중
 
+## 2026-04-29: 풀 테스트 회귀 130건+ 점진 디버깅
+
+- **백로그 이유**: 257건 일괄 보강 후 풀 테스트에서 회귀 130건+. 한 세션에 다 못 함. 모듈별 점진 사이클 필요.
+- **할 것**:
+  1. EI 78건부터 시작 (가장 큰 회귀)
+  2. 단독 실행 후 풀 테스트 0회귀 확인
+  3. 회귀 모듈은 가드 보강 또는 AMBIGUOUS_DOC 후퇴
+  4. 모듈 1개 끝나면 다음 (MY 27 → GO/HOME-TA/HOME-TP/TA/TF/EO 순)
+- **필요한 것**: 모듈별 ~3시간, 총 7개 모듈 = 약 1~2주 + storageState 12h 갱신
+- **이전 검토**: 일괄 보강 → audit 0건이지만 풀 회귀 130+ → 점진 진행이 정답 (phase2 §일괄 보강의 리스크에 명문화)
+- **관련 파일**: tests/qa/{ei,my,go,home-ta,home-tp,ta,tf}/*.spec.ts
+- **참고**: docs/anchor-e2e-v2/automation-patterns.md §⚡ 가드 결합 패턴
+
+## 2026-04-29: AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰
+
+- **백로그 이유**: 9개 모듈 일괄 보강 시 모호 docs는 자동 AMBIGUOUS_DOC 마크. 일괄 리뷰는 Eugene 30분 결정 작업.
+- **할 것**:
+  1. 리포트 §04 모호 섹션에서 156건 한 번에 검토
+  2. 명확화 가능 → 강한 단언 보강 또는 그대로 유지
+  3. 모호 그대로 유지 → anchor 팀 docs 명확화 요청 일괄 메시지
+  4. 정성 키워드는 [B] BLOCKED 전환 검토
+- **필요한 것**: 30분 집중 시간 + anchor 팀 contact
+- **이전 검토**: AMBIGUOUS_DOC 마크 + audit 자동 검출 + 리포트 일괄 표시 흐름 정착
+- **관련 파일**: playwright-report/qa-report.html §04 docs 모호 의심
+- **참고**: docs/anchor-e2e-v2/phase2-code-generation.md §모호한 docs 처리
+
 ## 2026-04-28: ER PDF·링크 버튼 테스트 재활성화
 
 - **백로그 이유**: ER-1-05/1-06/2-05/2-06 — PDF 저장·링크 추출 버튼이 현재 UI에 미구현. 버튼 미노출로 테스트가 timeout됨 → `test.skip()`으로 임시 전환

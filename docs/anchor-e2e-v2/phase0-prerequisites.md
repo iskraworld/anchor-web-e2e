@@ -59,13 +59,20 @@ ls docs/qa/
 
 ### 4. 인증 스토리지 상태 갱신
 
-기존 `.auth/` 파일이 만료됐을 수 있으므로 재생성한다:
+⚠️ **JWT 만료 주기 ~12시간** — Phase 2/3 작업 중에도 12시간 초과 시 재실행 필요. 만료된 storageState로 spec을 돌리면 모든 보호 경로가 `/login`으로 redirect되어 대량 timeout 발생.
 
 ```bash
+# storageState mtime 체크 (12시간 초과 시 재실행)
+find tests/.auth -name "*.json" -mmin +720 | head -1 && \
+  npx playwright test tests/auth.setup.ts --project=setup
+
+# 또는 강제 재생성
 npx playwright test tests/auth.setup.ts --project=setup
 ```
 
 5개 계정 로그인 상태가 `tests/.auth/*.json`에 저장되면 완료.
+
+> 💡 작업 시작 전·재개 시 항상 `ls -la tests/.auth/`로 mtime 확인. 빨간 신호: `*.json`이 12시간 이상 오래됨 → 즉시 재실행.
 
 ---
 

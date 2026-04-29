@@ -13,6 +13,57 @@
 
 ---
 
+## 0. 환경 헬스체크 (필수 선행)
+
+전체 실행 전 5분 헬스체크. **이걸 건너뛰면 staging 다운/storageState 만료/페이지 500 같은 환경 이슈를 수백 건 timeout 형태로 뒤늦게 발견한다.**
+
+### 0-1. storageState 신선도 체크
+```bash
+ls -la tests/.auth/
+# mtime이 12시간 이상 오래됐으면 즉시 재실행
+find tests/.auth -name "*.json" -mmin +720 | head -1 && \
+  npx playwright test tests/auth.setup.ts --project=setup
+```
+
+### 0-2. 페이지 진입 진단 spec
+
+`tests/_diag/page-availability.spec.ts` 같은 파일에 각 모듈의 entry page 진입만 검증하는 1줄 spec을 둔다:
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+const PAGES = [
+  { name: 'MY',      path: '/my-info',                 auth: 'paid-user' },
+  { name: 'GO',      path: '/search/active-officials', auth: 'paid-user' },
+  { name: 'EO',      path: '/search/former-officials', auth: 'tax-officer' },
+  { name: 'ER',      path: '/tax-history-report/me',   auth: 'tax-officer' },
+  // ... 11개 모듈 entry
+];
+
+for (const p of PAGES) {
+  test(`[DIAG-${p.name}] ${p.path} 진입 가능`, async ({ page }) => {
+    test.use({ storageState: `tests/.auth/${p.auth}.json` });
+    await page.goto(p.path);
+    await expect(page.locator('body')).toBeVisible();
+    // 500 오류 페이지가 아닌지 명시적 확인
+    await expect(page.getByText(/500|서버 오류|Internal Server Error/i)).not.toBeVisible({ timeout: 3000 }).catch(() => {});
+  });
+}
+```
+
+```bash
+SKIP_AUTH_SETUP=1 npx playwright test tests/_diag/page-availability.spec.ts --project=chromium
+```
+
+진단 결과:
+- ✅ 모두 PASS → Phase 3 §1 본 실행 진행
+- ❌ 일부 PASS / 일부 FAIL → 실패 모듈은 staging 이슈일 가능성. spec의 해당 항목을 `[B]`로 임시 마킹 후 본 실행 (실패 일괄 발생 방지)
+- ❌ 모두 FAIL → storageState 만료 또는 staging 다운. 본 실행 금지, 환경 복구 후 재시도
+
+> 💡 진단 spec은 `.gitignore`에 `tests/_diag/` 추가하거나 별도 폴더로 분리해 본 실행에 섞이지 않게 한다.
+
+---
+
 ## 1. 전체 실행
 
 ```bash

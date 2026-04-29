@@ -5,6 +5,43 @@
 
 ---
 
+## 0. SPA Navigation — 가장 중요 ⚠️
+
+**과거 244건 실패의 가장 큰 원인이 이 패턴 미적용이었다.** SPA에서 `page.goto('/deep-url')`을 직접 치면 라우터가 홈(`/`)으로 redirect하는 경우가 많다. spec 작성자가 이 동작을 모르면 **deep page에 진입하지 못한 채 selector를 찾으려다 timeout**으로 실패한다.
+
+### 잘못된 패턴 (❌)
+
+```typescript
+// 직접 deep URL 진입 — SPA에서 홈으로 redirect됨
+await page.goto('/my-info');
+await expect(page.getByText('내 정보')).toBeVisible();  // 홈에 있는 단어 우연 매치 또는 timeout
+```
+
+### 올바른 패턴 (✅)
+
+```typescript
+// 홈 진입 → GNB 클릭 → 페이지 로드 대기
+async function navigateTo(page: Page, gnbLabel: string) {
+  await page.goto('/');
+  const menu = page.getByText(gnbLabel).first();
+  if (await menu.isVisible({ timeout: 5000 })) {
+    await menu.dispatchEvent('click');  // 일부 GNB는 normal click 실패 — dispatchEvent 권장
+    await page.waitForLoadState('load', { timeout: 20000 }).catch(() => {});
+  }
+}
+
+await navigateTo(page, '내 정보');
+await expect(page.getByTestId('myinfo-name-label').first()).toBeVisible();
+```
+
+### 판단 기준
+
+- **모든 deep URL 테스트는 GNB 경로로 진입**해야 한다는 가정으로 시작
+- 직접 URL 진입이 가능한지는 **PoC 단계(phase 2.0)에서 1번 검증**한다 (아래 §10 참고)
+- 직접 진입이 가능하면 사용해도 되지만, 안 되는 페이지가 1개라도 있으면 모든 spec에 GNB 패턴 강제
+
+---
+
 ## 1. PDF / 파일 다운로드
 
 `page.waitForEvent('download')`로 다운로드 트리거 자체를 자동화 검증한다.

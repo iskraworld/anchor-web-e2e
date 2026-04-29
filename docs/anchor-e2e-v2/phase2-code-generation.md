@@ -6,6 +6,42 @@
 
 ---
 
+## 🚨 Phase 2.0 — PoC 모듈 1개로 패턴 확정 (필수 선행)
+
+**이 단계를 건너뛰면 Phase 3에서 수백 건이 같은 이유로 한꺼번에 실패한다.**
+
+> 과거 사례: 11개 모듈 818건을 일괄 생성 후 처음 실행하자 244건 실패. 원인의 70%가 **SPA navigation 패턴 미적용** + **strict mode violation** + **storageState 만료** 등 *공통 패턴 오류*. 1개 모듈을 먼저 PoC했다면 첫 실행에서 발견되어 나머지 10개 모듈에 패턴이 적용됐을 것.
+
+### 절차
+
+1. **가장 단순한 모듈 1개 선택** (예: MY — 내 정보, ~50건)
+2. 해당 모듈 spec만 생성 (다른 모듈은 손대지 않음)
+3. **즉시 실행**:
+   ```bash
+   SKIP_AUTH_SETUP=1 npx playwright test tests/qa/my/ --project=chromium
+   ```
+4. 실패 패턴 분석 — 아래 체크리스트로 진단
+
+### PoC 진단 체크리스트
+
+| 증상 | 원인 후보 | 패턴 확정 |
+|---|---|---|
+| 대부분 timeout, selector 못 찾음 | SPA direct URL → 홈 redirect | `automation-patterns.md` §0 GNB 클릭 패턴 |
+| `getByText` strict mode violation | 광범위 정규식, 복수 매칭 | `getByRole` / `getByTestId` 우선, `.first()` 강제 |
+| `/login` redirect 보임 | storageState 만료 | auth setup 재실행 + describe 블록에 `test.use({ storageState })` |
+| 일부 페이지만 500 응답 | staging 서버 오류 | 해당 페이지는 `[B]`로 임시 마킹, BLOCKED 추적 |
+| `expect()` 직후 무관한 실패 전파 | 가드 미적용 | `isVisibleSoft` 헬퍼 강제, `.catch(() => false)` 가드 |
+
+### 패턴이 확정될 때까지 다른 모듈 생성 금지
+
+PoC 모듈이 **0 fail (intentional skip만 허용)** 될 때까지 나머지 10개 모듈은 시작하지 않는다. 패턴이 확정되면:
+- 헬퍼 함수(navigateTo, isVisibleSoft, safeClick 등)를 모듈간 공유 위치(예: 각 spec 상단 또는 별도 helper)에 정의
+- 나머지 모듈은 같은 헬퍼·같은 패턴으로 일괄 생성
+
+**확정된 패턴 = automation-patterns.md 0~9번 항목 + 모듈 공통 헬퍼.** Phase 2.0 완료 후에야 Phase 2 본 작업으로 진입.
+
+---
+
 ## ⚠️ 핵심 원칙
 
 **docs/qa 활성 TC-ID == tests/qa spec TC-ID (test + test.skip 합계)**

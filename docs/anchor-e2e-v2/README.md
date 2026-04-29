@@ -50,12 +50,19 @@ playwright-report/
 
 ## Phase 순서
 
-| Phase | 파일 | 소요 예상 |
-|---|---|---|
-| 0 | phase0-prerequisites.md | 10분 |
-| 1 | phase1-qa-analysis.md | 30분 |
-| 2 | phase2-code-generation.md | 3~4시간 |
-| 3 | phase3-run-and-report.md | 1시간 |
+| Phase | 파일 | 소요 예상 | 핵심 가드 |
+|---|---|---|---|
+| 0 | phase0-prerequisites.md | 10분 | storageState mtime ≤ 12h |
+| 1 | phase1-qa-analysis.md | 30분 | TC-ID 누락 0 |
+| **2.0** | phase2-code-generation.md §Phase 2.0 | **30분~1시간** | **PoC 1모듈 0 fail 도달 시까지 다른 모듈 생성 금지** |
+| 2 | phase2-code-generation.md | 3~4시간 | `npm run verify:coverage` 누락 0 |
+| **3.0** | phase3-run-and-report.md §0 | **5분** | **진단 spec — 페이지 진입 가능성 확인** |
+| 3 | phase3-run-and-report.md | 1시간 | `npm run verify:coverage:audit` [M] ≤ 5% |
+
+### 추가 참고 문서
+
+- [automation-patterns.md](./automation-patterns.md) — Playwright 자동화 패턴 모음 ([M] 처리 전 필독)
+- [qa-report-setup.md](./qa-report-setup.md) — 다른 프로젝트로 가져갈 때 셋업 가이드
 
 ---
 

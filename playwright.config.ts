@@ -45,7 +45,7 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      dependencies: ['setup'],
+      dependencies: process.env.SKIP_AUTH_SETUP ? [] : ['setup'],
       testIgnore: '**/auth.setup.ts',
     },
   ],

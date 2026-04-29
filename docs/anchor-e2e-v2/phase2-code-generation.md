@@ -6,6 +6,14 @@
 
 ---
 
+## ⚠️ 핵심 원칙
+
+**spec 파일의 TC-ID 총 수 == qa-automation-map.md 의 총 TC 수 == docs/qa 기준 872개**
+
+이 숫자가 맞지 않으면 Phase 2가 완료된 것이 아니다.
+
+---
+
 ## 디렉토리 구조
 
 ```
@@ -93,20 +101,22 @@ test.describe('AUTH — 로그인/회원가입', () => {
 건너뛰지만 TC-ID는 결과에 나타난다.
 
 ```typescript
-test.skip('[AUTH-4-6-03] 카카오 소셜 로그인', async ({ page }) => {
+test.skip('[AUTH-4-6-03][M] 카카오 소셜 로그인', async ({ page }) => {
   // MANUAL: OAuth 팝업 — Playwright 자동화 차단
 });
 ```
 
 ### 4. SKIP 케이스 처리
 
-사람이 수행하는 케이스. 이유를 주석으로 명시한다.
+사람이 수행하는 케이스 (정책상 제외). 이유를 주석으로 명시한다.
 
 ```typescript
-test.skip('[AUTH-4-6-01] 신규 일반 회원가입', async ({ page }) => {
-  // SKIP: 사람이 수행 — 계정 생성 후 삭제 필요, 스테이징 데이터 오염 방지
+test.skip('[AUTH-탈퇴-01][S] 계정 완전 탈퇴', async ({ page }) => {
+  // SKIP: 테스트 계정 영구 삭제 위험 — 수동 수행
 });
 ```
+
+> ⚠️ SKIP을 남발하지 않는다. MANUAL + SKIP 합계가 30개를 초과하면 반드시 재검토한다.
 
 ### 5. 삭제된 TC
 
@@ -121,6 +131,34 @@ test.use({ storageState: 'tests/.auth/taxpayer-paid.json' });
 ```
 
 각 describe 블록에서 필요한 계정으로 설정.
+
+### 7. CRUD 테스트 원상복구
+
+데이터 변경 케이스(프로필 저장, 이력 추가 등)는 afterEach/afterAll에서 원상복구한다.
+
+```typescript
+test.afterEach(async ({ page }) => {
+  // 변경한 데이터를 원래 상태로 복구
+});
+```
+
+### 8. UI 미구현 항목
+
+현재 UI에 없는 버튼/기능이 있으면 `test.skip()`으로 표시하되, 이유에 "UI 미구현" 명시.
+릴리즈 후 해제 예정임을 주석에 기재.
+
+```typescript
+test.skip('[ER-1-05][M] PDF 다운로드', async ({ page }) => {
+  // MANUAL: UI 미구현 — PDF 버튼 릴리즈 후 재활성화 필요
+});
+```
+
+### 9. 불안정한 UI 요소 처리
+
+자동완성, 드롭다운 등 타이밍 이슈가 있는 요소:
+- `waitForSelector` + 충분한 timeout 사용
+- `dispatchEvent('click')` 사용 (viewport 외부 요소)
+- retry 로직 추가
 
 ---
 
@@ -141,20 +179,14 @@ npx playwright test tests/qa/my/ --project=chromium
 
 ---
 
-## 주의사항
-
-- 데이터 변경 케이스(프로필 저장, 이력 추가 등)는 setUp/tearDown으로 원상복구
-- 스테이징 데이터에 의존하는 케이스는 `test.slow()`로 마킹
-- 한 모듈이 다른 모듈 데이터에 의존하는 경우 주석으로 명시
-
----
-
-## 완료 기준
+## ✅ 완료 기준
 
 - [ ] 11개 모듈 spec 파일 생성
+- [ ] **spec 파일 전체 TC-ID 수 == 872개 (삭제된 TC 제외)**
 - [ ] 모든 활성 TC-ID가 코드에 1:1 매핑됨
 - [ ] 삭제된 TC는 코드에 없음
 - [ ] 각 모듈 단독 실행 시 에러 없음 (FAIL은 허용)
 - [ ] `npx playwright test tests/qa/ --project=chromium` 전체 실행 가능
+- [ ] MANUAL + SKIP 합계 검토 완료
 
 완료 → Phase 3로 이동.

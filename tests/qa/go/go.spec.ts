@@ -1031,3 +1031,23 @@ test.describe('GO — 현직 공무원 탐색', () => {
     });
   });
 });
+
+// ─── 누락 TC 보강 — docs/qa 기준 ────────────────────────────────
+
+test.describe('GO — 요구기능 삭제 (Deprecated)', () => {
+  test.skip('[GO-1-23][D] 관계망 조건 초기화', async () => {
+    // DEPRECATED: 관계망 조건 초기화 기능 제거됨
+  });
+  test.skip('[GO-1-33][D] 검색 조건 일치 값 강조 표시', async () => {
+    // DEPRECATED: 검색 결과 강조 UI 제거됨
+  });
+  test.skip('[GO-1-38][D] 인사말 영역 확인', async () => {
+    // DEPRECATED: 인사말 영역 제거됨
+  });
+  test.skip('[GO-1-39][D] 직급/직책 필터 축약 상태', async () => {
+    // DEPRECATED: 필터 축약 UI 제거됨
+  });
+  test.skip('[GO-1-41][D] 비교 대상 개별 인물 목록 필터링', async () => {
+    // DEPRECATED: 비교 대상 필터링 기능 제거됨
+  });
+});

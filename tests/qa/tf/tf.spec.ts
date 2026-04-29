@@ -1003,3 +1003,20 @@ test.describe('TF — 법인&팀연동관리', () => {
     });
   });
 });
+
+// ─── 누락 TC 보강 — docs/qa 기준 ────────────────────────────────
+
+test.describe('TF — 요구기능 삭제 (Deprecated)', () => {
+  test.skip('[TF-1-02][D] 구성원 나의 연동 상태 표시', async () => {
+    // DEPRECATED: 구성원 연동 상태 UI 제거됨
+  });
+  test.skip('[TF-3-09][D] 법인 운영 권한 이임 — 문의하기', async () => {
+    // DEPRECATED: 문의하기 진입점 제거됨
+  });
+  test.skip('[TF-3-12][D] 비세무사 전용 필드 확인', async () => {
+    // DEPRECATED: 비세무사 전용 필드 제거됨
+  });
+  test.skip('[TF-3-25][D] 미구독 소유자 운영 권한 이임 버튼 비활성화', async () => {
+    // DEPRECATED: 미구독 소유자 비활성화 정책 변경
+  });
+});

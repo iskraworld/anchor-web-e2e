@@ -1022,3 +1022,14 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
   });
 
 });
+
+// ─── 누락 TC 보강 — docs/qa 기준 ────────────────────────────────
+
+test.describe('HOME-TP — 수동 검증 필요 (Manual)', () => {
+  test.skip('[HOME-TP-1-05][M] 납세자 홈 — 항목 (UI 미출시)', async () => {
+    // MANUAL: 관련 UI 미출시
+  });
+  test.skip('[HOME-TP-1-23][M] 납세자 홈 — 항목 (UI 미출시)', async () => {
+    // MANUAL: 관련 UI 미출시
+  });
+});

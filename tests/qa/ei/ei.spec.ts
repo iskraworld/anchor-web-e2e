@@ -800,3 +800,38 @@ test.describe('EI — 전문이력관리', () => {
     });
   });
 });
+
+// ─── 누락 TC 보강 — docs/qa 기준 ────────────────────────────────
+
+test.describe('EI — 요구기능 삭제 (Deprecated)', () => {
+  test.skip('[EI-1-19][D] 소개글/전화번호/이메일 저장 검증', async () => {
+    // DEPRECATED: 입력 데이터 저장 정책 변경
+  });
+  test.skip('[EI-1-26][D] 실적 사례 전문 영역 증빙 승인 여부', async () => {
+    // DEPRECATED: 증빙 승인 기능 제거됨
+  });
+  test.skip('[EI-1-27][D] 전화번호 안심번호 처리 확인', async () => {
+    // DEPRECATED: 안심번호 기능 제거됨
+  });
+});
+
+test.describe('EI — 수동 검증 필요 (Manual)', () => {
+  test.skip('[EI-1-08][M] 총 경력 파일 업로드', async () => {
+    // MANUAL: 세무사 자격 인증 — 관리자 승인 필요
+  });
+  test.skip('[EI-1-09][M] 자격증 업로드 모달 파일 제출', async () => {
+    // MANUAL: 세무사 자격 인증 — 관리자 승인 필요
+  });
+  test.skip('[EI-1-17][M] 승인 상태 총 경력 항목 확인', async () => {
+    // MANUAL: 세무사 자격 인증 — 관리자 승인 필요
+  });
+  test.skip('[EI-1-31][M] 소개글 빈 값 저장 유효성 검증', async () => {
+    // MANUAL: 폼 유효성 검증 — UI 미구현
+  });
+  test.skip('[EI-1-32][M] 유효하지 않은 전화번호 입력 검증', async () => {
+    // MANUAL: 폼 유효성 검증 — UI 미구현
+  });
+  test.skip('[EI-1-33][M] 유효하지 않은 이메일 입력 검증', async () => {
+    // MANUAL: 폼 유효성 검증 — UI 미구현
+  });
+});

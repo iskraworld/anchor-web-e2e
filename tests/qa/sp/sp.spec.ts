@@ -654,3 +654,56 @@ test.describe('SP — 구독관리', () => {
     });
   });
 });
+
+// ─── 누락 TC 보강 — docs/qa 기준 ────────────────────────────────
+
+test.describe('SP — 요구기능 삭제 (Deprecated)', () => {
+  test.skip('[SP-2-04][D] 구독 확인 다이얼로그 — 구독 버튼 선택', async () => {
+    // DEPRECATED: 결제 모듈 요구사항 변경
+  });
+  test.skip('[SP-2-05][D] 결제 모듈에서 결제 완료', async () => {
+    // DEPRECATED: 결제 모듈 요구사항 변경
+  });
+  test.skip('[SP-2-12][D] 추천 배지 확인', async () => {
+    // DEPRECATED: 추천 배지 기능 제거됨
+  });
+});
+
+test.describe('SP — 수동 검증 필요 (Manual)', () => {
+  test.skip('[SP-1-03][M] "현재 구독 멤버십" 탭 선택', async () => {
+    // MANUAL: 결제 페이지 — PG 결제 자동화 불가
+  });
+  test.skip('[SP-1-04][M] "결제 내역" 탭 선택', async () => {
+    // MANUAL: 결제 페이지 — PG 결제 자동화 불가
+  });
+  test.skip('[SP-1-05][M] 결제 수단 추가 버튼 선택', async () => {
+    // MANUAL: 결제 페이지 — PG 결제 자동화 불가
+  });
+  test.skip('[SP-1-06][M] 등록된 결제 수단 중 기본 설정', async () => {
+    // MANUAL: 결제 페이지 — PG 결제 자동화 불가
+  });
+  test.skip('[SP-1-07][M] 결제 수단 삭제', async () => {
+    // MANUAL: 결제 페이지 — PG 결제 자동화 불가
+  });
+  test.skip('[SP-1-15][M] "결제 내역" 탭 페이지네이션', async () => {
+    // MANUAL: 결제 데이터 — PG 결제 자동화 불가
+  });
+  test.skip('[SP-1-21][M] 결제 내역 최신순 정렬 확인', async () => {
+    // MANUAL: 결제 데이터 — PG 결제 자동화 불가
+  });
+  test.skip('[SP-1-22][M] 결제 내역 페이지네이션 10건씩', async () => {
+    // MANUAL: 결제 데이터 — PG 결제 자동화 불가
+  });
+  test.skip('[SP-1-23][M] 결제 수단 추가 버튼 비활성화', async () => {
+    // MANUAL: 결제 페이지 — PG 결제 자동화 불가
+  });
+  test.skip('[SP-1-24][M] 결제 내역 처리 상태 확인', async () => {
+    // MANUAL: 결제 데이터 — PG 결제 자동화 불가
+  });
+  test.skip('[SP-1-25][M] 결제 수단 카드 정보 표시', async () => {
+    // MANUAL: 결제 페이지 — PG 결제 자동화 불가
+  });
+  test.skip('[SP-1-33][M] 구독 후 해지 완료 상태 결제 내역', async () => {
+    // MANUAL: 결제 데이터 — PG 결제 자동화 불가
+  });
+});

@@ -1038,3 +1038,14 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
   });
 
 });
+
+// ─── 누락 TC 보강 — docs/qa 기준 ────────────────────────────────
+
+test.describe('HOME-TA — 수동 검증 필요 (Manual)', () => {
+  test.skip('[HOME-TA-3-16][M] 세무사 홈 — 항목 (UI 미출시)', async () => {
+    // MANUAL: 관련 UI 미출시
+  });
+  test.skip('[HOME-TA-3-18][M] 세무사 홈 — 항목 (UI 미출시)', async () => {
+    // MANUAL: 관련 UI 미출시
+  });
+});

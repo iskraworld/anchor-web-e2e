@@ -1184,3 +1184,48 @@ test.describe('AUTH — 4-8. 세무법인 회원가입', () => {
     await expect(page.locator('body')).toBeVisible();
   });
 });
+
+// ─── 요구기능 삭제 (Deprecated) — docs/qa에 ~~취소선~~ 처리됨 ─────────────────
+// 서비스에서 해당 기능이 제거되어 더 이상 테스트 불가. [D] 태그로 보존.
+
+test.describe('AUTH — 요구기능 삭제 (Deprecated)', () => {
+  test.skip('[AUTH-1-04][D] 전직 공무원 찾기 선택 — 구독 유도 안내', async () => {
+    // DEPRECATED: 비로그인 홈에서 "전직 공무원 찾기" 진입점 제거됨
+  });
+  test.skip('[AUTH-2-03][D] 일반 납세자 멤버십 탭 선택', async () => {
+    // DEPRECATED: 멤버십 탭 구조 변경
+  });
+  test.skip('[AUTH-2-05][D] 새창으로 열기 선택', async () => {
+    // DEPRECATED: 새창 열기 옵션 제거됨
+  });
+  test.skip('[AUTH-3-04][D] 전문 분야 필터 선택', async () => {
+    // DEPRECATED: 비로그인 세무사 검색 필터 단순화
+  });
+  test.skip('[AUTH-3-06][D] 프로필 카드 선택', async () => {
+    // DEPRECATED: 비로그인 프로필 카드 진입 제거됨
+  });
+  test.skip('[AUTH-3-11][D] 비로그인 공개 가능 정보만 표시 확인', async () => {
+    // DEPRECATED: 비로그인 프로필 페이지 정책 변경
+  });
+  test.skip('[AUTH-6-11][D] 진행 단계 표시 확인', async () => {
+    // DEPRECATED: 회원가입 진행 단계 UI 제거됨
+  });
+  test.skip('[AUTH-6-21][D] 필수 약관 미동의 상태 검증', async () => {
+    // DEPRECATED: 회원가입 약관 검증 정책 변경
+  });
+  test.skip('[AUTH-7-11][D] 진행 단계 확인', async () => {
+    // DEPRECATED: 세무사 회원가입 진행 단계 UI 제거됨
+  });
+  test.skip('[AUTH-7-22][D] 필수 약관 미동의 상태 검증', async () => {
+    // DEPRECATED: 세무사 회원가입 약관 검증 정책 변경
+  });
+  test.skip('[AUTH-8-01][D] 세무법인 회원가입 화면 진입', async () => {
+    // DEPRECATED: 세무법인 회원가입 흐름 변경 (진행 단계 표시 제거)
+  });
+  test.skip('[AUTH-8-13][D] 법인 인증 안내 문구 확인', async () => {
+    // DEPRECATED: 법인 인증 안내 문구 제거됨
+  });
+  test.skip('[AUTH-8-25][D] 필수 약관 미동의 상태 검증', async () => {
+    // DEPRECATED: 세무법인 회원가입 약관 검증 정책 변경
+  });
+});

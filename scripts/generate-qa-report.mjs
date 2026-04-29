@@ -29,6 +29,7 @@ const DELETED_ROW_RE2 = /^\|\s*~~([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)~~\s*\|/
 const TC_ID_RE2 = /^[A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*$/;
 
 function buildDocsCounts(docsDir) {
+  // 활성 + 삭제된 TC 모두 포함 (전체 docs 기준)
   const seen = new Set();
   const counts = {};
   if (!existsSync(docsDir)) return counts;
@@ -36,13 +37,13 @@ function buildDocsCounts(docsDir) {
     if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
     const lines = readFileSync(join(docsDir, entry.name), 'utf-8').split('\n');
     for (const line of lines) {
-      if (DELETED_ROW_RE2.test(line)) continue;
-      const m = line.match(ACTIVE_ROW_RE2);
-      if (m && TC_ID_RE2.test(m[1]) && !seen.has(m[1])) {
-        seen.add(m[1]);
-        const mod = m[1].match(/^(HOME-TA|HOME-TP|[A-Z]+)/)?.[1] ?? '?';
-        counts[mod] = (counts[mod] ?? 0) + 1;
-      }
+      const del = line.match(DELETED_ROW_RE2);
+      const act = line.match(ACTIVE_ROW_RE2);
+      const tcId = del?.[1] ?? (act && TC_ID_RE2.test(act[1]) ? act[1] : null);
+      if (!tcId || seen.has(tcId)) continue;
+      seen.add(tcId);
+      const mod = tcId.match(/^(HOME-TA|HOME-TP|[A-Z]+)/)?.[1] ?? '?';
+      counts[mod] = (counts[mod] ?? 0) + 1;
     }
   }
   return counts;
@@ -80,8 +81,8 @@ function parseSpecReasons(specDir) {
         const cm = lines[j].match(/\/\/\s*(.+)/);
         if (cm) { reason = cm[1].trim(); break; }
       }
-      // Clean MANUAL:/SKIP: prefixes
-      reason = reason.replace(/^MANUAL:\s*/i, '').replace(/^SKIP:\s*/i, '');
+      // Clean MANUAL:/SKIP:/DEPRECATED: prefixes
+      reason = reason.replace(/^MANUAL:\s*/i, '').replace(/^SKIP:\s*/i, '').replace(/^DEPRECATED:\s*/i, '');
       reasons.set(tcId, reason || '사유 미기재');
     }
   }
@@ -94,7 +95,7 @@ const specReasons = parseSpecReasons(resolve(root, 'tests/qa'));
 
 // ── TC-ID 파서 ────────────────────────────────────────────────────────────────
 // HOME-TA / HOME-TP 같은 복합 prefix 지원 — (?:-[A-Z]+)* 추가
-const TC_RE = /^\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d-]+)\](\[M\]|\[S\])?/;
+const TC_RE = /^\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d-]+)\](\[M\]|\[S\]|\[D\])?/;
 
 function parseTcId(title) {
   const m = title.match(TC_RE);
@@ -138,12 +139,51 @@ for (const fileSuite of data.suites ?? []) {
 
 const tcMap = new Map();
 
+// 1) 결과 JSON 기반으로 채움
 for (const spec of allSpecs) {
   const parsed = parseTcId(spec.title);
   if (!parsed) continue;
   const { id, tag } = parsed;
   const reason = specReasons.get(id) ?? '';
   tcMap.set(id, { id, tag, title: spec.title, status: spec.status, error: spec.error, file: spec.file, reason });
+}
+
+// 2) spec 파일 직접 파싱 — 결과 JSON에 없는 TC도 포함 ([D] 새로 추가된 것 등)
+function collectAllSpecTcs(specDir) {
+  const out = [];
+  const RE = /test(?:\.skip)?\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\](\[M\]|\[S\]|\[D\])?[^'"]*)['"]/g;
+  function walk(d) {
+    if (!existsSync(d)) return;
+    for (const entry of readdirSync(d, { withFileTypes: true })) {
+      const full = join(d, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith('.spec.ts')) {
+        const content = readFileSync(full, 'utf-8');
+        let m;
+        while ((m = RE.exec(content)) !== null) {
+          out.push({ id: m[2], tag: m[3] ?? '', title: m[1] });
+        }
+        RE.lastIndex = 0;
+      }
+    }
+  }
+  walk(specDir);
+  return out;
+}
+
+for (const tc of collectAllSpecTcs(resolve(root, 'tests/qa'))) {
+  if (tcMap.has(tc.id)) {
+    // 결과 JSON에 있으면 tag만 보강 ([D]는 결과 status보다 우선)
+    const existing = tcMap.get(tc.id);
+    if (tc.tag && !existing.tag) existing.tag = tc.tag;
+  } else {
+    // 결과 JSON에 없는 TC — 정적 분류 (대부분 [D]/[M]/[S] test.skip)
+    tcMap.set(tc.id, {
+      id: tc.id, tag: tc.tag, title: tc.title,
+      status: 'skipped', error: null, file: '',
+      reason: specReasons.get(tc.id) ?? '',
+    });
+  }
 }
 
 // ── 모듈별 그룹화 ─────────────────────────────────────────────────────────────
@@ -179,6 +219,7 @@ for (const [, tcs] of byModule) {
 // ── 결과 분류 ─────────────────────────────────────────────────────────────────
 
 function classifyResult(tc) {
+  if (tc.tag === '[D]') return 'deprecated';
   if (tc.tag === '[M]') return 'manual';
   if (tc.tag === '[S]') return 'skip';
   if (tc.status === 'passed') return 'pass';
@@ -188,11 +229,11 @@ function classifyResult(tc) {
 }
 
 function resultIcon(result) {
-  return { pass: '✅', fail: '❌', manual: '⏭️', skip: '👤', unknown: '❓' }[result] ?? '❓';
+  return { pass: '✅', fail: '❌', manual: '⏭️', skip: '👤', deprecated: '🗑️', unknown: '❓' }[result] ?? '❓';
 }
 
 function resultLabel(result) {
-  return { pass: 'PASS', fail: 'FAIL', manual: '수동', skip: '스킵', unknown: '?' }[result] ?? '?';
+  return { pass: 'PASS', fail: 'FAIL', manual: '수동', skip: '스킵', deprecated: '삭제', unknown: '?' }[result] ?? '?';
 }
 
 // 스킵 이유 분류
@@ -211,12 +252,13 @@ const now = new Date().toLocaleString('ko-KR', {
 });
 
 const allTcs = [...tcMap.values()];
-const totalAll    = allTcs.length;
-const totalPass   = allTcs.filter(t => classifyResult(t) === 'pass').length;
-const totalFail   = allTcs.filter(t => classifyResult(t) === 'fail').length;
-const totalManual = allTcs.filter(t => classifyResult(t) === 'manual').length;
-const totalSkip   = allTcs.filter(t => classifyResult(t) === 'skip').length;
-const autoTotal   = totalAll - totalManual - totalSkip;
+const totalAll        = allTcs.length;
+const totalPass       = allTcs.filter(t => classifyResult(t) === 'pass').length;
+const totalFail       = allTcs.filter(t => classifyResult(t) === 'fail').length;
+const totalManual     = allTcs.filter(t => classifyResult(t) === 'manual').length;
+const totalSkip       = allTcs.filter(t => classifyResult(t) === 'skip').length;
+const totalDeprecated = allTcs.filter(t => classifyResult(t) === 'deprecated').length;
+const autoTotal       = totalAll - totalManual - totalSkip - totalDeprecated;
 const overallStatus = totalFail > 0 ? 'FAIL' : 'PASS';
 const coveragePct = Math.min(100, Math.round((totalAll / DOCS_TOTAL) * 100));
 const notImpl = Math.max(0, DOCS_TOTAL - totalAll);
@@ -303,12 +345,14 @@ function summaryRows() {
     const f  = tcs.filter(t => classifyResult(t) === 'fail').length;
     const m  = tcs.filter(t => classifyResult(t) === 'manual').length;
     const sk = tcs.filter(t => classifyResult(t) === 'skip').length;
+    const d  = tcs.filter(t => classifyResult(t) === 'deprecated').length;
     const cls = f > 0 ? 'fail' : 'pass';
     return `<tr class="${cls}">
       <td><a href="#module-${mod}">${mod}</a></td>
       <td class="num">${tcs.length}</td>
       <td class="num pass-cell">${p}</td>
       <td class="num ${f > 0 ? 'fail-cell' : ''}">${f > 0 ? f : '—'}</td>
+      <td class="num deprecated-cell">${d > 0 ? d : '—'}</td>
       <td class="num manual-cell">${m > 0 ? m : '—'}</td>
       <td class="num skip-cell">${sk > 0 ? sk : '—'}</td>
     </tr>`;
@@ -430,6 +474,30 @@ function skipTable() {
   </section>`;
 }
 
+// ── 요구기능 삭제 목록 ────────────────────────────────────────────────────────
+
+function deprecatedTable() {
+  const deps = allTcs.filter(t => classifyResult(t) === 'deprecated');
+  if (!deps.length) return '';
+  const rows = deps.map(tc => `
+    <tr>
+      <td><code>${escHtml(tc.id)}</code></td>
+      <td>${escHtml(shortTitle(tc.title))}</td>
+      <td class="reason-cell">${escHtml(tc.reason || '요구사항 변경 — 서비스에서 해당 기능 제거됨')}</td>
+    </tr>`).join('\n');
+  return `<section id="deprecated-list">
+    <h2>🗑️ 요구기능 삭제 목록 (${deps.length}건)</h2>
+    <p class="manual-note">아래 항목은 docs/qa에 정의되어 있었으나 요구사항 변경으로 서비스에서 해당 기능이 제거된 케이스입니다. 테스트 대상에서 공식적으로 제외됩니다.</p>
+    <div class="tc-table-wrap">
+    <table class="tc-table">
+      <colgroup><col style="width:140px"><col><col style="width:260px"></colgroup>
+      <thead><tr><th>TC-ID</th><th>설명</th><th>삭제 사유</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>
+  </section>`;
+}
+
 // ── 실패 상세 ─────────────────────────────────────────────────────────────────
 
 function failDetails() {
@@ -463,8 +531,8 @@ const html = `<!DOCTYPE html>
 <title>Anchor QA 결과 리포트</title>
 <style>
   :root {
-    --pass: #16a34a; --fail: #dc2626; --manual: #d97706; --skip: #6b7280;
-    --pass-bg: #f0fdf4; --fail-bg: #fef2f2; --manual-bg: #fffbeb; --skip-bg: #f9fafb;
+    --pass: #16a34a; --fail: #dc2626; --manual: #d97706; --skip: #6b7280; --deprecated: #7c3aed;
+    --pass-bg: #f0fdf4; --fail-bg: #fef2f2; --manual-bg: #fffbeb; --skip-bg: #f9fafb; --deprecated-bg: #f5f3ff;
     --border: #e5e7eb; --text: #111827; --muted: #6b7280; --code-bg: #f3f4f6;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -499,6 +567,8 @@ const html = `<!DOCTYPE html>
   .big-num.manual .num { color: var(--manual); }
   .big-num.skip { background: var(--skip-bg); }
   .big-num.skip .num { color: var(--skip); }
+  .big-num.deprecated { background: var(--deprecated-bg); border-color: #c4b5fd; }
+  .big-num.deprecated .num { color: var(--deprecated); }
 
   .module-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 28px; }
   .module-nav a { padding: 4px 12px; border: 1px solid var(--border); border-radius: 20px;
@@ -522,6 +592,7 @@ const html = `<!DOCTYPE html>
   .fail-cell { color: var(--fail); font-weight: 600; }
   .manual-cell { color: var(--manual); }
   .skip-cell { color: var(--skip); }
+  .deprecated-cell { color: var(--deprecated); }
 
   section { margin-bottom: 36px; }
   .module-header { display: flex; align-items: center; justify-content: space-between;
@@ -564,10 +635,11 @@ const html = `<!DOCTYPE html>
 
   .result-badge { display: inline-block; padding: 2px 8px; border-radius: 4px;
                   font-size: 0.75rem; font-weight: 600; }
-  .result-pass   { background: var(--pass-bg); color: var(--pass); }
-  .result-fail   { background: var(--fail-bg); color: var(--fail); }
-  .result-manual { background: var(--manual-bg); color: var(--manual); }
-  .result-skip   { background: var(--skip-bg); color: var(--skip); }
+  .result-pass       { background: var(--pass-bg); color: var(--pass); }
+  .result-fail       { background: var(--fail-bg); color: var(--fail); }
+  .result-manual     { background: var(--manual-bg); color: var(--manual); }
+  .result-skip       { background: var(--skip-bg); color: var(--skip); }
+  .result-deprecated { background: var(--deprecated-bg); color: var(--deprecated); }
 
   .fail-section h2 { background: var(--fail-bg); border-color: #fca5a5; }
   .fail-section .tc-table { border-color: #fca5a5; }
@@ -593,6 +665,7 @@ const html = `<!DOCTYPE html>
   <div class="big-numbers">
     <div class="big-num pass"><div class="num">${totalPass}</div><div class="lbl">✅ PASS</div></div>
     <div class="big-num ${totalFail > 0 ? 'fail' : 'skip'}"><div class="num">${totalFail}</div><div class="lbl">❌ FAIL</div></div>
+    <div class="big-num deprecated"><div class="num">${totalDeprecated}</div><div class="lbl">🗑️ 요구기능 삭제</div></div>
     <div class="big-num manual"><div class="num">${totalManual}</div><div class="lbl">⏭️ 수동 검증 필요</div></div>
     <div class="big-num skip"><div class="num">${totalSkip}</div><div class="lbl">👤 스킵</div></div>
   </div>
@@ -601,6 +674,7 @@ const html = `<!DOCTYPE html>
     <a href="#coverage">📊 커버리지</a>
     ${moduleOrder.map(m => byModule.get(m)?.length ? `<a href="#module-${m}">${m}</a>` : '').join('')}
     ${totalManual > 0 ? '<a href="#manual-checks">⏭️ 수동</a>' : ''}
+    ${totalDeprecated > 0 ? '<a href="#deprecated-list">🗑️ 삭제</a>' : ''}
     ${totalSkip > 0 ? '<a href="#skip-list">👤 스킵</a>' : ''}
     ${totalFail > 0 ? '<a href="#fail-details">❌ 실패</a>' : ''}
   </div>
@@ -612,7 +686,7 @@ const html = `<!DOCTYPE html>
   <div class="summary-wrap">
     <table class="summary-table">
       <thead>
-        <tr><th>모듈</th><th class="num">전체</th><th class="num">✅ PASS</th><th class="num">❌ FAIL</th><th class="num">⏭️ 수동</th><th class="num">👤 스킵</th></tr>
+        <tr><th>모듈</th><th class="num">전체</th><th class="num">✅ PASS</th><th class="num">❌ FAIL</th><th class="num">🗑️ 삭제</th><th class="num">⏭️ 수동</th><th class="num">👤 스킵</th></tr>
       </thead>
       <tbody>
         ${summaryRows()}
@@ -623,6 +697,7 @@ const html = `<!DOCTYPE html>
           <td class="num">${totalAll}</td>
           <td class="num pass-cell">${totalPass}</td>
           <td class="num ${totalFail > 0 ? 'fail-cell' : ''}">${totalFail > 0 ? totalFail : '—'}</td>
+          <td class="num deprecated-cell">${totalDeprecated > 0 ? totalDeprecated : '—'}</td>
           <td class="num manual-cell">${totalManual > 0 ? totalManual : '—'}</td>
           <td class="num skip-cell">${totalSkip > 0 ? totalSkip : '—'}</td>
         </tr>
@@ -632,15 +707,15 @@ const html = `<!DOCTYPE html>
 
   ${totalFail > 0 ? failDetails() : ''}
 
+  ${manualTable()}
+
+  ${deprecatedTable()}
+
+  ${skipTable()}
+
   <hr class="section-divider">
 
   ${moduleOrder.map(mod => moduleSection(mod)).join('\n')}
-
-  <hr class="section-divider">
-
-  ${manualTable()}
-
-  ${skipTable()}
 
 </div>
 </body>
@@ -650,5 +725,5 @@ writeFileSync(htmlOut, html, 'utf-8');
 
 console.log(`✅ QA 리포트 → ${htmlOut}`);
 console.log(`   TC-ID 총 ${totalAll}건 (docs/qa ${DOCS_TOTAL}건 기준 커버리지 ${coveragePct}%)`);
-console.log(`   PASS ${totalPass} | FAIL ${totalFail} | 수동 ${totalManual} | 스킵 ${totalSkip}`);
-console.log(`   미구현 ${notImpl}건 — 순차 구현 필요`);
+console.log(`   PASS ${totalPass} | FAIL ${totalFail} | 삭제 ${totalDeprecated} | 수동 ${totalManual} | 스킵 ${totalSkip}`);
+console.log(`   합계: ${totalPass + totalFail + totalDeprecated + totalManual + totalSkip} / 미구현 ${notImpl}건`);

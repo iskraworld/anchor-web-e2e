@@ -266,7 +266,7 @@
       <div class="brand-name">Anchor <span class="brand-sep">/</span> <span class="brand-sub">QA Report</span></div>
     </div>
     <div class="top-meta">
-      <div><span class="dot"></span>실행 <b>2026. 04. 29. PM 06:05</b></div>
+      <div><span class="dot"></span>실행 <b>2026. 04. 29. PM 06:12</b></div>
       <div>자동화 <b>792</b> · 대기 <b>17</b> · 수동 <b>20</b> · 스킵 <b>15</b></div>
     </div>
     <div class="top-actions">
@@ -852,7 +852,7 @@
   <section id="ambiguous-docs">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">04</span>docs 모호 의심 <span class="chip" style="margin-left:6px">3건</span></h2>
+        <h2 class="sec-title"><span class="idx">04</span>docs 모호 의심 <span class="chip" style="margin-left:6px">9건</span></h2>
         <p class="sec-sub">Full QA는 끊김 없이 끝까지 — 여기서 일괄 검토하여 다음 사이클에 결정 반영</p>
       </div>
     </div>
@@ -861,7 +861,7 @@
       <div class="mod-head">
         <div class="mod-head-l">
           <span class="pill" style="background:#FAEFD8;color:#B26A00"><span class="pip" style="background:#B26A00"></span>AI 해석</span>
-          <span class="mod-name">3건 — 단언이 작성되어 실행됨, 해석 검토 필요</span>
+          <span class="mod-name">9건 — 단언이 작성되어 실행됨, 해석 검토 필요</span>
         </div>
       </div>
       <table class="lt">
@@ -883,6 +883,36 @@
             <tr>
               <td><span class="tc-id">GO-1-34</span></td>
               <td class="reason">docs &quot;전체 텍스트 노출&quot; 메커니즘 모호 (tooltip / title attr / popover).</td>
+            </tr>
+
+            <tr>
+              <td><span class="tc-id">MY-1-12</span></td>
+              <td class="reason">docs &quot;도로명주소 선택 후 변경 완료&quot; — 외부 주소 검색 API 호출 + 선택 + 적용 흐름.</td>
+            </tr>
+
+            <tr>
+              <td><span class="tc-id">MY-1-15</span></td>
+              <td class="reason">docs &quot;입력 후 변경 완료&quot; — 본인인증/SMS 단계가 있는지 모호.</td>
+            </tr>
+
+            <tr>
+              <td><span class="tc-id">MY-1-21</span></td>
+              <td class="reason">docs 기대 결과 텍스트 잘림. &quot;해제&quot; 버튼 클릭 후 결과 (해제 완료 메시지/페이지 변화) 모호.</td>
+            </tr>
+
+            <tr>
+              <td><span class="tc-id">MY-1-33</span></td>
+              <td class="reason">docs &quot;잘못된 인증번호 입력&quot; — 인증번호 발송 후 잘못 입력하는 흐름.</td>
+            </tr>
+
+            <tr>
+              <td><span class="tc-id">MY-1-36</span></td>
+              <td class="reason">docs &quot;주소 삭제하여 공란으로 변경&quot; — 적용 후 결과 (저장 완료/모달 닫힘) 모호.</td>
+            </tr>
+
+            <tr>
+              <td><span class="tc-id">MY-1-39</span></td>
+              <td class="reason">docs &quot;현재 비밀번호 불일치&quot; — 변경 시도(저장 클릭) 후 서버 응답에서 에러.</td>
             </tr>
         </tbody>
       </table>
@@ -6102,7 +6132,7 @@
   </section>
 
   <footer>
-    <div>Anchor QA · 자동 생성 리포트 · 2026. 04. 29. PM 06:05</div>
+    <div>Anchor QA · 자동 생성 리포트 · 2026. 04. 29. PM 06:12</div>
     <div>
       <a href="./index.html">E2E</a>
       <span style="margin:0 8px;color:var(--ink-4)">·</span>

@@ -4,20 +4,20 @@
 
 ---
 
-## 마지막 실행: 2026-04-29 15:59
-## 마지막 업데이트: 2026-04-29 15:59
+## 마지막 실행: 2026-04-29 18:01
+## 마지막 업데이트: 2026-04-29 18:01
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **QA 리포트 디자인 v2 + [B] BLOCKED 카테고리 도입 + [M] 오분류 재발 방지 가드 완료** — 빠졌던 14건 실제 변환 후 풀 스위트 재실행. 최종 PASS 781 / FAIL 11 / 삭제 28 / 대기 17 / 수동 20 / 스킵 15 = 872 (100% 커버리지), [M] 비율 2.5%.
+- **Fake PASS 전량 제거 완료 (274→0)** — 가드 체계 보강 + 에이전트 9개 병렬 위임으로 271건 단언 보강. 최종 739 pass / 55 fail / 80 skip. AMBIGUOUS_DOC 156건 리뷰 대기.
 
 ### 이어서 할 것
-1. HOME staging 회복 후 BLOCKED 11건 (HOME-TP-1-11/12/13/14/35 + HOME-TA-1-07/08/22/23) 재테스트
-2. D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 대기)
-3. ER PDF/링크 버튼 테스트 재활성화 (Anchor 팀 UI 출시 대기)
+1. AMBIGUOUS_DOC 156건 일괄 리뷰
+2. 55건 fail 원인 분류 및 수정
+3. 회귀 분석 결과 확인 (diff-regression.mjs)
 
 ### 막힌 것
-- **HOME staging BLOCKED 11건**: 소속 드롭다운 검색 API 500 오류 — staging 회복 시 재테스트 필요
+- **AMBIGUOUS_DOC 156건**: Eugene 리뷰 필요 (AI 자동 분류 완료, 최종 판단 대기)
 - **setup hang 재발 가능성**: storageState JWT 만료 주기 ~12시간
 
 ### 사람 판단 필요
@@ -25,6 +25,7 @@
 - ER-1-05/1-06/2-05/2-06: PDF·링크 버튼 UI 미구현 — 릴리즈 후 `test.skip()` 해제
 - 다음 QA 프로젝트 진행 시 `docs/anchor-e2e-v2/` + `scripts/verify-coverage.mjs` + `qa-report.config.mjs` 복사하면 동일 정합성·리포트 보장됨
 - AI가 기술적으로 할 수 있는 작업이 막힐 경우, Anchor 팀에 바로 넘기지 말고 승인 형식으로 사람에게 먼저 물어볼 것
+- AMBIGUOUS_DOC 156건 일괄 리뷰 — AI 자동 분류 완료, Eugene 최종 판단 필요
 
 ### 백로그 요약
 - 대기 중: 3개
@@ -78,6 +79,15 @@
 - [x] audit 화이트리스트에 "관리자 승인" 패턴 추가 (EI 자격인증 정당화)
 - [x] 풀 QA 스위트 재실행 → 최종 PASS 781 / FAIL 11 / 삭제 28 / 대기 17 / 수동 20 / 스킵 15 = 872, [M] 비율 2.5%
 - [x] 커밋 `309e339` 푸시 + Vercel prod 배포 완료
+- [x] e2e-v2 가드 체계 4종 추가 (Phase 0 storageState mtime, Phase 2.0 PoC, automation-patterns SPA, Phase 3.0 진단 spec)
+- [x] `verify-coverage.mjs` 통합 강화 (Fake PASS 검출 + [B]/[D] 화이트리스트 + 에이전트 위임 audit)
+- [x] `tests/qa/_shared/helpers.ts` 공통 헬퍼 + phase2 단언 패턴 카탈로그
+- [x] `scripts/diff-regression.mjs` 회귀 분석 스크립트 (Telegram 알림 포함)
+- [x] Fake PASS 274건 전량 제거 (에이전트 9개 병렬 위임으로 271건 단언 보강)
+- [x] AMBIGUOUS_DOC 카테고리 도입 + AI 자동 분류 156건
+- [x] 풀 테스트 재실행 → 739 pass / 55 fail / 80 skip
+- [ ] AMBIGUOUS_DOC 156건 일괄 리뷰
+- [ ] 55건 fail 원인 분류 및 수정
 - [ ] HOME staging BLOCKED 11건 재테스트 (staging 회복 후)
 - [ ] CI 스케줄 설정 (백로그)
 - [ ] D-2/D-3 BLOCKED 해제 (UI 출시 후)

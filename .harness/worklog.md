@@ -4,6 +4,35 @@
 
 ---
 
+worklog.md + state.md 갱신 완료.
+
+- **worklog**: Session 2026-04-29 18:01 항목 추가 (구간 1+2 통합)
+- **state**: 현재 집중 → Fake PASS 전량 제거 완료, 이어서 할 것 → AMBIGUOUS_DOC 리뷰 / 55건 fail 수정 / 회귀 분석
+
+
+## Session 2026-04-29 18:01 — e2e-v2 가드 체계 보강 + Fake PASS 274건 전량 제거
+
+### 작업 요약
+- 244건 실패 원인 5대 분류 (SPA direct URL ~150, Strict Mode ~70, JWT 만료 ~30, Staging 500 ~25, 가드 패턴 부재)
+- e2e-v2에 방어 가드 4종 추가: Phase 0 storageState mtime 체크, Phase 2.0 PoC 단계 신설, `automation-patterns.md` SPA 패턴, Phase 3.0 진단 spec
+- Fake PASS 전체 스캔 → **271건(35%)** `body.toBeVisible()` 단독 단언으로 가짜 PASS 확인
+- `verify-coverage.mjs` 통합 강화: Fake PASS 검출 + [B]/[D] 화이트리스트 + 에이전트 위임 audit
+- `tests/qa/_shared/helpers.ts` 공통 헬퍼 신규 + phase2 단언 패턴 카탈로그
+- `scripts/diff-regression.mjs` 회귀 분석 스크립트 (Telegram 알림 포함)
+- phase3 reporter cli flag 함정 명시
+- 오버엔지니어링 제안 6개 항목으로 축소 합의, docs lint(A)/데이터 의존성(C)/분기 사이클(F)/리포트 가이드(H)/실행 시간(J) 보류
+- 운영 원칙 "Full QA 중 사람 개입 0" 문서화, 모호 docs 2분류(BLOCKED/AMBIGUOUS_DOC) 확정
+- GO 3건 + MY 11건 PoC 단언 보강, 나머지 257건 에이전트 9개 병렬 위임 (AUTH/EI/GO/EO/HOME-TA/HOME-TP/SP/TA/TF)
+- 풀 테스트 872건 실행 → **Fake PASS 274→0건(100% 제거)**, AMBIGUOUS_DOC 156건
+- 최종: **739 pass / 55 fail / 80 skip**
+
+### 다음 액션
+- AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰
+- 회귀 분석 결과 확인 (diff-regression.mjs 실행 중)
+- 55건 fail 원인 분류 및 수정 계획
+
+---
+
 ## Session 2026-04-29 15:59 — QA 리포트 v2 디자인 적용 + [B] 카테고리 도입 + [M] 오분류 가드
 
 ### 작업 요약

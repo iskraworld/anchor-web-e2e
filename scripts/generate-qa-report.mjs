@@ -161,7 +161,7 @@ function classifyResult(tc) {
   if (tc.tag === '[M]') return 'manual';
   if (tc.tag === '[S]') return 'skip';
   if (tc.status === 'passed') return 'pass';
-  if (tc.status === 'failed') return 'fail';
+  if (tc.status === 'failed' || tc.status === 'timedOut' || tc.status === 'interrupted') return 'fail';
   if (tc.status === 'skipped') return 'skip';
   return 'unknown';
 }
@@ -248,7 +248,9 @@ function coverageTable() {
     <div style="padding:10px 16px;font-size:0.82rem;color:#6b7280;background:#fffbeb;border:1px solid #fcd34d;border-bottom:none;">
       ⚠️ 미구현 ${totalNotImpl}건은 docs/qa에 정의되어 있으나 아직 자동화 스펙 파일에 구현되지 않은 TC입니다. 우선순위에 따라 순차 구현 예정입니다.
     </div>
-    <table class="tc-table" style="border-radius:0 0 8px 8px;">
+    <div class="tc-table-wrap">
+    <table class="tc-table" style="border-radius:0 0 8px 8px;table-layout:auto;">
+      <colgroup><col style="width:120px"><col style="width:90px"><col style="width:70px"><col style="width:70px"><col></colgroup>
       <thead>
         <tr><th>모듈</th><th class="num">docs 총계</th><th class="num">구현</th><th class="num">미구현</th><th>커버리지</th></tr>
       </thead>
@@ -265,6 +267,7 @@ function coverageTable() {
         </tr>
       </tfoot>
     </table>
+    </div>
   </section>`;
 }
 
@@ -327,12 +330,15 @@ function moduleSection(mod) {
         ${f > 0 ? `❌ ${f} &nbsp;` : ''}
       </div>
     </div>
+    <div class="tc-table-wrap">
     <table class="tc-table">
+      <colgroup><col style="width:140px"><col style="width:90px"><col></colgroup>
       <thead>
         <tr><th>TC-ID</th><th>결과</th><th>설명</th></tr>
       </thead>
       <tbody>${rows}</tbody>
     </table>
+    </div>
   </section>`;
 }
 
@@ -350,10 +356,13 @@ function manualTable() {
   return `<section id="manual-checks">
     <h2>⏭️ 수동 검증 필요 목록 (${manuals.length}건)</h2>
     <p class="manual-note">아래 항목은 OAuth, 이메일 인증, SMS, PG 결제, PDF 내용 등 자동화가 불가능하거나 권장되지 않는 케이스입니다. 사람이 직접 확인해야 합니다.</p>
+    <div class="tc-table-wrap">
     <table class="tc-table">
+      <colgroup><col style="width:140px"><col><col style="width:260px"></colgroup>
       <thead><tr><th>TC-ID</th><th>설명</th><th>수동 검증 이유</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
+    </div>
   </section>`;
 }
 
@@ -389,10 +398,13 @@ function skipTable() {
   return `<section id="skip-list">
     <h2>👤 스킵 목록 (${skips.length}건)</h2>
     <p class="manual-note">명시적 스킵은 현재 기능 미구현, 세션 파괴 위험, 환경 불안정 등의 이유로 비활성화된 케이스입니다. 조건부 스킵은 실행 시점에 UI 요소가 없을 경우 자동으로 건너뛰는 케이스입니다.</p>
+    <div class="tc-table-wrap">
     <table class="tc-table">
+      <colgroup><col style="width:140px"><col><col style="width:260px"></colgroup>
       <thead><tr><th>TC-ID</th><th>설명</th><th>스킵 이유</th></tr></thead>
       <tbody>${body}</tbody>
     </table>
+    </div>
   </section>`;
 }
 
@@ -409,10 +421,13 @@ function failDetails() {
     </tr>`).join('\n');
   return `<section id="fail-details" class="fail-section">
     <h2>❌ 실패 상세 (${failed.length}건)</h2>
+    <div class="tc-table-wrap">
     <table class="tc-table">
+      <colgroup><col style="width:140px"><col style="width:200px"><col></colgroup>
       <thead><tr><th>TC-ID</th><th>설명</th><th>오류</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
+    </div>
   </section>`;
 }
 
@@ -501,21 +516,23 @@ const html = `<!DOCTYPE html>
                  background: var(--manual-bg); border: 1px solid #fcd34d;
                  border-bottom: none; }
 
+  .tc-table-wrap { overflow-x: auto; }
   .tc-table { width: 100%; border-collapse: collapse; font-size: 0.85rem;
               border: 1px solid var(--border); border-radius: 0 0 8px 8px;
-              overflow: hidden; }
-  .module-header + .tc-table { border-top: 1px solid var(--border); }
+              table-layout: fixed; }
+  .module-header + .tc-table-wrap .tc-table { border-top: 1px solid var(--border); }
   .tc-table th { padding: 8px 12px; text-align: left; background: #fafafa;
                  font-size: 0.75rem; color: var(--muted); text-transform: uppercase;
                  letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
-  .tc-table td { padding: 8px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+  .tc-table td { padding: 8px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top;
+                 word-break: break-word; overflow-wrap: break-word; }
   .tc-table tr:last-child td { border-bottom: none; }
   .tc-table tr.result-fail td { background: #fff5f5; }
   .tc-table tr.result-skip td, .tc-table tr.result-manual td { color: var(--muted); }
   .tc-table tr.group-header td { background: #f3f4f6; font-size: 0.78rem; font-weight: 600;
                                   color: var(--muted); padding: 6px 12px; }
-  .tc-id-cell { width: 130px; }
-  .result-cell { width: 100px; white-space: nowrap; }
+  .tc-id-cell { width: 140px; }
+  .result-cell { width: 90px; white-space: nowrap; }
   .reason-cell { font-size: 0.8rem; color: #374151; max-width: 320px; }
   .title-cell { }
   code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem;

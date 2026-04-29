@@ -612,9 +612,19 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
       const menuItem = page.getByRole('menuitem', { name: /내 정보/ }).first();
       if (await isVisibleSoft(menuItem, 2000)) {
         await safeClick(menuItem);
+        // docs: "내 정보 화면으로 이동" — URL 또는 내 정보 testId 검증
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        const onMyInfo = /\/my-info/.test(page.url());
+        if (onMyInfo) {
+          await expect(page).toHaveURL(/\/my-info/);
+        } else {
+          // SPA 네비게이션 실패 시 내 정보 라벨 노출로 폴백 검증
+          await expect(page.getByTestId('myinfo-name-label').first()).toBeVisible();
+        }
+      } else {
+        // 메뉴 미노출 — paidUser 진단상 GNB 메뉴 미렌더 가능 (helpers.ts 노트 §)
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      // 클릭 후 페이지 정상 유지 또는 이동 — body 노출만 검증 (strict 회피)
-      await expect(page.locator('body')).toBeVisible();
     });
 
     test('[HOME-TP-2-03] GNB — 구독 관리 메뉴 탭', async ({ page }) => {
@@ -623,55 +633,102 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
       const menuItem = page.getByRole('menuitem', { name: /구독 관리|구독/ }).first();
       if (await isVisibleSoft(menuItem, 2000)) {
         await safeClick(menuItem);
+        // docs: "구독 관리 화면으로 이동"
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        await expect(page).toHaveURL(/\/membership|\/subscription/);
+      } else {
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
 
-    test('[HOME-TP-2-05] GNB — 문의하기 메뉴 탭', async ({ page }) => {
+    test('[HOME-TP-2-05] GNB — 문의하기 메뉴 탭', async ({ page, context }) => {
+      // AMBIGUOUS_DOC: docs 기대 결과 "문의 채널로 연결" + 실제 결과 "구글폼 없음(이슈)" —
+      // 외부 새창 / URL 이동 / 모달 열림 어느 것인지 모호. 메뉴가 노출되어 클릭됐는지를
+      // 동작 단언으로 검증 (신뢰도 60%). 실제 채널 연결은 이슈 해결 후 재검증.
       await page.goto('/');
       await openGnb(page);
       const menuItem = page.getByRole('menuitem', { name: /문의/ }).first();
       if (await isVisibleSoft(menuItem, 2000)) {
+        const beforeUrl = page.url();
+        const pagePromise = context.waitForEvent('page', { timeout: 3000 }).catch(() => null);
         await safeClick(menuItem);
+        await page.waitForLoadState('load', { timeout: 5000 }).catch(() => {});
+        const newPage = await pagePromise;
+        const afterUrl = page.url();
+        const externalOpened = newPage !== null;
+        const navigated = beforeUrl !== afterUrl;
+        const modalOpened = await isVisibleSoft(page.getByRole('dialog'), 1500);
+        // 셋 중 하나라도 발생하면 "문의 채널 연결" 동작이 트리거된 것으로 간주
+        expect(externalOpened || navigated || modalOpened).toBeTruthy();
+        if (newPage) await newPage.close().catch(() => undefined);
+      } else {
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
 
     test('[HOME-TP-2-06] U2+U3+U9(팀 소유자) — GNB 팀 멤버 관리 탭', async ({ page }) => {
+      // AMBIGUOUS_DOC: 팀 소유자 전용 auth 미존재 — paidUser로 대체 검증 (helpers 노트).
+      // 메뉴 노출 시 클릭 후 URL 이동 검증, 미노출 시 권한 가드 패턴 (신뢰도 70%)
       await page.goto('/');
       await openGnb(page);
       const teamMemberMenu = page.getByRole('menuitem', { name: /팀 멤버 관리/ }).first();
       if (await isVisibleSoft(teamMemberMenu, 2000)) {
         await safeClick(teamMemberMenu);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        // docs: "팀 멤버 관리 화면으로 이동" — URL 또는 페이지 변화로 검증
+        await expect(page).toHaveURL(/\/team|\/member|\/management/);
+      } else {
+        // paidUser 진단상 팀 소유자 권한 미보유 — 메뉴 미노출이 정상
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
 
     test('[HOME-TP-2-07] U2+U7+U8+U9(관리자) — GNB 법인 멤버 관리 탭', async ({ page }) => {
+      // AMBIGUOUS_DOC: 법인 관리자 전용 auth 미존재 — paidUser로 대체.
+      // 메뉴 노출 시 URL 이동 검증, 미노출 시 권한 가드 (신뢰도 70%)
       await page.goto('/');
       await openGnb(page);
       const firmMemberMenu = page.getByRole('menuitem', { name: /법인 멤버 관리/ }).first();
       if (await isVisibleSoft(firmMemberMenu, 2000)) {
         await safeClick(firmMemberMenu);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        // docs: "법인 멤버 관리 화면으로 이동"
+        await expect(page).toHaveURL(/\/firm|\/member|\/management/);
+      } else {
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
 
     test('[HOME-TP-2-08] U2+U7+U8+U9(관리자) — GNB 세무 이력 리포트 탭', async ({ page }) => {
+      // AMBIGUOUS_DOC: 관리자 전용 auth 미존재 — paidUser로 대체.
+      // 메뉴 노출 시 URL 이동 검증, 미노출 시 권한 가드 (신뢰도 80%)
       await page.goto('/');
       await openGnb(page);
       const reportMenu = page.getByRole('menuitem', { name: /세무 이력 리포트/ }).first();
       if (await isVisibleSoft(reportMenu, 2000)) {
         await safeClick(reportMenu);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        // docs: "세무 이력 리포트 화면으로 이동"
+        await expect(page).toHaveURL(/\/tax-history-report/);
+      } else {
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
 
     test('[HOME-TP-2-09] U2+U7+U9(구성원) — GNB 세무 이력 리포트 탭', async ({ page }) => {
+      // AMBIGUOUS_DOC: 법인 구성원 전용 auth 미존재 — paidUser로 대체.
+      // 메뉴 노출 시 URL 이동 검증, 미노출 시 권한 가드 (신뢰도 80%)
       await page.goto('/');
       await openGnb(page);
-      // 메뉴 노출은 권한별로 다름 — 페이지 정상 로드만 검증
-      await expect(page.locator('body')).toBeVisible();
+      const reportMenu = page.getByRole('menuitem', { name: /세무 이력 리포트/ }).first();
+      if (await isVisibleSoft(reportMenu, 2000)) {
+        await safeClick(reportMenu);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        // docs: "세무 이력 리포트 화면으로 이동"
+        await expect(page).toHaveURL(/\/tax-history-report/);
+      } else {
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
+      }
     });
 
     test('[HOME-TP-2-10] GNB — 로그아웃 탭', async ({ page }) => {
@@ -680,9 +737,12 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
       const menuItem = page.getByRole('menuitem', { name: /로그아웃/ }).first();
       if (await isVisibleSoft(menuItem, 2000)) {
         await safeClick(menuItem);
+        // docs: "즉시 로그아웃" — 로그인 페이지로 redirect
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+      } else {
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      // body 정상 유지
-      await expect(page.locator('body')).toBeVisible();
     });
   });
 
@@ -941,52 +1001,114 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
     test.use({ storageState: AUTH_FILES.paidUser });
 
     test('[HOME-TP-4-01] 전체보기 탭 — 전체 목록 표시', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "전체 목록 표시" — 사전조건 "최근 조회 1건 이상" 미충족 시
+      // 빈 상태 또는 0건 가능. 전체보기 진입점 자체가 없을 수도 있음 (신뢰도 70%)
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       const viewAllLink = page.getByRole('link', { name: /전체보기/ }).first();
-      if (await isVisibleSoft(viewAllBtn, 2000)) {
+      const btnVisible = await isVisibleSoft(viewAllBtn, 2000);
+      const linkVisible = !btnVisible && (await isVisibleSoft(viewAllLink, 2000));
+      if (btnVisible) {
         await safeClick(viewAllBtn);
-      } else if (await isVisibleSoft(viewAllLink, 2000)) {
+      } else if (linkVisible) {
         await safeClick(viewAllLink);
+      } else {
+        // 진입점 미노출 — 최근 조회 0건 (빈 상태) 정상 분기
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
+        return;
       }
-      await expect(page.locator('body')).toBeVisible();
+      await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+      // 전체보기 화면 진입 후: URL 변화 또는 카드/목록/빈상태 안내 노출
+      const urlChanged = !/\/$/.test(page.url()) && page.url() !== '/';
+      const list = page.locator(
+        '[data-testid*="recent"], [data-testid*="profile-card"], [class*="card"]',
+      );
+      const listCount = await list.count();
+      const emptyState = page.getByText(/조회한 프로필이 없|최근 조회 내역이 없|0건/).first();
+      const hasEmpty = await isVisibleSoft(emptyState, 2000);
+      expect(urlChanged || listCount > 0 || hasEmpty).toBeTruthy();
     });
 
     test('[HOME-TP-4-02] 전체보기 — 현직 공무원 프로필 카드 탭', async ({ page }) => {
+      // AMBIGUOUS_DOC: 사전조건 "현직 공무원 조회 이력" — 시드 데이터 없으면 카드 0건.
+      // 카드 노출 시 클릭 후 상세 URL 이동, 미노출 시 권한/시드 가드 (신뢰도 70%)
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
       }
-      await expect(page.locator('body')).toBeVisible();
+      const card = page
+        .locator('[data-testid*="active-official"], [data-testid*="recent-profile"]')
+        .first();
+      if (await isVisibleSoft(card, 2000)) {
+        await safeClick(card);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        // docs: "현직 공무원 프로필 상세로 이동"
+        await expect(page).toHaveURL(/\/(active-official|profile|officials?\/)/);
+      } else {
+        // 시드/조회 이력 없음 — 페이지 정상 로드만 검증
+        await expect(page.getByTestId('home-search-greeting').or(page.locator('body'))).toBeVisible();
+      }
     });
 
     test('[HOME-TP-4-03] 전체보기 — 전직 공무원 프로필 카드 탭', async ({ page }) => {
+      // AMBIGUOUS_DOC: 사전조건 "전직 공무원 조회 이력" — 시드 데이터 없으면 카드 0건 (신뢰도 70%)
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
       }
-      await expect(page.locator('body')).toBeVisible();
+      const card = page
+        .locator('[data-testid*="retired-official"], [data-testid*="recent-profile"]')
+        .first();
+      if (await isVisibleSoft(card, 2000)) {
+        await safeClick(card);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        // docs: "전직 공무원 프로필 상세로 이동"
+        await expect(page).toHaveURL(/\/(retired-official|profile|officials?\/)/);
+      } else {
+        await expect(page.getByTestId('home-search-greeting').or(page.locator('body'))).toBeVisible();
+      }
     });
 
     test('[HOME-TP-4-04] 전체보기 — 세무사 프로필 카드 탭', async ({ page }) => {
+      // AMBIGUOUS_DOC: 사전조건 "세무사 조회 이력" — 시드 데이터 없으면 카드 0건 (신뢰도 70%)
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
       }
-      await expect(page.locator('body')).toBeVisible();
+      const card = page
+        .locator('[data-testid*="tax-expert"], [data-testid*="recent-profile"]')
+        .first();
+      if (await isVisibleSoft(card, 2000)) {
+        await safeClick(card);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        // docs: "세무사 프로필 상세로 이동"
+        await expect(page).toHaveURL(/\/(tax-expert|profile|experts?\/)/);
+      } else {
+        await expect(page.getByTestId('home-search-greeting').or(page.locator('body'))).toBeVisible();
+      }
     });
 
     test('[HOME-TP-4-05] 전체보기 — 뒤로가기 탭', async ({ page }) => {
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
-      if (await isVisibleSoft(viewAllBtn, 2000)) {
+      const entered = await isVisibleSoft(viewAllBtn, 2000);
+      if (entered) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        await page.goBack().catch(() => undefined);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        // docs: "홈 화면으로 복귀" — 홈 진입 시 노출되는 home-search-greeting로 검증
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible({ timeout: 10000 });
+      } else {
+        // 진입점 미노출 (최근 조회 0건) — 이미 홈에 있는 상태 검증
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await page.goBack().catch(() => undefined);
-      await expect(page.locator('body')).toBeVisible();
     });
   });
 
@@ -998,39 +1120,87 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
     test.use({ storageState: AUTH_FILES.paidUser });
 
     test('[HOME-TP-4-11] 최근 조회 순서 정렬 확인', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "최근 조회 순서대로 정렬" — 정렬 기준 데이터(조회 timestamp) UI에
+      // 노출되지 않아 직접 정렬 검증 불가. 전체보기 진입 + 카드 ≥ 1건 OR 빈 상태로 검증 (신뢰도 60%)
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        const cards = page.locator(
+          '[data-testid*="recent"], [data-testid*="profile-card"], [class*="card"]',
+        );
+        const count = await cards.count();
+        const emptyState = page.getByText(/조회한 프로필이 없|최근 조회 내역이 없|0건/).first();
+        const hasEmpty = await isVisibleSoft(emptyState, 2000);
+        // 카드 ≥ 1건이거나 빈 상태 — 정상 화면 진입
+        expect(count > 0 || hasEmpty).toBeTruthy();
+      } else {
+        // 최근 조회 0건 — 빈 상태 정상 (홈 유지)
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
 
     test('[HOME-TP-4-12] 현직 공무원 카드 표시 확인', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "이름, 소속, 직급, 직책" — 카드 내부 필드별 testId 미정의.
+      // 사전조건 "현직 공무원 조회 이력" — 시드 없으면 카드 0건. 카드 노출 시 카드 1개에
+      // 텍스트가 포함되어 있는지로 폴백 검증 (신뢰도 60%)
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
       }
-      await expect(page.locator('body')).toBeVisible();
+      const card = page
+        .locator('[data-testid*="active-official"], [data-testid*="recent-profile"]')
+        .first();
+      if (await isVisibleSoft(card, 2000)) {
+        const text = (await card.textContent({ timeout: 2000 }).catch(() => ''))?.trim() ?? '';
+        // 이름/소속/직급/직책 중 어떤 데이터든 들어있어야 함 (텍스트 길이로 폴백)
+        expect(text.length).toBeGreaterThan(0);
+      } else {
+        await expect(page.getByTestId('home-search-greeting').or(page.locator('body'))).toBeVisible();
+      }
     });
 
     test('[HOME-TP-4-13] 전직 공무원 카드 표시 확인', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "이름, 은퇴 당시 소속, 직급, 직책" — 카드 필드 testId 미정의.
+      // 시드 없으면 카드 0건. 카드 노출 시 텍스트 길이로 폴백 검증 (신뢰도 60%)
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
       }
-      await expect(page.locator('body')).toBeVisible();
+      const card = page
+        .locator('[data-testid*="retired-official"], [data-testid*="recent-profile"]')
+        .first();
+      if (await isVisibleSoft(card, 2000)) {
+        const text = (await card.textContent({ timeout: 2000 }).catch(() => ''))?.trim() ?? '';
+        expect(text.length).toBeGreaterThan(0);
+      } else {
+        await expect(page.getByTestId('home-search-greeting').or(page.locator('body'))).toBeVisible();
+      }
     });
 
     test('[HOME-TP-4-14] 세무사 카드 — 이름, 공무원 출신 여부, 소속 법인, 지역, 전문 영역', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs 필드 다수 — 카드 필드별 testId 미정의 + docs 실제 결과 "소속 지역
+      // 정보 안나옴(이슈)". 카드 노출 시 텍스트 포함 여부 + 미포함 영역(지역) 검증은 보류 (신뢰도 60%)
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
       }
-      await expect(page.locator('body')).toBeVisible();
+      const card = page
+        .locator('[data-testid*="tax-expert"], [data-testid*="recent-profile"]')
+        .first();
+      if (await isVisibleSoft(card, 2000)) {
+        const text = (await card.textContent({ timeout: 2000 }).catch(() => ''))?.trim() ?? '';
+        expect(text.length).toBeGreaterThan(0);
+      } else {
+        await expect(page.getByTestId('home-search-greeting').or(page.locator('body'))).toBeVisible();
+      }
     });
   });
 

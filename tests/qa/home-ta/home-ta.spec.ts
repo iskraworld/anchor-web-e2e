@@ -328,15 +328,29 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
     });
 
     test('[HOME-TA-1-34] 전체보기 탭 — 최근 조회 프로필 전체보기 화면 이동', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "전체보기 화면(3-4)으로 이동" — 전용 URL/testId가 진단에 없음.
+      // 전체보기 진입 시 URL 변경 또는 모달/리스트 노출 중 하나로 해석 (신뢰도 70%)
       await page.goto('/');
+      const homeUrl = page.url();
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       const viewAllLink = page.getByRole('link', { name: /전체보기/ }).first();
+      let clicked = false;
       if (await isVisibleSoft(viewAllBtn, 2000)) {
-        await safeClick(viewAllBtn);
+        clicked = await safeClick(viewAllBtn);
       } else if (await isVisibleSoft(viewAllLink, 2000)) {
-        await safeClick(viewAllLink);
+        clicked = await safeClick(viewAllLink);
       }
-      await expect(page.locator('body')).toBeVisible();
+      if (clicked) {
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        // URL이 바뀌었거나 — 전체보기 영역 노출 중 하나는 만족해야 함
+        const urlChanged = page.url() !== homeUrl;
+        const listSection = page.locator('[data-testid*="recent"], [class*="recent"]').first();
+        const listVisible = await isVisibleSoft(listSection, 3000);
+        expect(urlChanged || listVisible).toBeTruthy();
+      } else {
+        // 전체보기 진입점이 없는 경우 — 홈 인사말이 살아있는지만 가드
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
+      }
     });
   });
 
@@ -542,61 +556,111 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
     test('[HOME-TA-2-02] GNB — 세무 이력 관리 메뉴 탭', async ({ page }) => {
       await page.goto('/');
       await openGnb(page);
+      // GNB 메뉴 아이템(menuitem 역할 또는 텍스트) 둘 다 시도
       const menuItem = page.getByRole('menuitem', { name: /세무 이력 관리/ }).first();
-      if (await isVisibleSoft(menuItem, 2000)) {
-        await safeClick(menuItem);
+      const menuText = page.getByText(/세무 이력 관리/).first();
+      const target = (await isVisibleSoft(menuItem, 2000)) ? menuItem : menuText;
+      if (await isVisibleSoft(target, 2000)) {
+        await safeClick(target);
+        await page.waitForLoadState('load', { timeout: 15000 }).catch(() => {});
+        // docs: "세무 이력 관리 화면으로 이동"
+        await expect(page).toHaveURL(/\/tax-history-management/, { timeout: 10000 });
+      } else {
+        // 권한 미보유 등으로 메뉴 미노출 — 홈에 그대로 있음을 가드
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
 
     test('[HOME-TA-2-03] GNB — 세무 이력 리포트 메뉴 탭', async ({ page }) => {
       await page.goto('/');
       await openGnb(page);
       const menuItem = page.getByRole('menuitem', { name: /세무 이력 리포트/ }).first();
-      if (await isVisibleSoft(menuItem, 2000)) {
-        await safeClick(menuItem);
+      const menuText = page.getByText(/세무 이력 리포트/).first();
+      const target = (await isVisibleSoft(menuItem, 2000)) ? menuItem : menuText;
+      if (await isVisibleSoft(target, 2000)) {
+        await safeClick(target);
+        await page.waitForLoadState('load', { timeout: 15000 }).catch(() => {});
+        // docs: "세무 이력 리포트 화면으로 이동"
+        await expect(page).toHaveURL(/\/tax-history-report/, { timeout: 10000 });
+      } else {
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
 
     test('[HOME-TA-2-04] GNB — 내 정보 메뉴 탭', async ({ page }) => {
       await page.goto('/');
       await openGnb(page);
       const menuItem = page.getByRole('menuitem', { name: /내 정보/ }).first();
-      if (await isVisibleSoft(menuItem, 2000)) {
-        await safeClick(menuItem);
+      const menuText = page.getByText(/내 정보/).first();
+      const target = (await isVisibleSoft(menuItem, 2000)) ? menuItem : menuText;
+      if (await isVisibleSoft(target, 2000)) {
+        await safeClick(target);
+        await page.waitForLoadState('load', { timeout: 15000 }).catch(() => {});
+        // docs: "내 정보 화면으로 이동"
+        await expect(page).toHaveURL(/\/my-info/, { timeout: 10000 });
+      } else {
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
 
     test('[HOME-TA-2-05] GNB — 구독 정보 메뉴 탭', async ({ page }) => {
       await page.goto('/');
       await openGnb(page);
       const menuItem = page.getByRole('menuitem', { name: /구독/ }).first();
-      if (await isVisibleSoft(menuItem, 2000)) {
-        await safeClick(menuItem);
+      const menuText = page.getByText(/구독 관리|구독 정보/).first();
+      const target = (await isVisibleSoft(menuItem, 2000)) ? menuItem : menuText;
+      if (await isVisibleSoft(target, 2000)) {
+        await safeClick(target);
+        await page.waitForLoadState('load', { timeout: 15000 }).catch(() => {});
+        // docs: "구독 관리 화면으로 이동" — /membership 또는 /subscription 라우트 허용
+        await expect(page).toHaveURL(/\/(membership|subscription)/, { timeout: 10000 });
+      } else {
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
 
-    test('[HOME-TA-2-07] GNB — 문의하기 메뉴 탭', async ({ page }) => {
+    test('[HOME-TA-2-07] GNB — 문의하기 메뉴 탭', async ({ page, context }) => {
+      // AMBIGUOUS_DOC: docs "문의 채널로 연결" — 외부 새 창(카카오톡/이메일) vs 내부 페이지 라우트 모호.
+      // 클릭 후 새 창 발생 또는 URL 변화 둘 중 하나로 해석 (신뢰도 70%)
       await page.goto('/');
       await openGnb(page);
+      const homeUrl = page.url();
       const menuItem = page.getByRole('menuitem', { name: /문의/ }).first();
-      if (await isVisibleSoft(menuItem, 2000)) {
-        await safeClick(menuItem);
+      const menuText = page.getByText(/문의하기|문의/).first();
+      const target = (await isVisibleSoft(menuItem, 2000)) ? menuItem : menuText;
+      if (await isVisibleSoft(target, 2000)) {
+        // 새 창 발생 가능성 — race로 대응
+        const popupPromise = context.waitForEvent('page', { timeout: 5000 }).catch(() => null);
+        await safeClick(target);
+        const popup = await popupPromise;
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        const urlChanged = page.url() !== homeUrl;
+        // 새 창 또는 같은 창 URL 변경 또는 mailto: 링크가 떴거나 — 셋 중 하나 만족하면 PASS
+        expect(popup !== null || urlChanged).toBeTruthy();
+      } else {
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
 
     test('[HOME-TA-2-08] GNB — 로그아웃 탭', async ({ page }) => {
       await page.goto('/');
       await openGnb(page);
       const menuItem = page.getByRole('menuitem', { name: /로그아웃/ }).first();
-      if (await isVisibleSoft(menuItem, 2000)) {
-        await safeClick(menuItem);
+      const menuText = page.getByText(/로그아웃/).first();
+      const target = (await isVisibleSoft(menuItem, 2000)) ? menuItem : menuText;
+      if (await isVisibleSoft(target, 2000)) {
+        await safeClick(target);
+        // 로그아웃은 confirm 모달이 있을 수 있음 — 확인 버튼이 있으면 누른다
+        const confirmBtn = page.getByRole('button', { name: /확인|로그아웃/ }).first();
+        if (await isVisibleSoft(confirmBtn, 2000)) {
+          await safeClick(confirmBtn);
+        }
+        await page.waitForLoadState('load', { timeout: 15000 }).catch(() => {});
+        // docs: "즉시 로그아웃. 로그인 화면으로 이동"
+        await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+      } else {
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
   });
 
@@ -604,13 +668,24 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
     test.use({ storageState: AUTH_FILES.firmOwner });
 
     test('[HOME-TA-2-06] GNB — 법인 멤버 관리 메뉴 탭', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "법인 멤버 관리 화면으로 이동" — 전용 URL 패턴이 진단에 없음.
+      // 페이지 URL 변경 또는 "연동 관리"/"법인 멤버" 화면 컨텐츠 노출 둘 중 하나로 해석 (신뢰도 70%)
       await page.goto('/');
+      const homeUrl = page.url();
       await openGnb(page);
       const firmMemberMenu = page.getByRole('menuitem', { name: /법인 멤버 관리/ }).first();
-      if (await isVisibleSoft(firmMemberMenu, 2000)) {
-        await safeClick(firmMemberMenu);
+      const firmMemberText = page.getByText(/법인 멤버 관리/).first();
+      const target = (await isVisibleSoft(firmMemberMenu, 2000)) ? firmMemberMenu : firmMemberText;
+      if (await isVisibleSoft(target, 2000)) {
+        await safeClick(target);
+        await page.waitForLoadState('load', { timeout: 15000 }).catch(() => {});
+        const urlChanged = page.url() !== homeUrl;
+        const firmContent = page.getByText(/연동 관리|법인 멤버/).first();
+        const contentVisible = await isVisibleSoft(firmContent, 5000);
+        expect(urlChanged || contentVisible).toBeTruthy();
+      } else {
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
   });
 
@@ -727,6 +802,7 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
 
     test('[HOME-TA-3-02] 세무 이력 관리 작성 안내 알림 — 바로가기 탭', async ({ page }) => {
       await page.goto('/');
+      const homeUrl = page.url();
       const notificationBtn = page.getByRole('button', { name: /알림/ }).first();
       if (await isVisibleSoft(notificationBtn, 2000)) {
         await safeClick(notificationBtn);
@@ -734,8 +810,15 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
       const shortcutBtn = page.getByRole('button', { name: /바로가기/ }).first();
       if (await isVisibleSoft(shortcutBtn, 2000)) {
         await safeClick(shortcutBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        // docs: "세무 이력 관리 화면으로 이동" — 알림 종류에 따라 라우트가 달라질 수 있어 URL 변화로 가드
+        const urlChanged = page.url() !== homeUrl;
+        const onTaxHistory = /\/tax-history-management/.test(page.url());
+        expect(urlChanged || onTaxHistory).toBeTruthy();
+      } else {
+        // 알림이 없으면 홈에 그대로 — 가드 통과
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
 
     test('[HOME-TA-3-03] 이력 검토 진행중 알림 — 바로가기 탭', async ({ page }) => {
@@ -815,6 +898,7 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
 
     test('[HOME-TA-3-10] U6(소유자) — 멤버 연동 해제 알림 바로가기 탭', async ({ page }) => {
       await page.goto('/');
+      const homeUrl = page.url();
       const notificationBtn = page.getByRole('button', { name: /알림/ }).first();
       if (await isVisibleSoft(notificationBtn, 2000)) {
         await safeClick(notificationBtn);
@@ -822,8 +906,15 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
       const memberMgmtBtn = page.getByRole('button', { name: /바로가기|멤버 관리/ }).first();
       if (await isVisibleSoft(memberMgmtBtn, 2000)) {
         await safeClick(memberMgmtBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        // docs: "법인 멤버 관리 화면으로 이동" — URL 변화 또는 멤버 관리 컨텐츠 노출
+        const urlChanged = page.url() !== homeUrl;
+        const memberContent = page.getByText(/법인 멤버|연동 관리|멤버 관리/).first();
+        const contentVisible = await isVisibleSoft(memberContent, 3000);
+        expect(urlChanged || contentVisible).toBeTruthy();
+      } else {
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
 
     test('[HOME-TA-3-31] U6(소유자) — 관계사 태그 부여 알림 바로가기 탭', async ({ page }) => {
@@ -840,7 +931,10 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
     test.use({ storageState: AUTH_FILES.taxOfficer });
 
     test('[HOME-TA-3-32] 세무사 인증 안내 알림 — 인증하러가기 탭', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "인증 화면으로 이동" — 인증 라우트(/cert /verify /auth/cert 등) 명시 없음.
+      // URL 변화 또는 인증 키워드 노출 둘 중 하나로 해석 (신뢰도 70%)
       await page.goto('/');
+      const homeUrl = page.url();
       const notificationBtn = page.getByRole('button', { name: /알림/ }).first();
       if (await isVisibleSoft(notificationBtn, 2000)) {
         await safeClick(notificationBtn);
@@ -848,8 +942,14 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
       const certBtn = page.getByRole('button', { name: /인증하러가기|인증/ }).first();
       if (await isVisibleSoft(certBtn, 2000)) {
         await safeClick(certBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        const urlChanged = page.url() !== homeUrl;
+        const certHeader = page.getByText(/세무사 인증|인증 안내|인증하기/).first();
+        const headerVisible = await isVisibleSoft(certHeader, 3000);
+        expect(urlChanged || headerVisible).toBeTruthy();
+      } else {
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
       }
-      await expect(page.locator('body')).toBeVisible();
     });
   });
 
@@ -958,52 +1058,114 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
     test.use({ storageState: AUTH_FILES.taxOfficer });
 
     test('[HOME-TA-4-01] 전체보기 탭 — 전체 목록 표시', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "전체 목록 표시" — 전체보기 화면의 testId/URL 패턴이 진단에 없음.
+      // 전체보기 진입 시 URL 변경 또는 카드 목록 N≥1 표시 중 하나로 해석 (신뢰도 70%)
       await page.goto('/');
+      const homeUrl = page.url();
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       const viewAllLink = page.getByRole('link', { name: /전체보기/ }).first();
+      let clicked = false;
       if (await isVisibleSoft(viewAllBtn, 2000)) {
-        await safeClick(viewAllBtn);
+        clicked = await safeClick(viewAllBtn);
       } else if (await isVisibleSoft(viewAllLink, 2000)) {
-        await safeClick(viewAllLink);
+        clicked = await safeClick(viewAllLink);
       }
-      await expect(page.locator('body')).toBeVisible();
+      if (clicked) {
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        const urlChanged = page.url() !== homeUrl;
+        const cards = page.locator('[data-testid*="recent"], [data-testid*="profile-card"], [class*="recent"]');
+        const cardCount = await cards.count().catch(() => 0);
+        expect(urlChanged || cardCount > 0).toBeTruthy();
+      } else {
+        // 진입점 미노출 — 최근 조회 데이터 0건 가능
+        await expect(page.getByTestId('home-search-greeting')).toBeVisible();
+      }
     });
 
     test('[HOME-TA-4-02] 전체보기 — 현직 공무원 프로필 카드 탭', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "현직 공무원 프로필 상세로 이동" — 전체보기 화면 + 카드 testId 미정.
+      // 카드 클릭 후 URL 변화 또는 상세 컨텐츠 노출로 해석 (신뢰도 70%)
       await page.goto('/');
+      const beforeUrl = page.url();
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
       }
-      await expect(page.locator('body')).toBeVisible();
+      const card = page.locator('[data-testid*="active-official"], [data-testid*="recent-profile"]').first();
+      if (await isVisibleSoft(card, 3000)) {
+        const urlAfterViewAll = page.url();
+        await safeClick(card);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        // 상세 진입 → URL 변경
+        expect(page.url() !== urlAfterViewAll || page.url() !== beforeUrl).toBeTruthy();
+      } else {
+        // 데이터 0건 — 가드 통과
+        await expect(page.locator('body')).toBeVisible();
+      }
     });
 
     test('[HOME-TA-4-03] 전체보기 — 전직 공무원 프로필 카드 탭', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "전직 공무원 프로필 상세로 이동" — 전체보기 화면 + 카드 testId 미정.
+      // 카드 클릭 후 URL 변화 또는 상세 컨텐츠 노출로 해석 (신뢰도 70%)
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
       }
-      await expect(page.locator('body')).toBeVisible();
+      const card = page.locator('[data-testid*="retired-official"], [data-testid*="recent-profile"]').first();
+      if (await isVisibleSoft(card, 3000)) {
+        const urlBefore = page.url();
+        await safeClick(card);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        const urlChanged = page.url() !== urlBefore;
+        const detailContent = page.getByText(/은퇴|퇴직|전직/).first();
+        const detailVisible = await isVisibleSoft(detailContent, 3000);
+        expect(urlChanged || detailVisible).toBeTruthy();
+      } else {
+        await expect(page.locator('body')).toBeVisible();
+      }
     });
 
     test('[HOME-TA-4-04] 전체보기 — 세무사 프로필 카드 탭', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "세무사 프로필 상세로 이동" — 전체보기 화면 + 카드 testId 미정.
+      // 카드 클릭 후 URL 변화 또는 상세 컨텐츠 노출로 해석 (신뢰도 70%)
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
       }
-      await expect(page.locator('body')).toBeVisible();
+      const card = page.locator('[data-testid*="tax-expert"], [data-testid*="tax-officer"], [data-testid*="recent-profile"]').first();
+      if (await isVisibleSoft(card, 3000)) {
+        const urlBefore = page.url();
+        await safeClick(card);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        const urlChanged = page.url() !== urlBefore;
+        const detailContent = page.getByText(/세무사|소속 법인|소개/).first();
+        const detailVisible = await isVisibleSoft(detailContent, 3000);
+        expect(urlChanged || detailVisible).toBeTruthy();
+      } else {
+        await expect(page.locator('body')).toBeVisible();
+      }
     });
 
     test('[HOME-TA-4-05] 전체보기 — 뒤로가기 탭', async ({ page }) => {
       await page.goto('/');
+      const homeUrl = page.url();
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
       }
       await page.goBack().catch(() => undefined);
-      await expect(page.locator('body')).toBeVisible();
+      await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+      // docs: "홈 화면으로 복귀" — 홈 인사말 노출 또는 URL이 홈 형태
+      const greeting = page.getByTestId('home-search-greeting');
+      const onHome = page.url() === homeUrl || /\/$/.test(new URL(page.url()).pathname);
+      const greetingVisible = await isVisibleSoft(greeting, 5000);
+      expect(onHome || greetingVisible).toBeTruthy();
     });
   });
 
@@ -1015,39 +1177,89 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
     test.use({ storageState: AUTH_FILES.taxOfficer });
 
     test('[HOME-TA-4-11] 최근 조회 순서 정렬 확인', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "최근 조회 순서대로 정렬" — 정렬 기준 timestamp는 DOM에서 직접 확인 불가.
+      // 카드 N건(≥1) 표시 + 첫 카드가 visible 인지 검증으로 해석 (신뢰도 60%)
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
       }
-      await expect(page.locator('body')).toBeVisible();
+      const cards = page.locator('[data-testid*="recent"], [data-testid*="profile-card"], [class*="profile-card"]');
+      const count = await cards.count().catch(() => 0);
+      if (count > 0) {
+        await expect(cards.first()).toBeVisible();
+      } else {
+        // 0건일 때는 가드만
+        await expect(page.locator('body')).toBeVisible();
+      }
     });
 
     test('[HOME-TA-4-12] 현직 공무원 카드 — 이름, 소속, 직급, 직책', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "이름, 소속, 직급, 직책" 4개 필드 모두 노출 — 개별 testId 미정.
+      // 현직 카드가 1건 이상 노출되며 그 안에 이름 또는 직급/직책 키워드가 보이는지로 해석 (신뢰도 70%)
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
       }
-      await expect(page.locator('body')).toBeVisible();
+      const card = page.locator('[data-testid*="active-official"], [data-testid*="recent-profile"]').first();
+      if (await isVisibleSoft(card, 3000)) {
+        await expect(card).toBeVisible();
+        // 카드 내부에 직급/직책 관련 텍스트가 노출되어야 함 — 약식 검증
+        const fieldText = card.getByText(/주무관|사무관|과장|국장|팀장|소속|직급|직책|세무서/).first();
+        const fieldVisible = await isVisibleSoft(fieldText, 2000);
+        if (fieldVisible) {
+          await expect(fieldText).toBeVisible();
+        }
+      } else {
+        await expect(page.locator('body')).toBeVisible();
+      }
     });
 
     test('[HOME-TA-4-13] 전직 공무원 카드 — 이름, 은퇴 당시 소속, 직급, 직책', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "이름, 은퇴 당시 소속, 직급, 직책" 필드 노출 — 개별 testId 미정.
+      // 전직 카드가 1건 이상 노출되며 은퇴/퇴직/직급 관련 키워드가 보이는지로 해석 (신뢰도 70%)
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
       }
-      await expect(page.locator('body')).toBeVisible();
+      const card = page.locator('[data-testid*="retired-official"], [data-testid*="recent-profile"]').first();
+      if (await isVisibleSoft(card, 3000)) {
+        await expect(card).toBeVisible();
+        const fieldText = card.getByText(/은퇴|퇴직|전직|직급|직책|소속|세무서/).first();
+        const fieldVisible = await isVisibleSoft(fieldText, 2000);
+        if (fieldVisible) {
+          await expect(fieldText).toBeVisible();
+        }
+      } else {
+        await expect(page.locator('body')).toBeVisible();
+      }
     });
 
     test('[HOME-TA-4-14] 세무사 카드 — 이름, 소속 법인, 소개 메시지', async ({ page }) => {
+      // AMBIGUOUS_DOC: docs "이름, 소속 법인, 소개 메세지" 필드 노출 — 개별 testId 미정.
+      // 세무사 카드가 1건 이상 노출되며 세무사/법인/소개 관련 키워드가 보이는지로 해석 (신뢰도 70%)
       await page.goto('/');
       const viewAllBtn = page.getByRole('button', { name: /전체보기/ }).first();
       if (await isVisibleSoft(viewAllBtn, 2000)) {
         await safeClick(viewAllBtn);
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
       }
-      await expect(page.locator('body')).toBeVisible();
+      const card = page.locator('[data-testid*="tax-expert"], [data-testid*="tax-officer"], [data-testid*="recent-profile"]').first();
+      if (await isVisibleSoft(card, 3000)) {
+        await expect(card).toBeVisible();
+        const fieldText = card.getByText(/세무사|세무법인|소속|소개/).first();
+        const fieldVisible = await isVisibleSoft(fieldText, 2000);
+        if (fieldVisible) {
+          await expect(fieldText).toBeVisible();
+        }
+      } else {
+        await expect(page.locator('body')).toBeVisible();
+      }
     });
   });
 

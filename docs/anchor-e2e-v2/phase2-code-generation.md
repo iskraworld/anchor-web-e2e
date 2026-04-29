@@ -59,6 +59,49 @@ import { isVisibleSoft, safeClick, navigateViaGnb } from '../_shared/helpers';
 
 **확정된 패턴 = automation-patterns.md 0~9번 + `_shared/helpers.ts`.** Phase 2.0 완료 후에야 Phase 2 본 작업으로 진입.
 
+### 모호한 docs 처리 — Full QA 무인 원칙
+
+⚠️ **Full QA 실행 중 사람에게 묻지 않는다. 끊김 없이 끝까지.**
+
+docs 기대 결과가 모호한 경우 (예: "조건에 따른 결과 필터링", "적절히 표시"), AI는 **자동으로 둘 중 하나를 선택**:
+
+#### 옵션 1 — 추론 가능 → AMBIGUOUS_DOC 마크 + 단언 작성
+
+```typescript
+test('[GO-1-22] 조건 추가 후 결과 필터링', async ({ page }) => {
+  // AMBIGUOUS_DOC: docs "조건에 따른 결과 필터링"이 행 수 변화인지 결과 변화인지 모호.
+  // 행 수 감소 또는 동일로 해석 (신뢰도 70%)
+  const before = await page.getByRole('row').count();
+  // ... 조건 적용 ...
+  const after = await page.getByRole('row').count();
+  expect(after).toBeLessThanOrEqual(before);
+});
+```
+
+→ audit 통과, 리포트에 "🟡 AI 해석" 카테고리로 표시. Eugene 일괄 검토.
+
+#### 옵션 2 — 추론 불가 → [B] BLOCKED + 사유 "docs 모호"
+
+```typescript
+test.skip('[TA-2-15][B] 데이터 적절히 표시', async () => {
+  // BLOCKED: docs 모호 — "적절히 표시"의 의미 불명확. anchor 팀 명확화 후 자동화
+});
+```
+
+→ audit가 [B] 화이트리스트 통과시킴. 리포트에 "🔵 명확화 필요" 카테고리로 표시. anchor 팀 명확화 또는 Eugene 결정 대기.
+
+#### 판단 기준
+
+| docs 표현 | 처리 |
+|---|---|
+| "X 화면 이동", "Y 텍스트 표시", "버튼 비활성화" | 명확 → 강한 단언 |
+| "조건에 따른 필터링", "결과 N건 이상" | 추론 가능 → 옵션 1 (AMBIGUOUS_DOC) |
+| "적절히", "충분히", "자연스럽게", "사용자에게 좋게" | 정성 키워드 → 옵션 2 ([B]) |
+
+**원칙**: 어떤 경우에도 사람에게 묻지 않는다. Full QA는 끝까지 가고, 모호 항목은 리포트에 일괄 모인다.
+
+---
+
 ### 단언 패턴 카탈로그 — Fake PASS 방지
 
 ⚠️ **PoC 단계에서 가장 중요한 체크: "단언이 docs 기대 결과를 검증하는가?"**

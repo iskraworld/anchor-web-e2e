@@ -171,7 +171,11 @@ for (const spec of allSpecs) {
 // 2) spec 파일 직접 파싱 — 결과 JSON에 없는 TC도 포함 ([D] 새로 추가된 것 등)
 function collectAllSpecTcs(specDir) {
   const out = [];
+  const ambiguous = []; // // AMBIGUOUS_DOC: 마크 검출
   const RE = /test(?:\.skip)?\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\](\[M\]|\[S\]|\[D\]|\[B\])?[^'"]*)['"]/g;
+  // active test() 본문에서 AMBIGUOUS_DOC 검출
+  const TEST_BODY_RE = /\btest\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\][^'"]+)['"][^{]*\{([\s\S]*?)\n\s{2,4}\}\s*\)\s*;/g;
+
   function walk(d) {
     if (!existsSync(d)) return;
     for (const entry of readdirSync(d, { withFileTypes: true })) {
@@ -184,14 +188,22 @@ function collectAllSpecTcs(specDir) {
           out.push({ id: m[2], tag: m[3] ?? '', title: m[1] });
         }
         RE.lastIndex = 0;
+        let bm;
+        while ((bm = TEST_BODY_RE.exec(content)) !== null) {
+          const body = bm[3];
+          const am = body.match(/\/\/\s*AMBIGUOUS_DOC:\s*([^\n]+)/i);
+          if (am) ambiguous.push({ id: bm[2], note: am[1].trim() });
+        }
+        TEST_BODY_RE.lastIndex = 0;
       }
     }
   }
   walk(specDir);
-  return out;
+  return { items: out, ambiguous };
 }
 
-for (const tc of collectAllSpecTcs(resolve(root, 'tests/qa'))) {
+const { items: specItemsAll, ambiguous: ambiguousMarks } = collectAllSpecTcs(resolve(root, 'tests/qa'));
+for (const tc of specItemsAll) {
   if (tcMap.has(tc.id)) {
     // 결과 JSON에 있으면 tag만 보강 ([D]는 결과 status보다 우선)
     const existing = tcMap.get(tc.id);
@@ -205,6 +217,8 @@ for (const tc of collectAllSpecTcs(resolve(root, 'tests/qa'))) {
     });
   }
 }
+// AMBIGUOUS_DOC 마크된 항목에 note 부착
+const ambiguousMap = new Map(ambiguousMarks.map(a => [a.id, a.note]));
 
 // ── 모듈별 그룹화 ─────────────────────────────────────────────────────────────
 
@@ -546,7 +560,7 @@ function manualTable() {
   return `<section id="manual-checks">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">04</span>수동 검증 필요 <span class="chip" style="margin-left:6px">${manuals.length}건</span></h2>
+        <h2 class="sec-title"><span class="idx">05</span>수동 검증 필요 <span class="chip" style="margin-left:6px">${manuals.length}건</span></h2>
         <p class="sec-sub">OAuth · 이메일 인증 · SMS · PG 결제 · PDF 내용 등 자동화가 불가하거나 권장되지 않는 케이스</p>
       </div>
     </div>
@@ -569,6 +583,75 @@ function manualTable() {
   </section>`;
 }
 
+// ── 디자인: docs 모호 의심 ───────────────────────────────────────────────────
+// Eugene 일괄 리뷰 대상. Full QA는 끊김 없이 끝까지 가고, 여기서 한 번에 결정.
+
+function ambiguousTable() {
+  // 1) AMBIGUOUS_DOC 마크된 active test
+  const interpretedRows = [...ambiguousMap.entries()].map(([id, note]) => ({ id, note, kind: 'interpreted' }));
+  // 2) [B] BLOCKED인데 사유에 "docs 모호" 키워드
+  const blockedAmbig = allTcs
+    .filter(t => classifyResult(t) === 'blocked' && /docs.*모호|명확화.*필요|기대결과.*모호/i.test(t.reason || ''))
+    .map(t => ({ id: t.id, note: t.reason, kind: 'blocked' }));
+
+  if (interpretedRows.length === 0 && blockedAmbig.length === 0) return '';
+
+  const interpretedTable = interpretedRows.length > 0 ? `
+    <div class="card" style="margin-bottom:12px">
+      <div class="mod-head">
+        <div class="mod-head-l">
+          <span class="pill" style="background:#FAEFD8;color:#B26A00"><span class="pip" style="background:#B26A00"></span>AI 해석</span>
+          <span class="mod-name">${interpretedRows.length}건 — 단언이 작성되어 실행됨, 해석 검토 필요</span>
+        </div>
+      </div>
+      <table class="lt">
+        <thead>
+          <tr><th style="width:18%">TC-ID</th><th>AI 해석 + 신뢰도</th></tr>
+        </thead>
+        <tbody>
+          ${interpretedRows.map(r => `
+            <tr>
+              <td><span class="tc-id">${escHtml(r.id)}</span></td>
+              <td class="reason">${escHtml(r.note)}</td>
+            </tr>`).join('\n')}
+        </tbody>
+      </table>
+    </div>` : '';
+
+  const blockedTableHtml = blockedAmbig.length > 0 ? `
+    <div class="card">
+      <div class="mod-head">
+        <div class="mod-head-l">
+          <span class="pill" style="background:#E4F0F7;color:#3B82A6"><span class="pip" style="background:#3B82A6"></span>명확화 필요</span>
+          <span class="mod-name">${blockedAmbig.length}건 — anchor 팀 docs 명확화 또는 Eugene 결정 대기</span>
+        </div>
+      </div>
+      <table class="lt">
+        <thead>
+          <tr><th style="width:18%">TC-ID</th><th>모호 사유</th></tr>
+        </thead>
+        <tbody>
+          ${blockedAmbig.map(r => `
+            <tr>
+              <td><span class="tc-id">${escHtml(r.id)}</span></td>
+              <td class="reason">${escHtml(r.note || '(사유 미기재)')}</td>
+            </tr>`).join('\n')}
+        </tbody>
+      </table>
+    </div>` : '';
+
+  return `<section id="ambiguous-docs">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title"><span class="idx">04</span>docs 모호 의심 <span class="chip" style="margin-left:6px">${interpretedRows.length + blockedAmbig.length}건</span></h2>
+        <p class="sec-sub">Full QA는 끊김 없이 끝까지 — 여기서 일괄 검토하여 다음 사이클에 결정 반영</p>
+      </div>
+    </div>
+    ${interpretedTable}
+    ${blockedTableHtml}
+  </section>`;
+}
+
 // ── 디자인: 출시 대기 (Blocked) ──────────────────────────────────────────────
 
 function blockedTable() {
@@ -583,7 +666,7 @@ function blockedTable() {
   return `<section id="blocked-list">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">05</span>출시 대기 <span class="chip" style="margin-left:6px">${blocks.length}건</span></h2>
+        <h2 class="sec-title"><span class="idx">06</span>출시 대기 <span class="chip" style="margin-left:6px">${blocks.length}건</span></h2>
         <p class="sec-sub">UI 미출시 또는 의존 기능 미배포로 일시 비활성화 — 출시 후 즉시 자동화 활성화 가능</p>
       </div>
     </div>
@@ -616,7 +699,7 @@ function deprecatedTable() {
   return `<section id="deprecated-list">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">06</span>요구기능 삭제 <span class="chip" style="margin-left:6px">${deps.length}건</span></h2>
+        <h2 class="sec-title"><span class="idx">07</span>요구기능 삭제 <span class="chip" style="margin-left:6px">${deps.length}건</span></h2>
         <p class="sec-sub">docs/qa에 정의되어 있으나 요구사항 변경으로 서비스에서 제거된 케이스 — 테스트 대상에서 공식 제외</p>
       </div>
     </div>
@@ -660,7 +743,7 @@ function skipTable() {
   return `<section id="skip-list">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">07</span>스킵 <span class="chip" style="margin-left:6px">${skips.length}건</span></h2>
+        <h2 class="sec-title"><span class="idx">08</span>스킵 <span class="chip" style="margin-left:6px">${skips.length}건</span></h2>
         <p class="sec-sub">현재 미구현 · 세션 파괴 위험 · 환경 불안정 등의 이유로 비활성화된 케이스</p>
       </div>
     </div>
@@ -969,6 +1052,7 @@ const html = `<!doctype html>
       <p>docs/qa에 정의된 ${DOCS_TOTAL}건이 자동화 스펙 파일에 ${totalAll}건 구현되어 커버리지는 ${coveragePct}%입니다. 이 중 ${totalDeprecated}건은 요구사항 변경으로 삭제, ${totalBlocked}건은 UI 출시 대기, ${totalManual}건은 수동 검증 영역입니다.</p>
       <div class="modnav">
         ${moduleOrder.filter(m => byModule.get(m)?.length).map(m => `<a href="#module-${m}">${m}</a>`).join('')}
+        ${ambiguousMap.size > 0 ? '<a href="#ambiguous-docs">모호</a>' : ''}
         ${totalManual > 0 ? '<a href="#manual-checks">수동</a>' : ''}
         ${totalBlocked > 0 ? '<a href="#blocked-list">대기</a>' : ''}
         ${totalDeprecated > 0 ? '<a href="#deprecated-list">삭제</a>' : ''}
@@ -1045,6 +1129,8 @@ const html = `<!doctype html>
 
   ${totalFail > 0 ? failDetails() : ''}
 
+  ${ambiguousTable()}
+
   ${manualTable()}
 
   ${blockedTable()}
@@ -1053,7 +1139,7 @@ const html = `<!doctype html>
 
   ${skipTable()}
 
-  ${moduleOrder.map((mod, i) => moduleSection(mod, i + 8)).join('\n')}
+  ${moduleOrder.map((mod, i) => moduleSection(mod, i + 9)).join('\n')}
 
   <footer>
     <div>${escHtml(BRAND.name)} QA · 자동 생성 리포트 · ${escHtml(now)}</div>

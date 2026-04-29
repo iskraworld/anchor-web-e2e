@@ -59,10 +59,11 @@ const TEST_BODY_RE = /\btest\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]
 
 function collectSpecTcIds(specDir) {
   const ids = new Set();
-  const manualItems = [];      // [M]
-  const blockedItems = [];     // [B]
-  const deprecatedItems = [];  // [D]
-  const activeTests = [];      // test() — fake-pass 검출용
+  const manualItems = [];        // [M]
+  const blockedItems = [];       // [B]
+  const deprecatedItems = [];    // [D]
+  const activeTests = [];        // test() — fake-pass 검출용
+  const ambiguousItems = [];     // // AMBIGUOUS_DOC: 코멘트 — 모호 docs 검토 대상
 
   function reasonAfter(lines, i, prefix) {
     for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
@@ -96,12 +97,15 @@ function collectSpecTcIds(specDir) {
           else if (tag === '[D]') deprecatedItems.push({ id, reason: reasonAfter(lines, i, 'DEPRECATED') });
         }
 
-        // active test() — fake-pass 검출용 단언 추출
+        // active test() — fake-pass 검출용 단언 추출 + AMBIGUOUS_DOC 마크 검출
         let mm;
         while ((mm = TEST_BODY_RE.exec(content)) !== null) {
           const body = mm[3];
           const expects = (body.match(/\bexpect\s*\([^)]+\)[^;]*/g) ?? []).map(s => s.trim());
           activeTests.push({ id: mm[2], expects });
+          // AMBIGUOUS_DOC 마크 검출 — body 내부의 코멘트
+          const ambig = body.match(/\/\/\s*AMBIGUOUS_DOC:\s*([^\n]+)/i);
+          if (ambig) ambiguousItems.push({ id: mm[2], note: ambig[1].trim() });
         }
         TEST_BODY_RE.lastIndex = 0;
       }
@@ -109,7 +113,7 @@ function collectSpecTcIds(specDir) {
   }
 
   walk(specDir);
-  return { ids, manualItems, blockedItems, deprecatedItems, activeTests };
+  return { ids, manualItems, blockedItems, deprecatedItems, activeTests, ambiguousItems };
 }
 
 // ── 화이트리스트 ─────────────────────────────────────────────────────
@@ -163,7 +167,7 @@ function detectFakePass(activeTest) {
 const auditMode = process.argv.includes('--audit');
 
 const { active: docIds, deleted: deletedIds } = collectDocsTcIds(resolve(root, 'docs/qa'));
-const { ids: specIds, manualItems, blockedItems, deprecatedItems, activeTests } = collectSpecTcIds(resolve(root, 'tests/qa'));
+const { ids: specIds, manualItems, blockedItems, deprecatedItems, activeTests, ambiguousItems } = collectSpecTcIds(resolve(root, 'tests/qa'));
 
 // docs 활성 TC 중 spec에 없는 것 → 누락
 const missing = [...docIds].filter(id => !specIds.has(id)).sort();
@@ -265,7 +269,31 @@ if (auditMode) {
     console.log('   ✅ 모든 active test가 docs 기대 결과 단언 보유\n');
   }
 
-  // 6) 에이전트 위임 시 안전장치 알림 (D)
+  // 6) docs 모호 의심 — AMBIGUOUS_DOC 마크 + [B] docs 모호 사유
+  const docAmbiguousBlocked = blockedItems.filter(it => /docs.*모호|명확화.*필요|기대결과.*모호/i.test(it.reason));
+  const totalAmbiguous = ambiguousItems.length + docAmbiguousBlocked.length;
+  if (totalAmbiguous > 0) {
+    console.log(`▸ docs 모호 의심 ${totalAmbiguous}건 — Eugene 일괄 리뷰 대상`);
+    if (ambiguousItems.length > 0) {
+      console.log(`  🟡 AMBIGUOUS_DOC 마크 ${ambiguousItems.length}건 (AI 해석 + 검토 필요):`);
+      for (const it of ambiguousItems.slice(0, 10)) {
+        console.log(`    ${it.id.padEnd(15)} "${it.note.slice(0, 80)}"`);
+      }
+      if (ambiguousItems.length > 10) console.log(`    ... +${ambiguousItems.length - 10}건`);
+    }
+    if (docAmbiguousBlocked.length > 0) {
+      console.log(`  🔵 [B] docs 모호 ${docAmbiguousBlocked.length}건 (anchor 팀 명확화 필요):`);
+      for (const it of docAmbiguousBlocked.slice(0, 10)) {
+        console.log(`    ${it.id.padEnd(15)} "${(it.reason || '').slice(0, 80)}"`);
+      }
+      if (docAmbiguousBlocked.length > 10) console.log(`    ... +${docAmbiguousBlocked.length - 10}건`);
+    }
+    console.log('   → 리포트 모호 섹션에서 일괄 결정 (Full QA는 끊김 없이 끝까지)\n');
+  } else {
+    console.log('▸ docs 모호 의심 없음 ✅\n');
+  }
+
+  // 7) 에이전트 위임 시 안전장치 알림 (D)
   console.log('▸ 에이전트 위임 결과는 위 모든 항목이 0건이어야 머지 허용 (phase2 §위임 프로토콜)');
   console.log('');
 }

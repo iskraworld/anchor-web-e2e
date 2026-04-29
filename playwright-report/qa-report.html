@@ -266,7 +266,7 @@
       <div class="brand-name">Anchor <span class="brand-sep">/</span> <span class="brand-sub">QA Report</span></div>
     </div>
     <div class="top-meta">
-      <div><span class="dot"></span>실행 <b>2026. 04. 29. PM 06:03</b></div>
+      <div><span class="dot"></span>실행 <b>2026. 04. 29. PM 06:05</b></div>
       <div>자동화 <b>792</b> · 대기 <b>17</b> · 수동 <b>20</b> · 스킵 <b>15</b></div>
     </div>
     <div class="top-actions">
@@ -282,7 +282,7 @@
       <p>docs/qa에 정의된 872건이 자동화 스펙 파일에 872건 구현되어 커버리지는 100%입니다. 이 중 28건은 요구사항 변경으로 삭제, 17건은 UI 출시 대기, 20건은 수동 검증 영역입니다.</p>
       <div class="modnav">
         <a href="#module-AUTH">AUTH</a><a href="#module-MY">MY</a><a href="#module-HOME-TP">HOME-TP</a><a href="#module-HOME-TA">HOME-TA</a><a href="#module-TA">TA</a><a href="#module-GO">GO</a><a href="#module-EO">EO</a><a href="#module-EI">EI</a><a href="#module-ER">ER</a><a href="#module-SP">SP</a><a href="#module-TF">TF</a>
-        
+        <a href="#ambiguous-docs">모호</a>
         <a href="#manual-checks">수동</a>
         <a href="#blocked-list">대기</a>
         <a href="#deprecated-list">삭제</a>
@@ -849,7 +849,46 @@
     </div></div>
   </section>
 
-  
+  <section id="ambiguous-docs">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title"><span class="idx">04</span>docs 모호 의심 <span class="chip" style="margin-left:6px">3건</span></h2>
+        <p class="sec-sub">Full QA는 끊김 없이 끝까지 — 여기서 일괄 검토하여 다음 사이클에 결정 반영</p>
+      </div>
+    </div>
+    
+    <div class="card" style="margin-bottom:12px">
+      <div class="mod-head">
+        <div class="mod-head-l">
+          <span class="pill" style="background:#FAEFD8;color:#B26A00"><span class="pip" style="background:#B26A00"></span>AI 해석</span>
+          <span class="mod-name">3건 — 단언이 작성되어 실행됨, 해석 검토 필요</span>
+        </div>
+      </div>
+      <table class="lt">
+        <thead>
+          <tr><th style="width:18%">TC-ID</th><th>AI 해석 + 신뢰도</th></tr>
+        </thead>
+        <tbody>
+          
+            <tr>
+              <td><span class="tc-id">GO-1-17</span></td>
+              <td class="reason">docs &quot;본인 기준 공통 관계 표시&quot;가 어떤 UI 요소인지 모호.</td>
+            </tr>
+
+            <tr>
+              <td><span class="tc-id">GO-1-22</span></td>
+              <td class="reason">docs &quot;조건에 따라 결과 필터링&quot;이 행 수 변화인지 결과 변화인지 모호.</td>
+            </tr>
+
+            <tr>
+              <td><span class="tc-id">GO-1-34</span></td>
+              <td class="reason">docs &quot;전체 텍스트 노출&quot; 메커니즘 모호 (tooltip / title attr / popover).</td>
+            </tr>
+        </tbody>
+      </table>
+    </div>
+    
+  </section>
 
   <section id="manual-checks">
     <div class="sec-head">
@@ -6063,7 +6102,7 @@
   </section>
 
   <footer>
-    <div>Anchor QA · 자동 생성 리포트 · 2026. 04. 29. PM 06:03</div>
+    <div>Anchor QA · 자동 생성 리포트 · 2026. 04. 29. PM 06:05</div>
     <div>
       <a href="./index.html">E2E</a>
       <span style="margin:0 8px;color:var(--ink-4)">·</span>

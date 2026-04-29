@@ -266,7 +266,7 @@
       <div class="brand-name">Anchor <span class="brand-sep">/</span> <span class="brand-sub">QA Report</span></div>
     </div>
     <div class="top-meta">
-      <div><span class="dot"></span>실행 <b>2026. 04. 29. PM 07:02</b></div>
+      <div><span class="dot"></span>실행 <b>2026. 04. 29. PM 08:24</b></div>
       <div>자동화 <b>792</b> · 대기 <b>17</b> · 수동 <b>20</b> · 스킵 <b>15</b></div>
     </div>
     <div class="top-actions">
@@ -1204,7 +1204,7 @@
   <section id="ambiguous-docs">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">04</span>docs 모호 의심 <span class="chip" style="margin-left:6px">156건</span></h2>
+        <h2 class="sec-title"><span class="idx">04</span>docs 모호 의심 <span class="chip" style="margin-left:6px">157건</span></h2>
         <p class="sec-sub">Full QA는 끊김 없이 끝까지 — 여기서 일괄 검토하여 다음 사이클에 결정 반영</p>
       </div>
     </div>
@@ -1213,7 +1213,7 @@
       <div class="mod-head">
         <div class="mod-head-l">
           <span class="pill" style="background:#FAEFD8;color:#B26A00"><span class="pip" style="background:#B26A00"></span>AI 해석</span>
-          <span class="mod-name">156건 — 단언이 작성되어 실행됨, 해석 검토 필요</span>
+          <span class="mod-name">157건 — 단언이 작성되어 실행됨, 해석 검토 필요</span>
         </div>
       </div>
       <table class="lt">
@@ -1598,6 +1598,11 @@
             </tr>
 
             <tr>
+              <td><span class="tc-id">HOME-TA-4-05</span></td>
+              <td class="reason">docs &quot;홈 화면으로 복귀&quot; — 전체보기 진입점이 없을 수도 있어 뒤로가기가 noop이 될 가능성.</td>
+            </tr>
+
+            <tr>
               <td><span class="tc-id">HOME-TA-4-11</span></td>
               <td class="reason">docs &quot;최근 조회 순서대로 정렬&quot; — 정렬 기준 timestamp는 DOM에서 직접 확인 불가.</td>
             </tr>
@@ -1824,7 +1829,7 @@
 
             <tr>
               <td><span class="tc-id">TA-1-18</span></td>
-              <td class="reason">docs &quot;10건씩 표시&quot; — 카드 selector가 안정적이지 않아 카드 수가 10 이하일 수 있음 (신뢰도 60%).</td>
+              <td class="reason">docs &quot;10건씩 표시&quot; — 가드 결합: 페이지 진입 → 탭 → 검색 → 카드 수 검증 + 가드. 신뢰도 60%.</td>
             </tr>
 
             <tr>
@@ -1839,12 +1844,12 @@
 
             <tr>
               <td><span class="tc-id">TA-1-23</span></td>
-              <td class="reason">docs &quot;TOP10 배지가 표시된다&quot; — TOP10 텍스트 추정 (신뢰도 65%).</td>
+              <td class="reason">docs &quot;TOP10 배지가 표시된다&quot; — 가드 결합: 페이지 진입 → 탭 → 검색 → 카드/배지 단언 + 가드. 신뢰도 65%.</td>
             </tr>
 
             <tr>
               <td><span class="tc-id">TA-1-24</span></td>
-              <td class="reason">docs &quot;관계사 배지 표시&quot; — 관계사 텍스트 키워드로 추정 (신뢰도 65%).</td>
+              <td class="reason">docs &quot;관계사 배지 표시&quot; — 가드 결합: 페이지 진입 → 탭 → 검색 → 카드/배지 단언 + 가드. 신뢰도 65%.</td>
             </tr>
 
             <tr>
@@ -7219,7 +7224,7 @@
   </section>
 
   <footer>
-    <div>Anchor QA · 자동 생성 리포트 · 2026. 04. 29. PM 07:02</div>
+    <div>Anchor QA · 자동 생성 리포트 · 2026. 04. 29. PM 08:24</div>
     <div>
       <a href="./index.html">E2E</a>
       <span style="margin:0 8px;color:var(--ink-4)">·</span>

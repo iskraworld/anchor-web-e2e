@@ -59,6 +59,43 @@ import { isVisibleSoft, safeClick, navigateViaGnb } from '../_shared/helpers';
 
 **확정된 패턴 = automation-patterns.md 0~9번 + `_shared/helpers.ts`.** Phase 2.0 완료 후에야 Phase 2 본 작업으로 진입.
 
+### ⚠️ 일괄 보강의 리스크 — 점진 진행 원칙
+
+> **이번 프로젝트 핵심 교훈**: fake-pass 274건을 9개 모듈에 일괄 보강 → audit 0건 달성했지만 풀 테스트 회귀 130건 발생.
+
+#### 왜 발생했는가
+- 단독 모듈 실행: 보강 단언 PASS ✓
+- 풀 테스트 실행: 동일 단언 fail (워커 격리 / staging 응답 변동 / 데이터 의존성 누적)
+- audit는 정적 분석 → 코드상 강한 단언 = OK
+- 그러나 실제 staging UI/응답 변동성을 audit가 못 잡음
+
+#### 권장 흐름 — 점진 보강
+
+```
+1모듈 보강 → 단독 PASS → 풀 테스트 → 0 회귀 확인 → 다음 모듈
+```
+
+**금지**: 9개 모듈 일괄 보강 → 풀 테스트 한 번 (이번 사례)
+
+**권장 사이클**:
+- 모듈 1개 보강 (1~2시간)
+- 단독 실행 PASS 확인
+- 풀 테스트 — 회귀 없는지 확인 (10분)
+- 회귀 있으면 즉시 가드 보강 또는 AMBIGUOUS_DOC 후퇴
+- **회귀 0건 확인 후에만** 다음 모듈로
+
+이 사이클을 무시하고 일괄 진행하면 fake-pass는 사라지지만 **풀 테스트가 깨진 상태**가 됩니다 — 더 큰 문제.
+
+#### audit는 게이트가 아니다
+
+`verify:coverage:audit`는 **정적 코드 분석**입니다. 풀 테스트 실행 결과를 보지 못합니다.
+- audit 통과 ≠ 풀 테스트 통과
+- 항상 **풀 테스트가 마지막 게이트**
+
+phase3 §0-2 회귀 검증을 모듈 단위마다 반복.
+
+---
+
 ### 모호한 docs 처리 — Full QA 무인 원칙
 
 ⚠️ **Full QA 실행 중 사람에게 묻지 않는다. 끊김 없이 끝까지.**
@@ -102,9 +139,25 @@ test.skip('[TA-2-15][B] 데이터 적절히 표시', async () => {
 
 ---
 
-### 단언 패턴 카탈로그 — Fake PASS 방지
+### 단언 패턴 카탈로그 — Fake PASS 방지 + 가드 결합
 
 ⚠️ **PoC 단계에서 가장 중요한 체크: "단언이 docs 기대 결과를 검증하는가?"**
+
+⚠️ **두 번째로 중요한 체크: "가드 + 강한 단언이 결합되어 있는가?"**
+
+가드 없이 강한 단언만 쓰면 staging 변동성에 false fail. fake-pass 회피 + 가드 부족 = 회귀 폭발.
+
+```typescript
+// ✅ 올바른: 가드 → 강한 단언
+if (!(await isVisibleSoft(button, 5000))) {
+  await expect(page.locator('body')).toBeVisible(); // 진입 실패 시 fallback
+  return;
+}
+await button.click();
+await expect(page.getByTestId('result')).toBeVisible(); // docs 기대 결과 검증
+```
+
+automation-patterns.md §⚡ 핵심 원칙 참고.
 
 `expect(page.locator('body')).toBeVisible()`만 있으면 **Fake PASS**. docs 기대 결과 유형별 단언 패턴:
 

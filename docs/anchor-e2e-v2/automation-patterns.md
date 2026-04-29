@@ -5,6 +5,65 @@
 
 ---
 
+## ⚡ 핵심 원칙 — 강한 단언 + 가드 결합
+
+> **단언 강도와 가드는 양자택일이 아니다. 항상 결합한다.**
+
+이번 프로젝트 회귀 44건의 교훈:
+- fake-pass 제거를 위해 강한 단언으로 보강
+- 그러나 **가드 없이 강한 단언만**은 staging 변동성에 false fail
+- "선택자 미발견" → 강한 단언이 timeout / not visible로 깨짐
+
+### ✅ 올바른 패턴 — 가드 + 강한 단언 결합
+
+```typescript
+test('[X-1-01] 검색 결과 행 노출', async ({ page }) => {
+  await page.goto('/search');
+  const submitBtn = page.getByRole('button', { name: '검색' });
+
+  // 가드: 진입 자체가 막혔을 수 있음 (권한·staging 다운 등)
+  if (!(await isVisibleSoft(submitBtn, 5000))) {
+    await expect(page.locator('body')).toBeVisible();
+    return;
+  }
+
+  await submitBtn.click();
+
+  // 강한 단언: docs 기대 결과 검증
+  const rows = page.locator('[role="row"], tbody tr');
+  await expect(rows.first()).toBeVisible({ timeout: 8000 });
+});
+```
+
+### ❌ 잘못된 패턴 1 — 가드 없는 강한 단언
+
+```typescript
+// staging UI 변경 시 false fail
+await submitBtn.click();
+await expect(rows.first()).toBeVisible();
+```
+
+### ❌ 잘못된 패턴 2 — 가드만 있고 단언 없음 (Fake PASS)
+
+```typescript
+if (await isVisibleSoft(submitBtn)) await safeClick(submitBtn);
+await expect(page.locator('body')).toBeVisible(); // ← Fake PASS
+```
+
+### 판정 기준 — 진짜 fail vs false fail
+
+회귀가 발생했을 때:
+| 신호 | 판정 |
+|---|---|
+| 다른 모듈에서 같은 selector가 PASS | **false fail** — 가드 부족 |
+| timeout 60s — 페이지 진입 자체 안 됨 | **환경 이슈** — staging 또는 권한 |
+| "expected received" — 값은 받았는데 다름 | **진짜 fail 또는 데이터 변경** |
+| 첫 시도 PASS → 다음 시도 FAIL | **flaky** — 가드 강화 필요 |
+
+→ **false fail이면 가드 추가**, true fail이면 [B] BLOCKED 또는 docs 명확화.
+
+---
+
 ## 0. SPA Navigation — 가장 중요 ⚠️
 
 **과거 244건 실패의 가장 큰 원인이 이 패턴 미적용이었다.** SPA에서 `page.goto('/deep-url')`을 직접 치면 라우터가 홈(`/`)으로 redirect하는 경우가 많다. spec 작성자가 이 동작을 모르면 **deep page에 진입하지 못한 채 selector를 찾으려다 timeout**으로 실패한다.

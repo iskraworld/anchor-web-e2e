@@ -90,6 +90,33 @@ SKIP_AUTH_SETUP=1 npx playwright test tests/_diag/page-availability.spec.ts --pr
 
 ---
 
+## 0-2. 보강 직후 회귀 검증 (필수)
+
+spec 보강(특히 fake-pass → 강한 단언) 직후엔 반드시 풀 실행 + 회귀 비교:
+
+```bash
+# 보강 전 results.json 백업
+cp playwright-report/results.json playwright-report/results.prev.json
+
+# 풀 실행
+npx playwright test tests/qa/ --project=chromium 2>&1 | tee /tmp/qa-run.log
+
+# 회귀 자동 분석
+npm run diff:regression
+```
+
+### 회귀 발생 시 판정
+
+| 회귀 비율 | 대응 |
+|---|---|
+| 0% | ✅ 진행 |
+| 1~5% | ⚠️ 검토 — 진짜 깨짐 vs false fail 분류 |
+| 5%+ | 🚨 **보강 단언이 가드 부족** — automation-patterns.md §⚡ 가드 결합 패턴 적용 후 재실행 |
+
+> 이번 프로젝트 사례: fake-pass 274 → 0 보강 후 풀 실행 시 회귀 44건 (5.7%). 원인 = 강한 단언만 추가하고 가드 결합 누락. 가이드에 가드 결합 패턴 명문화 후 재보강.
+
+---
+
 ## 1. 전체 실행
 
 ```bash

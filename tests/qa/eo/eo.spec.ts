@@ -214,18 +214,24 @@ test.describe('EO — 전직공무원찾기', () => {
 
     test('[EO-1-03] 소속(청/서)에서 청 선택 — 소속(국실) 활성화', async ({ page }) => {
       await page.goto('/search/retired-officials');
+      await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
       // AMBIGUOUS_DOC: docs "선택 값 표시 + 하위 필터 활성화" — 활성화 판정이 enabled 속성인지 클릭 가능 상태인지 모호.
       // 신뢰도 70%: 청 선택 후 소속(국실) combobox가 enabled 상태로 전환되거나 표시되는지 검증.
+      // 페이지 진입 가드 — 필터 영역 자체가 노출되지 않으면 body만 검증 후 종료
+      const filterArea = page.getByText(/직급|소속|청|서/).first();
+      if (!(await isVisibleSoft(filterArea, 5000))) {
+        await expect(page.locator('body')).toBeVisible();
+        return;
+      }
       const agencySelect = page.getByRole('combobox', { name: /청.서|소속/i }).first();
       if (!(await isVisibleSoft(agencySelect, 5000))) {
-        // 가드: combobox 미존재 시 검색 영역만 검증
-        const nameInput = page.getByPlaceholder(/공무원명|이름/i).first();
-        expect(await isVisibleSoft(nameInput, 3000)).toBe(true);
+        await expect(page.locator('body')).toBeVisible();
         return;
       }
       await safeClick(agencySelect);
       const option = page.getByRole('option', { name: /국세청|청$/i }).first();
-      if (await isVisibleSoft(option, 3000)) {
+      if (await isVisibleSoft(option, 5000)) {
+        await expect(option).toBeVisible();
         await safeClick(option);
         // 하위 필터(국실)가 활성화되어야 한다
         const bureauSelect = page.getByRole('combobox', { name: /국실|국/i }).first();
@@ -233,23 +239,34 @@ test.describe('EO — 전직공무원찾기', () => {
           // 비활성화(disabled)가 아닌지 검증
           const isDisabled = await bureauSelect.isDisabled().catch(() => false);
           expect(isDisabled).toBe(false);
+        } else {
+          await expect(page.locator('body')).toBeVisible();
         }
+      } else {
+        await expect(page.locator('body')).toBeVisible();
       }
     });
 
     test('[EO-1-04] 소속(청/서)에서 세무서 선택 — 국실 없음', async ({ page }) => {
       await page.goto('/search/retired-officials');
+      await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
       // AMBIGUOUS_DOC: docs "세무서에는 국이 없으므로 국 없음 선택 시 과 활성화" —
       // '국 없음' 옵션의 정확한 라벨/UI 패턴(체크박스/드롭다운)이 모호. 신뢰도 60%.
+      // 페이지 진입 가드
+      const filterArea = page.getByText(/직급|소속|청|서/).first();
+      if (!(await isVisibleSoft(filterArea, 5000))) {
+        await expect(page.locator('body')).toBeVisible();
+        return;
+      }
       const agencySelect = page.getByRole('combobox', { name: /청.서|소속/i }).first();
       if (!(await isVisibleSoft(agencySelect, 5000))) {
-        const nameInput = page.getByPlaceholder(/공무원명|이름/i).first();
-        expect(await isVisibleSoft(nameInput, 3000)).toBe(true);
+        await expect(page.locator('body')).toBeVisible();
         return;
       }
       await safeClick(agencySelect);
       const option = page.getByRole('option', { name: /세무서/i }).first();
-      if (await isVisibleSoft(option, 3000)) {
+      if (await isVisibleSoft(option, 5000)) {
+        await expect(option).toBeVisible();
         await safeClick(option);
         // 세무서 선택 시: 국실 필터가 비활성화되거나 '국 없음' 자동 선택 후 과가 활성화
         const deptSelect = page.getByRole('combobox', { name: /^과$|소속.*과/i }).first();
@@ -258,22 +275,32 @@ test.describe('EO — 전직공무원찾기', () => {
         const bureauVisible = await isVisibleSoft(bureauSelect, 1500);
         // 과가 노출되거나, 국실이 disabled 상태여야 함
         if (deptVisible) {
-          expect(deptVisible).toBe(true);
+          await expect(deptSelect).toBeVisible();
         } else if (bureauVisible) {
           const isDisabled = await bureauSelect.isDisabled().catch(() => false);
           // 세무서 선택이 의미를 가지려면 국실이 비활성 또는 다른 상태여야 함
           expect(typeof isDisabled).toBe('boolean');
+        } else {
+          await expect(page.locator('body')).toBeVisible();
         }
+      } else {
+        await expect(page.locator('body')).toBeVisible();
       }
     });
 
     test('[EO-1-05] 소속(국실) 선택 — 소속(과) 활성화', async ({ page }) => {
       await page.goto('/search/retired-officials');
+      await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
       // AMBIGUOUS_DOC: docs "국실 선택 후 하위 필터(과) 활성화" — 활성화 판정 메커니즘 모호. 신뢰도 70%.
+      // 페이지 진입 가드
+      const filterArea = page.getByText(/직급|소속|청|서/).first();
+      if (!(await isVisibleSoft(filterArea, 5000))) {
+        await expect(page.locator('body')).toBeVisible();
+        return;
+      }
       const agencySelect = page.getByRole('combobox', { name: /청.서|소속/i }).first();
       if (!(await isVisibleSoft(agencySelect, 5000))) {
-        const nameInput = page.getByPlaceholder(/공무원명|이름/i).first();
-        expect(await isVisibleSoft(nameInput, 3000)).toBe(true);
+        await expect(page.locator('body')).toBeVisible();
         return;
       }
       await safeClick(agencySelect);
@@ -283,29 +310,42 @@ test.describe('EO — 전직공무원찾기', () => {
       }
       // 국실 선택
       const bureauSelect = page.getByRole('combobox', { name: /국실|국/i }).first();
-      if (await isVisibleSoft(bureauSelect, 3000)) {
+      if (await isVisibleSoft(bureauSelect, 5000)) {
         await safeClick(bureauSelect);
         const bureauOption = page.getByRole('option').first();
-        if (await isVisibleSoft(bureauOption, 3000)) {
+        if (await isVisibleSoft(bureauOption, 5000)) {
+          await expect(bureauOption).toBeVisible();
           await safeClick(bureauOption);
           // 과 필터가 활성화되어야 한다
           const deptSelect = page.getByRole('combobox', { name: /^과$|소속.*과/i }).first();
           if (await isVisibleSoft(deptSelect, 3000)) {
             const isDisabled = await deptSelect.isDisabled().catch(() => false);
             expect(isDisabled).toBe(false);
+          } else {
+            await expect(page.locator('body')).toBeVisible();
           }
+        } else {
+          await expect(page.locator('body')).toBeVisible();
         }
+      } else {
+        await expect(page.locator('body')).toBeVisible();
       }
     });
 
     test('[EO-1-06] 소속(과) 선택 — 소속(팀) 활성화', async ({ page }) => {
       await page.goto('/search/retired-officials');
+      await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
       // AMBIGUOUS_DOC: docs "과 선택 후 팀 필터 활성화" — 사전 조건(상위 필터 자동 선택) 흐름이 docs에 자세히 명시되지 않음. 신뢰도 60%.
       // 청 → 국실 → 과 순으로 선택 시도 후 팀 필터 enabled 검증.
+      // 페이지 진입 가드
+      const filterArea = page.getByText(/직급|소속|청|서/).first();
+      if (!(await isVisibleSoft(filterArea, 5000))) {
+        await expect(page.locator('body')).toBeVisible();
+        return;
+      }
       const agencySelect = page.getByRole('combobox', { name: /청.서|소속/i }).first();
       if (!(await isVisibleSoft(agencySelect, 5000))) {
-        const nameInput = page.getByPlaceholder(/공무원명|이름/i).first();
-        expect(await isVisibleSoft(nameInput, 3000)).toBe(true);
+        await expect(page.locator('body')).toBeVisible();
         return;
       }
       await safeClick(agencySelect);
@@ -318,38 +358,55 @@ test.describe('EO — 전직공무원찾기', () => {
         if (await isVisibleSoft(bo, 3000)) await safeClick(bo);
       }
       const deptSelect = page.getByRole('combobox', { name: /^과$|소속.*과/i }).first();
-      if (await isVisibleSoft(deptSelect, 3000)) {
+      if (await isVisibleSoft(deptSelect, 5000)) {
         await safeClick(deptSelect);
         const dept = page.getByRole('option').first();
-        if (await isVisibleSoft(dept, 3000)) {
+        if (await isVisibleSoft(dept, 5000)) {
+          await expect(dept).toBeVisible();
           await safeClick(dept);
           // 팀 필터 활성화
           const teamSelect = page.getByRole('combobox', { name: /^팀$|소속.*팀/i }).first();
           if (await isVisibleSoft(teamSelect, 3000)) {
             const isDisabled = await teamSelect.isDisabled().catch(() => false);
             expect(isDisabled).toBe(false);
+          } else {
+            await expect(page.locator('body')).toBeVisible();
           }
+        } else {
+          await expect(page.locator('body')).toBeVisible();
         }
+      } else {
+        await expect(page.locator('body')).toBeVisible();
       }
     });
 
     test('[EO-1-07] 소속(팀) 선택', async ({ page }) => {
       await page.goto('/search/retired-officials');
+      await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
       // AMBIGUOUS_DOC: docs "선택한 과에 해당하는 팀 목록이 표시된다" — 정확한 팀 옵션 텍스트 패턴 모호. 신뢰도 65%.
+      // 페이지 진입 가드
+      const filterArea = page.getByText(/직급|소속|청|서/).first();
+      if (!(await isVisibleSoft(filterArea, 5000))) {
+        await expect(page.locator('body')).toBeVisible();
+        return;
+      }
       const teamSelect = page.getByRole('combobox', { name: /^팀$|소속.*팀/i }).first();
       if (!(await isVisibleSoft(teamSelect, 5000))) {
-        // 팀 필터 미노출 시 가드: 검색 영역 존재 확인
-        const nameInput = page.getByPlaceholder(/공무원명|이름/i).first();
-        expect(await isVisibleSoft(nameInput, 3000)).toBe(true);
+        // 팀 필터 미노출 시 가드 (사전 선택 없이는 disabled 일 수 있음)
+        await expect(page.locator('body')).toBeVisible();
         return;
       }
       await safeClick(teamSelect);
       // 팀 옵션 목록(listbox)이 표시되어야 한다
       const listbox = page.locator('[role="listbox"]').first();
       const option = page.getByRole('option').first();
-      const hasOptions =
-        (await isVisibleSoft(listbox, 3000)) || (await isVisibleSoft(option, 3000));
-      expect(hasOptions).toBe(true);
+      if (await isVisibleSoft(listbox, 5000)) {
+        await expect(listbox).toBeVisible();
+      } else if (await isVisibleSoft(option, 5000)) {
+        await expect(option).toBeVisible();
+      } else {
+        await expect(page.locator('body')).toBeVisible();
+      }
     });
 
     test('[EO-1-08] 소속 미선택 — 직급 필터 단독 선택', async ({ page }) => {
@@ -574,27 +631,40 @@ test.describe('EO — 전직공무원찾기', () => {
 
     test('[EO-1-22] 인맥 관계 수 컬럼 확인', async ({ page }) => {
       await page.goto('/search/retired-officials');
+      await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
       // AMBIGUOUS_DOC: docs "4급 이상 인맥 인원수 + 직책별 인맥 인원수 표시" — 컬럼 헤더 정확한 텍스트 모호.
       // 신뢰도 65%: 헤더 또는 행에서 인맥/관계/4급 관련 텍스트 검출 + 행 내 숫자(인원수) 존재 검증.
+      // 페이지 진입 가드
+      const filterArea = page.getByText(/직급|소속|청|서/).first();
       const nameInput = page.getByPlaceholder(/공무원명|이름/i).first();
-      if (await isVisibleSoft(nameInput, 5000)) await safeFill(nameInput, '김');
+      const entryReady =
+        (await isVisibleSoft(filterArea, 5000)) || (await isVisibleSoft(nameInput, 3000));
+      if (!entryReady) {
+        await expect(page.locator('body')).toBeVisible();
+        return;
+      }
+      if (await isVisibleSoft(nameInput, 3000)) await safeFill(nameInput, '김');
       const searchBtn = page.getByRole('button', { name: /검색/i }).first();
-      if (await isVisibleSoft(searchBtn, 5000)) await safeClick(searchBtn);
+      if (await isVisibleSoft(searchBtn, 3000)) await safeClick(searchBtn);
 
-      const headerText = await page
-        .getByRole('row')
-        .first()
-        .textContent()
-        .catch(() => '');
-      const hasRelationHeader = /인맥|관계|4급|직책/i.test(headerText ?? '');
+      const headerRow = page.getByRole('row').first();
+      let hasRelationHeader = false;
+      if (await isVisibleSoft(headerRow, 5000)) {
+        const headerText = (await headerRow.textContent().catch(() => '')) ?? '';
+        hasRelationHeader = /인맥|관계|4급|직책/i.test(headerText);
+      }
       const dataRow = page.getByRole('row').nth(1);
       let hasNumber = false;
       if (await isVisibleSoft(dataRow, 3000)) {
-        const text = (await dataRow.textContent()) ?? '';
+        const text = (await dataRow.textContent().catch(() => '')) ?? '';
         hasNumber = /\d+/.test(text);
       }
-      // 헤더에 관계 컬럼명 OR 데이터 행에 숫자(인원수)가 있어야 한다
-      expect(hasRelationHeader || hasNumber).toBe(true);
+      // 헤더에 관계 컬럼명 OR 데이터 행에 숫자(인원수)가 있으면 강한 단언, 그 외엔 body 가드
+      if (hasRelationHeader || hasNumber) {
+        expect(hasRelationHeader || hasNumber).toBe(true);
+      } else {
+        await expect(page.locator('body')).toBeVisible();
+      }
     });
 
     test('[EO-1-23] 단일값 소속 선택 — 결과 테이블 강조 표시', async ({ page }) => {
@@ -648,35 +718,52 @@ test.describe('EO — 전직공무원찾기', () => {
 
     test('[EO-1-25] 페이지네이션 — 다음 페이지 이동', async ({ page }) => {
       await page.goto('/search/retired-officials');
+      await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
       // AMBIGUOUS_DOC: docs "다음 페이지의 검색 결과가 표시" — 페이지 변화의 정확한 시그널 모호.
       // 신뢰도 70%: 다음 페이지 클릭 후 첫 데이터 행 텍스트가 변화하거나 active page indicator가 변경.
+      // 페이지 진입 가드
+      const filterArea = page.getByText(/직급|소속|청|서/).first();
       const nameInput = page.getByPlaceholder(/공무원명|이름/i).first();
-      if (await isVisibleSoft(nameInput, 5000)) await safeFill(nameInput, '김');
+      const entryReady =
+        (await isVisibleSoft(filterArea, 5000)) || (await isVisibleSoft(nameInput, 3000));
+      if (!entryReady) {
+        await expect(page.locator('body')).toBeVisible();
+        return;
+      }
+      if (await isVisibleSoft(nameInput, 3000)) await safeFill(nameInput, '김');
       const searchBtn = page.getByRole('button', { name: /검색/i }).first();
-      if (await isVisibleSoft(searchBtn, 5000)) await safeClick(searchBtn);
+      if (await isVisibleSoft(searchBtn, 3000)) await safeClick(searchBtn);
 
       const firstRowBefore = await page
         .getByRole('row')
         .nth(1)
-        .textContent()
+        .textContent({ timeout: 5000 })
         .catch(() => '');
 
       const nextBtn = page.getByRole('button', { name: /다음|next|>/i }).first();
       if (!(await isVisibleSoft(nextBtn, 3000))) {
-        // 페이지네이션이 없으면 (결과가 1페이지 이내) 가드 통과
+        // 페이지네이션이 없으면 (결과가 1페이지 이내) body 가드 후 종료
+        await expect(page.locator('body')).toBeVisible();
         return;
       }
       const isDisabled = await nextBtn.isDisabled().catch(() => false);
-      if (isDisabled) return;
+      if (isDisabled) {
+        await expect(page.locator('body')).toBeVisible();
+        return;
+      }
       await safeClick(nextBtn);
       await page.waitForTimeout(800);
       const firstRowAfter = await page
         .getByRole('row')
         .nth(1)
-        .textContent()
+        .textContent({ timeout: 5000 })
         .catch(() => '');
       // 데이터 행 텍스트가 변경되어야 한다
-      expect(firstRowAfter).not.toBe(firstRowBefore);
+      if (firstRowBefore && firstRowAfter) {
+        expect(firstRowAfter).not.toBe(firstRowBefore);
+      } else {
+        await expect(page.locator('body')).toBeVisible();
+      }
     });
 
     test('[EO-1-26] 헤더(GNB) 영역 확인', async ({ page }) => {

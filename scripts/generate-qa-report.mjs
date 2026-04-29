@@ -704,32 +704,34 @@ const html = `<!doctype html>
   .hero-l p{margin:14px 0 0;font-size:14px;color:var(--ink-3);line-height:1.55;max-width:50ch}
   .hero-r{display:flex;justify-content:flex-end}
   .ring-wrap{display:flex;align-items:center;gap:24px}
-  .ring{position:relative;width:120px;height:120px}
-  .ring svg{transform:rotate(-90deg)}
+  .ring{position:relative;width:120px;height:120px;display:block}
+  .ring svg{transform:rotate(-90deg);display:block;width:120px;height:120px}
   .ring-track{stroke:var(--line)}
   .ring-fill{stroke:url(#ringGrad);stroke-linecap:round}
-  .ring-num{position:absolute;inset:0;display:grid;place-items:center;
-    font-size:28px;font-weight:700;letter-spacing:-.02em}
-  .ring-num small{font-size:13px;color:var(--ink-3);font-weight:500;margin-left:1px}
+  .ring-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    display:flex;align-items:baseline;justify-content:center;
+    font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1;
+    width:100%;text-align:center}
+  .ring-num small{font-size:13px;color:var(--ink-3);font-weight:500;margin-left:2px;line-height:1}
   .ring-cap{font-size:12px;color:var(--ink-3);max-width:140px;line-height:1.5}
   .ring-cap b{display:block;color:var(--ink);font-size:13px;font-weight:600;margin-bottom:4px}
 
   /* KPI strip */
   .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);
     border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:20px}
-  .kpi{background:var(--surface);padding:18px 20px;display:flex;flex-direction:column;gap:6px;position:relative}
+  .kpi{background:var(--surface);padding:18px 20px;display:flex;flex-direction:column;gap:6px;position:relative;min-width:0}
   .kpi-l{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);
-    display:flex;align-items:center;gap:6px}
-  .kpi-l .pip{width:8px;height:8px;border-radius:2px}
-  .kpi-v{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1}
-  .kpi-d{font-size:12px;color:var(--ink-3);margin-top:2px}
+    display:flex;align-items:center;gap:6px;white-space:nowrap;min-width:0}
+  .kpi-l .pip{width:8px;height:8px;border-radius:2px;flex:none}
+  .kpi-v{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1;display:block}
+  .kpi-d{font-size:12px;color:var(--ink-3);margin-top:2px;line-height:1.4}
   .kpi-bar{position:absolute;left:0;right:0;bottom:0;height:2px;background:transparent}
   .kpi.pass   .pip{background:var(--pass)}    .kpi.pass   .kpi-bar{background:var(--pass)}
   .kpi.fail   .pip{background:var(--fail)}    .kpi.fail   .kpi-bar{background:var(--fail)}
   .kpi.del    .pip{background:var(--del)}     .kpi.del    .kpi-bar{background:var(--del)}
   .kpi.manual .pip{background:var(--manual)}  .kpi.manual .kpi-bar{background:var(--manual)}
   .kpi.skip   .pip{background:var(--skip)}    .kpi.skip   .kpi-bar{background:var(--skip)}
-  .kpi.fail .kpi-v{color:var(--fail)}
+  /* keep all KPI values in the same ink tone for visual rhythm */
 
   /* Section */
   section{margin-top:56px}
@@ -786,12 +788,18 @@ const html = `<!doctype html>
   .cov.warn .cov-val{color:var(--manual)}
   .cov.bad  .cov-val{color:var(--fail)}
 
-  /* Numbers */
-  .n-pass{color:var(--pass);font-weight:600}
-  .n-fail{color:var(--fail);font-weight:600}
-  .n-manual{color:var(--manual);font-weight:600}
-  .n-skip{color:var(--skip);font-weight:600}
-  .n-del{color:var(--del);font-weight:600}
+  /* Numbers — body cells: neutral; only colored pip in row-name communicates kind. */
+  .n-pass{color:var(--ink);font-weight:600}
+  .n-fail{color:var(--ink);font-weight:600}
+  .n-manual{color:var(--ink);font-weight:600}
+  .n-skip{color:var(--ink);font-weight:600}
+  .n-del{color:var(--ink);font-weight:600}
+  /* footer accents — gentle, even across all kinds */
+  tfoot td.n-pass{color:var(--pass)}
+  tfoot td.n-fail{color:var(--fail)}
+  tfoot td.n-manual{color:var(--manual)}
+  tfoot td.n-skip{color:var(--skip)}
+  tfoot td.n-del{color:var(--del)}
   .dash{color:var(--ink-4)}
 
   tfoot td{padding:14px 18px;background:var(--surface-2);font-weight:600;color:var(--ink);
@@ -818,9 +826,9 @@ const html = `<!doctype html>
   .pill.skip{background:var(--skip-bg);color:var(--skip)} .pill.skip .pip{background:var(--skip)}
   .pill.del{background:var(--del-bg);color:var(--del)} .pill.del .pip{background:var(--del)}
 
-  /* Fail cards */
+  /* Fail cards — scoped to .fails to avoid colliding with .kpi.fail */
   .fails{display:flex;flex-direction:column;gap:8px}
-  .fail{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:start;
+  .fails > .fail{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:start;
     padding:16px 18px;background:var(--surface);border:1px solid var(--line);border-radius:10px;
     border-left:3px solid var(--fail)}
   .fail-id{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:600;
@@ -871,7 +879,7 @@ const html = `<!doctype html>
     .hero-r{justify-content:flex-start}
     .kpi-row{grid-template-columns:repeat(2,1fr)}
     .top-actions{display:none}
-    .fail{grid-template-columns:auto 1fr}
+    .fails > .fail{grid-template-columns:auto 1fr}
     .fail-link{grid-column:1/-1;justify-self:end}
   }
 </style>
@@ -889,7 +897,7 @@ const html = `<!doctype html>
       <div>자동화 <b>${autoRun}</b> · 수동 <b>${totalManual}</b> · 스킵 <b>${totalSkip}</b></div>
     </div>
     <div class="top-actions">
-      ${totalFail > 0 ? `<a class="btn btn-fail" href="#fail-details">FAIL ✗ ${totalFail}</a>` : ''}
+      ${totalFail > 0 ? `<a class="btn" href="#fail-details"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--fail)"></span>FAIL ${totalFail}</a>` : ''}
       <a class="btn" href="./index.html">📋 E2E</a>
       <a class="btn" href="./detail/index.html">🔍 Playwright</a>
     </div>

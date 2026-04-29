@@ -275,435 +275,698 @@ function escHtml(str) {
 }
 
 function shortTitle(title) {
-  return title.replace(/^\[[^\]]+\](\[M\]|\[S\])?\s*/, '');
+  return title.replace(/^\[[^\]]+\](\[M\]|\[S\]|\[D\])?\s*/, '');
 }
 
-// ── 커버리지 표 ───────────────────────────────────────────────────────────────
+function cleanAnsi(str) {
+  if (!str) return '';
+  return String(str).replace(/\[[\d;]*m/g, '').replace(/\[\d+m/g, '');
+}
+
+// ── 디자인: 커버리지 표 ──────────────────────────────────────────────────────
 
 function coverageTable() {
   const rows = moduleOrder.map(mod => {
     const tcs = byModule.get(mod) ?? [];
     const docsTotal = DOCS_COUNTS[mod] ?? 0;
+    if (!docsTotal && !tcs.length) return '';
     const impl = tcs.length;
-    const notImpl = Math.max(0, docsTotal - impl);
-    const pct = docsTotal > 0 ? Math.round((impl / docsTotal) * 100) : 0;
-    const barColor = pct >= 70 ? '#16a34a' : pct >= 40 ? '#d97706' : '#dc2626';
+    const todo = Math.max(0, docsTotal - impl);
+    const pct = docsTotal > 0 ? Math.min(100, Math.round((impl / docsTotal) * 100)) : 0;
+    const tone = pct < 80 ? 'bad' : pct < 90 ? 'warn' : '';
+    const name = moduleLabels[mod]?.replace(/^[A-Z-]+\s*—\s*/, '') ?? '';
     return `<tr>
-      <td><a href="#module-${mod}">${mod}</a></td>
-      <td class="num">${docsTotal}</td>
-      <td class="num pass-cell">${impl}</td>
-      <td class="num skip-cell">${notImpl > 0 ? notImpl : '—'}</td>
-      <td class="num">
-        <div style="display:flex;align-items:center;gap:6px;">
-          <div style="width:80px;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">
-            <div style="width:${pct}%;height:100%;background:${barColor};"></div>
-          </div>
-          <span style="font-size:0.75rem;color:${barColor};font-weight:600;">${pct}%</span>
-        </div>
-      </td>
+      <td><a class="mod" href="#module-${mod}"><span class="mod-tag">${mod}</span><span class="mod-name">${escHtml(name)}</span></a></td>
+      <td class="r num">${docsTotal}</td>
+      <td class="r num n-pass">${impl}</td>
+      <td class="r num">${todo === 0 ? '<span class="dash">—</span>' : todo}</td>
+      <td class="r"><div class="cov ${tone}"><div class="cov-track"><div class="cov-fill" style="width:${pct}%"></div></div><div class="cov-val num">${pct}%</div></div></td>
     </tr>`;
-  }).join('\n');
+  }).filter(Boolean).join('\n');
 
   const totalNotImpl = notImpl;
+  const coverageTone = coveragePct < 80 ? 'bad' : coveragePct < 90 ? 'warn' : '';
   return `<section id="coverage">
-    <h2 style="font-size:1rem;font-weight:700;padding:12px 16px;background:#f3f4f6;border:1px solid #e5e7eb;border-bottom:none;border-radius:8px 8px 0 0;">
-      📊 자동화 커버리지 — docs/qa 기준 ${DOCS_TOTAL}건 중 ${totalAll}건 구현 (${coveragePct}%)
-    </h2>
-    <div style="padding:10px 16px;font-size:0.82rem;color:#6b7280;background:#fffbeb;border:1px solid #fcd34d;border-bottom:none;">
-      ⚠️ 미구현 ${totalNotImpl}건은 docs/qa에 정의되어 있으나 아직 자동화 스펙 파일에 구현되지 않은 TC입니다. 우선순위에 따라 순차 구현 예정입니다.
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title"><span class="idx">01</span>자동화 커버리지</h2>
+        <p class="sec-sub">docs/qa 기준 모듈별 자동화 스펙 구현 진행률 — 이번 빌드 기준 ${coveragePct}% 달성</p>
+      </div>
+      <div class="sec-tools">
+        <span class="chip">기준 docs/qa</span>
+        <span class="chip">${moduleOrder.length} modules</span>
+      </div>
     </div>
-    <div class="tc-table-wrap">
-    <table class="tc-table" style="border-radius:0 0 8px 8px;table-layout:auto;">
-      <colgroup><col style="width:120px"><col style="width:90px"><col style="width:70px"><col style="width:70px"><col></colgroup>
-      <thead>
-        <tr><th>모듈</th><th class="num">docs 총계</th><th class="num">구현</th><th class="num">미구현</th><th>커버리지</th></tr>
-      </thead>
-      <tbody>
-        ${rows}
-      </tbody>
-      <tfoot>
-        <tr style="font-weight:700;background:#f9fafb;">
-          <td>합계</td>
-          <td class="num">${DOCS_TOTAL}</td>
-          <td class="num pass-cell">${totalAll}</td>
-          <td class="num skip-cell">${totalNotImpl}</td>
-          <td><span style="font-size:0.8rem;font-weight:700;color:${coveragePct >= 70 ? '#16a34a' : '#d97706'};">${coveragePct}%</span></td>
-        </tr>
-      </tfoot>
-    </table>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:32%">모듈</th>
+            <th class="r">DOCS 총계</th>
+            <th class="r">구현</th>
+            <th class="r">미구현</th>
+            <th style="width:32%" class="r">커버리지</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          <tr>
+            <td>합계</td>
+            <td class="r num">${DOCS_TOTAL}</td>
+            <td class="r num n-pass">${totalAll}</td>
+            <td class="r num">${totalNotImpl === 0 ? '<span class="dash">—</span>' : totalNotImpl}</td>
+            <td class="r"><div class="cov ${coverageTone}"><div class="cov-track"><div class="cov-fill" style="width:${coveragePct}%"></div></div><div class="cov-val num">${coveragePct}%</div></div></td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   </section>`;
 }
 
-// ── 모듈 요약 표 행 ──────────────────────────────────────────────────────────
+// ── 디자인: 실행 결과 표 ─────────────────────────────────────────────────────
 
-function summaryRows() {
-  return moduleOrder.map(mod => {
+function resultsTable() {
+  const rows = moduleOrder.map(mod => {
     const tcs = byModule.get(mod) ?? [];
     if (!tcs.length) return '';
+    const total = tcs.length;
     const p  = tcs.filter(t => classifyResult(t) === 'pass').length;
     const f  = tcs.filter(t => classifyResult(t) === 'fail').length;
+    const d  = tcs.filter(t => classifyResult(t) === 'deprecated').length;
     const m  = tcs.filter(t => classifyResult(t) === 'manual').length;
     const sk = tcs.filter(t => classifyResult(t) === 'skip').length;
-    const d  = tcs.filter(t => classifyResult(t) === 'deprecated').length;
-    const cls = f > 0 ? 'fail' : 'pass';
-    return `<tr class="${cls}">
-      <td><a href="#module-${mod}">${mod}</a></td>
-      <td class="num">${tcs.length}</td>
-      <td class="num pass-cell">${p}</td>
-      <td class="num ${f > 0 ? 'fail-cell' : ''}">${f > 0 ? f : '—'}</td>
-      <td class="num deprecated-cell">${d > 0 ? d : '—'}</td>
-      <td class="num manual-cell">${m > 0 ? m : '—'}</td>
-      <td class="num skip-cell">${sk > 0 ? sk : '—'}</td>
+    const tot = total || 1;
+    const num = (v, kind) => v === 0 ? '<span class="dash">—</span>' : `<span class="n-${kind}">${v}</span>`;
+    return `<tr>
+      <td>
+        <div class="row-name">
+          <a class="mod" href="#module-${mod}"><span class="mod-tag">${mod}</span></a>
+          <div class="dist" aria-hidden>
+            <span class="p" style="width:${p/tot*100}%"></span>
+            <span class="f" style="width:${f/tot*100}%"></span>
+            <span class="d" style="width:${d/tot*100}%"></span>
+            <span class="m" style="width:${m/tot*100}%"></span>
+            <span class="s" style="width:${sk/tot*100}%"></span>
+          </div>
+        </div>
+      </td>
+      <td class="r num">${total}</td>
+      <td class="r num">${num(p,'pass')}</td>
+      <td class="r num">${num(f,'fail')}</td>
+      <td class="r num">${num(d,'del')}</td>
+      <td class="r num">${num(m,'manual')}</td>
+      <td class="r num">${num(sk,'skip')}</td>
     </tr>`;
-  }).join('\n');
+  }).filter(Boolean).join('\n');
+
+  return `<section id="results">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title"><span class="idx">02</span>실행 결과</h2>
+        <p class="sec-sub">docs/qa ${totalAll}건의 모듈별 PASS · FAIL · 삭제 · 수동 · 스킵 분포</p>
+      </div>
+      <div class="sec-tools">
+        <span class="chip pass"><span class="pip"></span>PASS</span>
+        <span class="chip fail"><span class="pip"></span>FAIL</span>
+        <span class="chip del"><span class="pip"></span>삭제</span>
+        <span class="chip manual"><span class="pip"></span>수동</span>
+        <span class="chip skip"><span class="pip"></span>스킵</span>
+      </div>
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:30%">모듈</th>
+            <th class="r">전체</th>
+            <th class="r">PASS</th>
+            <th class="r">FAIL</th>
+            <th class="r">삭제</th>
+            <th class="r">수동</th>
+            <th class="r">스킵</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          <tr>
+            <td>합계</td>
+            <td class="r num">${totalAll}</td>
+            <td class="r num n-pass">${totalPass}</td>
+            <td class="r num n-fail">${totalFail || '<span class="dash">—</span>'}</td>
+            <td class="r num n-del">${totalDeprecated || '<span class="dash">—</span>'}</td>
+            <td class="r num n-manual">${totalManual || '<span class="dash">—</span>'}</td>
+            <td class="r num n-skip">${totalSkip || '<span class="dash">—</span>'}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>`;
 }
 
-// ── 모듈별 TC 상세 섹션 ───────────────────────────────────────────────────────
+// ── 디자인: 모듈별 상세 섹션 ─────────────────────────────────────────────────
 
-function moduleSection(mod) {
+function moduleSection(mod, idx) {
   const tcs = byModule.get(mod) ?? [];
   if (!tcs.length) return '';
   const label = moduleLabels[mod] ?? mod;
-  const p = tcs.filter(t => classifyResult(t) === 'pass').length;
-  const f = tcs.filter(t => classifyResult(t) === 'fail').length;
-  const autoRun = tcs.filter(t => !['manual','skip'].includes(classifyResult(t))).length;
-  const statusCls = f > 0 ? 'fail' : 'pass';
+  const name = label.replace(/^[A-Z-]+\s*—\s*/, '');
+  const p  = tcs.filter(t => classifyResult(t) === 'pass').length;
+  const f  = tcs.filter(t => classifyResult(t) === 'fail').length;
+  const d  = tcs.filter(t => classifyResult(t) === 'deprecated').length;
+  const m  = tcs.filter(t => classifyResult(t) === 'manual').length;
+  const sk = tcs.filter(t => classifyResult(t) === 'skip').length;
+
+  const headerChips = [
+    p  > 0 ? `<span class="chip pass"><span class="pip"></span>PASS ${p}</span>` : '',
+    f  > 0 ? `<span class="chip fail"><span class="pip"></span>FAIL ${f}</span>` : '',
+    d  > 0 ? `<span class="chip del"><span class="pip"></span>삭제 ${d}</span>` : '',
+    m  > 0 ? `<span class="chip manual"><span class="pip"></span>수동 ${m}</span>` : '',
+    sk > 0 ? `<span class="chip skip"><span class="pip"></span>스킵 ${sk}</span>` : '',
+  ].filter(Boolean).join('');
 
   const rows = tcs.map(tc => {
     const result = classifyResult(tc);
-    const icon = resultIcon(result);
-    const lbl = resultLabel(result);
-    const rowCls = `result-${result}`;
-    const errorHtml = tc.error
-      ? `<div class="error-msg">${escHtml(tc.error)}</div>`
-      : '';
-    return `<tr class="${rowCls}">
-      <td class="tc-id-cell"><code>${escHtml(tc.id)}</code></td>
-      <td class="result-cell">
-        <span class="result-badge result-${result}">${icon} ${lbl}</span>
-      </td>
-      <td class="title-cell">${escHtml(shortTitle(tc.title))}${errorHtml}</td>
+    const pillMap = { pass:'pass', fail:'fail', deprecated:'del', manual:'manual', skip:'skip' };
+    const pillLabel = { pass:'PASS', fail:'FAIL', deprecated:'삭제', manual:'수동', skip:'스킵' };
+    const cls = pillMap[result] ?? 'skip';
+    const lbl = pillLabel[result] ?? result;
+    return `<tr id="tc-${escHtml(tc.id)}">
+      <td><span class="tc-id">${escHtml(tc.id)}</span></td>
+      <td><span class="pill ${cls}"><span class="pip"></span>${lbl}</span></td>
+      <td>${escHtml(shortTitle(tc.title))}</td>
     </tr>`;
   }).join('\n');
 
   return `<section id="module-${mod}">
-    <div class="module-header ${statusCls}">
-      <h2>${escHtml(label)}</h2>
-      <div class="module-meta">
-        자동화 ${autoRun}건 &nbsp;|&nbsp;
-        ✅ ${p} &nbsp;
-        ${f > 0 ? `❌ ${f} &nbsp;` : ''}
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title"><span class="idx">${String(idx).padStart(2,'0')}</span>${mod} 모듈 상세</h2>
+        <p class="sec-sub">${escHtml(name)} — TC-ID · 결과 · 설명</p>
       </div>
     </div>
-    <div class="tc-table-wrap">
-    <table class="tc-table">
-      <colgroup><col style="width:140px"><col style="width:90px"><col></colgroup>
-      <thead>
-        <tr><th>TC-ID</th><th>결과</th><th>설명</th></tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="card">
+      <div class="mod-head">
+        <div class="mod-head-l">
+          <span class="mod-tag">${mod}</span>
+          <span class="mod-name">${escHtml(name)}</span>
+        </div>
+        <div class="mod-head-r">${headerChips}</div>
+      </div>
+      <table class="lt">
+        <thead>
+          <tr>
+            <th style="width:18%">TC-ID</th>
+            <th style="width:14%">결과</th>
+            <th>설명</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
     </div>
   </section>`;
 }
 
-// ── 수동 검증 필요 목록 ───────────────────────────────────────────────────────
+// ── 디자인: 실패 상세 (카드형) ───────────────────────────────────────────────
+
+function failDetails() {
+  const failed = allTcs.filter(t => classifyResult(t) === 'fail');
+  if (!failed.length) return '';
+  const cards = failed.map(tc => {
+    const msg = cleanAnsi(tc.error ?? '');
+    return `<div class="fail">
+      <span class="fail-id">${escHtml(tc.id)}</span>
+      <div class="fail-body">
+        <div class="fail-title">${escHtml(shortTitle(tc.title))}</div>
+        ${msg ? `<div class="fail-msg" title="${escHtml(msg)}">${escHtml(msg)}</div>` : ''}
+      </div>
+      <a class="fail-link" href="#tc-${escHtml(tc.id)}">상세 →</a>
+    </div>`;
+  }).join('\n');
+  return `<section id="fail-details">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title"><span class="idx">03</span>실패 상세 <span class="chip" style="margin-left:6px">${failed.length}건</span></h2>
+        <p class="sec-sub">우선 처리해야 하는 케이스. 대부분은 60s 타임아웃 — 셀렉터 또는 비동기 로딩 점검 필요.</p>
+      </div>
+    </div>
+    <div class="fails">${cards}</div>
+  </section>`;
+}
+
+// ── 디자인: 수동 검증 ────────────────────────────────────────────────────────
 
 function manualTable() {
   const manuals = allTcs.filter(t => classifyResult(t) === 'manual');
   if (!manuals.length) return '';
   const rows = manuals.map(tc => `
     <tr>
-      <td><code>${escHtml(tc.id)}</code></td>
+      <td><span class="tc-id">${escHtml(tc.id)}</span></td>
       <td>${escHtml(shortTitle(tc.title))}</td>
-      <td class="reason-cell">${escHtml(tc.reason || '수동 검증 필요 — 자동화 불가 영역')}</td>
+      <td class="reason">${escHtml(tc.reason || '수동 검증 필요 — 자동화 불가 영역')}</td>
     </tr>`).join('\n');
   return `<section id="manual-checks">
-    <h2>⏭️ 수동 검증 필요 목록 (${manuals.length}건)</h2>
-    <p class="manual-note">아래 항목은 OAuth, 이메일 인증, SMS, PG 결제, PDF 내용 등 자동화가 불가능하거나 권장되지 않는 케이스입니다. 사람이 직접 확인해야 합니다.</p>
-    <div class="tc-table-wrap">
-    <table class="tc-table">
-      <colgroup><col style="width:140px"><col><col style="width:260px"></colgroup>
-      <thead><tr><th>TC-ID</th><th>설명</th><th>수동 검증 이유</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title"><span class="idx">04</span>수동 검증 필요 <span class="chip" style="margin-left:6px">${manuals.length}건</span></h2>
+        <p class="sec-sub">OAuth · 이메일 인증 · SMS · PG 결제 · PDF 내용 등 자동화가 불가하거나 권장되지 않는 케이스</p>
+      </div>
+    </div>
+    <div class="notice info">
+      <div class="notice-ico">i</div>
+      <div>아래 항목은 자동화가 불가하거나 권장되지 않는 케이스입니다. 사람이 직접 확인해야 합니다.</div>
+    </div>
+    <div class="card">
+      <table class="lt">
+        <thead>
+          <tr>
+            <th style="width:18%">TC-ID</th>
+            <th>설명</th>
+            <th style="width:34%">수동 검증 이유</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
     </div>
   </section>`;
 }
 
-// ── 스킵 목록 ─────────────────────────────────────────────────────────────────
-
-function skipTable() {
-  const skips = allTcs.filter(t => classifyResult(t) === 'skip');
-  if (!skips.length) return '';
-
-  // 분류: 명시적 스킵 vs 조건부 스킵
-  const explicit = skips.filter(t => t.reason);
-  const conditional = skips.filter(t => !t.reason);
-
-  function skipRows(tcs, defaultReason) {
-    return tcs.map(tc => `
-      <tr>
-        <td><code>${escHtml(tc.id)}</code></td>
-        <td>${escHtml(shortTitle(tc.title))}</td>
-        <td class="reason-cell">${escHtml(tc.reason || defaultReason)}</td>
-      </tr>`).join('\n');
-  }
-
-  let body = '';
-  if (explicit.length) {
-    body += `<tr class="group-header"><td colspan="3">📌 명시적 스킵 (${explicit.length}건) — 테스트 자체가 비활성화됨</td></tr>`;
-    body += skipRows(explicit, '');
-  }
-  if (conditional.length) {
-    body += `<tr class="group-header"><td colspan="3">🔀 조건부 스킵 (${conditional.length}건) — UI 요소 미노출 등 런타임 조건에 따라 스킵됨</td></tr>`;
-    body += skipRows(conditional, '조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵');
-  }
-
-  return `<section id="skip-list">
-    <h2>👤 스킵 목록 (${skips.length}건)</h2>
-    <p class="manual-note">명시적 스킵은 현재 기능 미구현, 세션 파괴 위험, 환경 불안정 등의 이유로 비활성화된 케이스입니다. 조건부 스킵은 실행 시점에 UI 요소가 없을 경우 자동으로 건너뛰는 케이스입니다.</p>
-    <div class="tc-table-wrap">
-    <table class="tc-table">
-      <colgroup><col style="width:140px"><col><col style="width:260px"></colgroup>
-      <thead><tr><th>TC-ID</th><th>설명</th><th>스킵 이유</th></tr></thead>
-      <tbody>${body}</tbody>
-    </table>
-    </div>
-  </section>`;
-}
-
-// ── 요구기능 삭제 목록 ────────────────────────────────────────────────────────
+// ── 디자인: 요구기능 삭제 ────────────────────────────────────────────────────
 
 function deprecatedTable() {
   const deps = allTcs.filter(t => classifyResult(t) === 'deprecated');
   if (!deps.length) return '';
   const rows = deps.map(tc => `
     <tr>
-      <td><code>${escHtml(tc.id)}</code></td>
+      <td><span class="tc-id">${escHtml(tc.id)}</span></td>
       <td>${escHtml(shortTitle(tc.title))}</td>
-      <td class="reason-cell">${escHtml(tc.reason || '요구사항 변경 — 서비스에서 해당 기능 제거됨')}</td>
+      <td class="reason">${escHtml(tc.reason || '요구사항 변경 — 서비스에서 해당 기능 제거됨')}</td>
     </tr>`).join('\n');
   return `<section id="deprecated-list">
-    <h2>🗑️ 요구기능 삭제 목록 (${deps.length}건)</h2>
-    <p class="manual-note">아래 항목은 docs/qa에 정의되어 있었으나 요구사항 변경으로 서비스에서 해당 기능이 제거된 케이스입니다. 테스트 대상에서 공식적으로 제외됩니다.</p>
-    <div class="tc-table-wrap">
-    <table class="tc-table">
-      <colgroup><col style="width:140px"><col><col style="width:260px"></colgroup>
-      <thead><tr><th>TC-ID</th><th>설명</th><th>삭제 사유</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title"><span class="idx">05</span>요구기능 삭제 <span class="chip" style="margin-left:6px">${deps.length}건</span></h2>
+        <p class="sec-sub">docs/qa에 정의되어 있으나 요구사항 변경으로 서비스에서 제거된 케이스 — 테스트 대상에서 공식 제외</p>
+      </div>
+    </div>
+    <div class="card">
+      <table class="lt">
+        <thead>
+          <tr>
+            <th style="width:18%">TC-ID</th>
+            <th>설명</th>
+            <th style="width:34%">삭제 사유</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
     </div>
   </section>`;
 }
 
-// ── 실패 상세 ─────────────────────────────────────────────────────────────────
+// ── 디자인: 스킵 (명시적/조건부 그룹) ────────────────────────────────────────
 
-function failDetails() {
-  const failed = allTcs.filter(t => classifyResult(t) === 'fail');
-  if (!failed.length) return '';
-  const rows = failed.map(tc => `
+function skipTable() {
+  const skips = allTcs.filter(t => classifyResult(t) === 'skip');
+  if (!skips.length) return '';
+  const explicit = skips.filter(t => t.tag === '[S]' || t.reason);
+  const conditional = skips.filter(t => t.tag !== '[S]' && !t.reason);
+  const rowOf = (tc, fallback) => `
     <tr>
-      <td><code>${escHtml(tc.id)}</code></td>
+      <td><span class="tc-id">${escHtml(tc.id)}</span></td>
       <td>${escHtml(shortTitle(tc.title))}</td>
-      <td class="error-msg">${escHtml(tc.error ?? '')}</td>
-    </tr>`).join('\n');
-  return `<section id="fail-details" class="fail-section">
-    <h2>❌ 실패 상세 (${failed.length}건)</h2>
-    <div class="tc-table-wrap">
-    <table class="tc-table">
-      <colgroup><col style="width:140px"><col style="width:200px"><col></colgroup>
-      <thead><tr><th>TC-ID</th><th>설명</th><th>오류</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+      <td class="reason">${escHtml(tc.reason || fallback)}</td>
+    </tr>`;
+  let body = '';
+  if (explicit.length) {
+    body += `<tr class="group-row"><td colspan="3">📌 명시적 스킵 <span class="grp-num">— 테스트 자체가 비활성화됨 (${explicit.length}건)</span></td></tr>`;
+    body += explicit.map(tc => rowOf(tc, '명시적 스킵')).join('\n');
+  }
+  if (conditional.length) {
+    body += `<tr class="group-row"><td colspan="3">🔀 조건부 스킵 <span class="grp-num">— UI 요소 미노출 등 런타임 조건에 따라 스킵됨 (${conditional.length}건)</span></td></tr>`;
+    body += conditional.map(tc => rowOf(tc, '조건부 스킵 — UI 요소가 없거나 기능 미제공 시 자동 스킵')).join('\n');
+  }
+  return `<section id="skip-list">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title"><span class="idx">06</span>스킵 <span class="chip" style="margin-left:6px">${skips.length}건</span></h2>
+        <p class="sec-sub">현재 미구현 · 세션 파괴 위험 · 환경 불안정 등의 이유로 비활성화된 케이스</p>
+      </div>
+    </div>
+    <div class="card">
+      <table class="lt">
+        <thead>
+          <tr>
+            <th style="width:18%">TC-ID</th>
+            <th>설명</th>
+            <th style="width:34%">스킵 이유</th>
+          </tr>
+        </thead>
+        <tbody>${body}</tbody>
+      </table>
     </div>
   </section>`;
 }
 
 // ── HTML 전체 ─────────────────────────────────────────────────────────────────
 
-const html = `<!DOCTYPE html>
+const dashLength = 2 * Math.PI * 50;
+const ringOffset = dashLength - (dashLength * coveragePct / 100);
+const autoRun = totalPass + totalFail; // 실제 자동 실행
+
+const html = `<!doctype html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Anchor QA 결과 리포트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  :root {
-    --pass: #16a34a; --fail: #dc2626; --manual: #d97706; --skip: #6b7280; --deprecated: #7c3aed;
-    --pass-bg: #f0fdf4; --fail-bg: #fef2f2; --manual-bg: #fffbeb; --skip-bg: #f9fafb; --deprecated-bg: #f5f3ff;
-    --border: #e5e7eb; --text: #111827; --muted: #6b7280; --code-bg: #f3f4f6;
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --bg:#FAF9F6;
+    --surface:#FFFFFF;
+    --surface-2:#F5F3EE;
+    --line:rgba(20,18,12,.08);
+    --line-strong:rgba(20,18,12,.14);
+    --ink:#1A1814;
+    --ink-2:#3A362E;
+    --ink-3:#6B6657;
+    --ink-4:#9A9483;
+    --pass:#1F8A4C;
+    --pass-bg:#E8F4EC;
+    --pass-bar:linear-gradient(90deg,#22A35A 0%,#1F8A4C 100%);
+    --fail:#C13030;
+    --fail-bg:#FBEBEB;
+    --manual:#B26A00;
+    --manual-bg:#FAEFD8;
+    --skip:#5C6470;
+    --skip-bg:#ECEDF0;
+    --del:#7B5BB6;
+    --del-bg:#EFEAF8;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-         color: var(--text); background: #fff; line-height: 1.6; }
-  .container { max-width: 1080px; margin: 0 auto; padding: 32px 24px; }
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:Pretendard,ui-sans-serif,-apple-system,system-ui,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    font-feature-settings:"ss01","tnum";-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+  a{color:inherit}
 
-  header { display: flex; align-items: flex-start; justify-content: space-between;
-           margin-bottom: 32px; flex-wrap: wrap; gap: 12px; }
-  header h1 { font-size: 1.7rem; font-weight: 800; }
-  .meta { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
-  .badge-status { padding: 6px 16px; border-radius: 9999px; font-size: 0.85rem;
-                  font-weight: 700; letter-spacing: 0.05em; }
-  .badge-status.PASS { background: var(--pass-bg); color: var(--pass); border: 1px solid var(--pass); }
-  .badge-status.FAIL { background: var(--fail-bg); color: var(--fail); border: 1px solid var(--fail); }
-  .header-links { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .detail-link { display: inline-flex; align-items: center; gap: 6px;
-                 padding: 6px 14px; background: #1e40af; color: #fff;
-                 border-radius: 6px; text-decoration: none; font-size: 0.82rem;
-                 font-weight: 500; }
+  .page{max-width:1180px;margin:0 auto;padding:48px 32px 80px}
 
-  .big-numbers { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
-  .big-num { flex: 1; min-width: 120px; padding: 16px 20px; border-radius: 10px;
-             border: 1px solid var(--border); text-align: center; }
-  .big-num .num { font-size: 2.2rem; font-weight: 800; line-height: 1; }
-  .big-num .lbl { font-size: 0.78rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
-  .big-num.pass { background: var(--pass-bg); border-color: #86efac; }
-  .big-num.pass .num { color: var(--pass); }
-  .big-num.fail { background: var(--fail-bg); border-color: #fca5a5; }
-  .big-num.fail .num { color: var(--fail); }
-  .big-num.manual { background: var(--manual-bg); border-color: #fcd34d; }
-  .big-num.manual .num { color: var(--manual); }
-  .big-num.skip { background: var(--skip-bg); }
-  .big-num.skip .num { color: var(--skip); }
-  .big-num.deprecated { background: var(--deprecated-bg); border-color: #c4b5fd; }
-  .big-num.deprecated .num { color: var(--deprecated); }
+  /* Topbar */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:24px;
+    padding-bottom:24px;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:28px;height:28px;border-radius:7px;background:var(--ink);
+    display:grid;place-items:center;color:var(--bg);font-weight:700;font-size:13px;letter-spacing:-.02em}
+  .brand-name{font-size:14px;font-weight:600;letter-spacing:-.01em}
+  .brand-sep{color:var(--ink-4);font-weight:400;margin:0 2px}
+  .brand-sub{font-size:13px;color:var(--ink-3);font-weight:500}
+  .top-meta{display:flex;align-items:center;gap:18px;font-size:13px;color:var(--ink-3)}
+  .top-meta b{color:var(--ink-2);font-weight:600}
+  .top-meta .dot{width:6px;height:6px;border-radius:50%;background:var(--pass);display:inline-block;
+    margin-right:8px;box-shadow:0 0 0 4px var(--pass-bg)}
+  .top-actions{display:flex;gap:8px}
+  .btn{appearance:none;border:1px solid var(--line-strong);background:var(--surface);
+    color:var(--ink-2);padding:8px 12px;border-radius:8px;font:inherit;font-size:12.5px;
+    font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none;
+    transition:background .15s, border-color .15s}
+  .btn:hover{background:var(--surface-2);border-color:var(--ink-4)}
+  .btn-fail{color:var(--fail);border-color:color-mix(in oklab,var(--fail) 35%, transparent);background:var(--fail-bg)}
+  .btn-fail:hover{background:color-mix(in oklab,var(--fail) 12%, var(--fail-bg))}
 
-  .module-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 28px; }
-  .module-nav a { padding: 4px 12px; border: 1px solid var(--border); border-radius: 20px;
-                  text-decoration: none; color: var(--text); font-size: 0.8rem; }
-  .module-nav a:hover { background: var(--code-bg); }
+  /* Hero */
+  .hero{padding:36px 0 28px;display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:end}
+  .hero-l h1{margin:0;font-size:32px;line-height:1.18;letter-spacing:-.022em;font-weight:700}
+  .hero-l h1 em{font-style:normal;color:var(--ink-3);font-weight:600}
+  .hero-l p{margin:14px 0 0;font-size:14px;color:var(--ink-3);line-height:1.55;max-width:50ch}
+  .hero-r{display:flex;justify-content:flex-end}
+  .ring-wrap{display:flex;align-items:center;gap:24px}
+  .ring{position:relative;width:120px;height:120px}
+  .ring svg{transform:rotate(-90deg)}
+  .ring-track{stroke:var(--line)}
+  .ring-fill{stroke:url(#ringGrad);stroke-linecap:round}
+  .ring-num{position:absolute;inset:0;display:grid;place-items:center;
+    font-size:28px;font-weight:700;letter-spacing:-.02em}
+  .ring-num small{font-size:13px;color:var(--ink-3);font-weight:500;margin-left:1px}
+  .ring-cap{font-size:12px;color:var(--ink-3);max-width:140px;line-height:1.5}
+  .ring-cap b{display:block;color:var(--ink);font-size:13px;font-weight:600;margin-bottom:4px}
 
-  .summary-wrap { overflow-x: auto; margin-bottom: 36px; }
-  .summary-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-  .summary-table th { padding: 9px 12px; text-align: left; color: var(--muted);
-                      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;
-                      background: var(--code-bg); border-bottom: 2px solid var(--border); }
-  .summary-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
-  .summary-table td a { color: inherit; text-decoration: none; font-weight: 600; }
-  .summary-table td a:hover { text-decoration: underline; }
-  .summary-table tr.fail td { background: #fff5f5; }
-  .summary-table tr.fail td:first-child { border-left: 3px solid var(--fail); }
-  .summary-table tr.pass td:first-child { border-left: 3px solid var(--pass); }
-  .summary-table tfoot td { font-weight: 700; background: var(--code-bg); }
-  .num { text-align: right; }
-  .pass-cell { color: var(--pass); font-weight: 600; }
-  .fail-cell { color: var(--fail); font-weight: 600; }
-  .manual-cell { color: var(--manual); }
-  .skip-cell { color: var(--skip); }
-  .deprecated-cell { color: var(--deprecated); }
+  /* KPI strip */
+  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:20px}
+  .kpi{background:var(--surface);padding:18px 20px;display:flex;flex-direction:column;gap:6px;position:relative}
+  .kpi-l{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);
+    display:flex;align-items:center;gap:6px}
+  .kpi-l .pip{width:8px;height:8px;border-radius:2px}
+  .kpi-v{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1}
+  .kpi-d{font-size:12px;color:var(--ink-3);margin-top:2px}
+  .kpi-bar{position:absolute;left:0;right:0;bottom:0;height:2px;background:transparent}
+  .kpi.pass   .pip{background:var(--pass)}    .kpi.pass   .kpi-bar{background:var(--pass)}
+  .kpi.fail   .pip{background:var(--fail)}    .kpi.fail   .kpi-bar{background:var(--fail)}
+  .kpi.del    .pip{background:var(--del)}     .kpi.del    .kpi-bar{background:var(--del)}
+  .kpi.manual .pip{background:var(--manual)}  .kpi.manual .kpi-bar{background:var(--manual)}
+  .kpi.skip   .pip{background:var(--skip)}    .kpi.skip   .kpi-bar{background:var(--skip)}
+  .kpi.fail .kpi-v{color:var(--fail)}
 
-  section { margin-bottom: 36px; }
-  .module-header { display: flex; align-items: center; justify-content: space-between;
-                   padding: 12px 16px; border-radius: 8px 8px 0 0;
-                   border: 1px solid var(--border); border-bottom: none; }
-  .module-header.fail { background: var(--fail-bg); border-color: #fca5a5; }
-  .module-header.pass { background: var(--pass-bg); border-color: #86efac; }
-  .module-header h2 { font-size: 1rem; font-weight: 700; }
-  .module-meta { font-size: 0.8rem; color: var(--muted); }
-  section h2 { font-size: 1rem; font-weight: 700; padding: 12px 16px;
-               background: var(--code-bg); border: 1px solid var(--border);
-               border-bottom: none; border-radius: 8px 8px 0 0; }
-  .manual-note { font-size: 0.82rem; color: var(--muted); padding: 10px 16px;
-                 background: var(--manual-bg); border: 1px solid #fcd34d;
-                 border-bottom: none; }
+  /* Section */
+  section{margin-top:56px}
+  .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px}
+  .sec-title{font-size:18px;font-weight:700;letter-spacing:-.012em;margin:0;display:flex;align-items:baseline;gap:10px}
+  .sec-title .idx{font-size:12px;font-weight:500;color:var(--ink-4);font-family:"JetBrains Mono",monospace;letter-spacing:0}
+  .sec-sub{font-size:13px;color:var(--ink-3);margin:6px 0 0;font-weight:400}
+  .sec-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .chip{font-size:11.5px;color:var(--ink-3);padding:5px 9px;border-radius:6px;
+    background:var(--surface-2);border:1px solid var(--line);font-weight:500;display:inline-flex;align-items:center;gap:5px}
+  .chip .pip{width:7px;height:7px;border-radius:2px}
+  .chip.pass .pip{background:var(--pass)}
+  .chip.fail .pip{background:var(--fail)}
+  .chip.del .pip{background:var(--del)}
+  .chip.manual .pip{background:var(--manual)}
+  .chip.skip .pip{background:var(--skip)}
 
-  .tc-table-wrap { overflow-x: auto; }
-  .tc-table { width: 100%; border-collapse: collapse; font-size: 0.85rem;
-              border: 1px solid var(--border); border-radius: 0 0 8px 8px;
-              table-layout: fixed; }
-  .module-header + .tc-table-wrap .tc-table { border-top: 1px solid var(--border); }
-  .tc-table th { padding: 8px 12px; text-align: left; background: #fafafa;
-                 font-size: 0.75rem; color: var(--muted); text-transform: uppercase;
-                 letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
-  .tc-table td { padding: 8px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top;
-                 word-break: break-word; overflow-wrap: break-word; }
-  .tc-table tr:last-child td { border-bottom: none; }
-  .tc-table tr.result-fail td { background: #fff5f5; }
-  .tc-table tr.result-skip td, .tc-table tr.result-manual td { color: var(--muted); }
-  .tc-table tr.group-header td { background: #f3f4f6; font-size: 0.78rem; font-weight: 600;
-                                  color: var(--muted); padding: 6px 12px; }
-  .tc-id-cell { width: 140px; }
-  .result-cell { width: 90px; white-space: nowrap; }
-  .reason-cell { font-size: 0.8rem; color: #374151; max-width: 320px; }
-  .title-cell { }
-  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem;
-         background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
-  .error-msg { font-size: 0.78rem; color: var(--fail); margin-top: 4px;
-               font-family: 'SF Mono', monospace; word-break: break-all; }
+  /* Notice */
+  .notice{display:flex;gap:12px;padding:14px 16px;border-radius:10px;
+    background:var(--manual-bg);border:1px solid color-mix(in oklab,var(--manual) 25%, transparent);
+    margin-bottom:14px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+  .notice b{color:var(--ink);font-weight:600}
+  .notice-ico{flex:none;width:18px;height:18px;border-radius:50%;background:var(--manual);
+    color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;margin-top:1px}
+  .notice.info{background:var(--surface-2);border-color:var(--line)}
+  .notice.info .notice-ico{background:var(--ink-3)}
 
-  .result-badge { display: inline-block; padding: 2px 8px; border-radius: 4px;
-                  font-size: 0.75rem; font-weight: 600; }
-  .result-pass       { background: var(--pass-bg); color: var(--pass); }
-  .result-fail       { background: var(--fail-bg); color: var(--fail); }
-  .result-manual     { background: var(--manual-bg); color: var(--manual); }
-  .result-skip       { background: var(--skip-bg); color: var(--skip); }
-  .result-deprecated { background: var(--deprecated-bg); color: var(--deprecated); }
+  /* Card / Table shell */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px}
+  thead th{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--ink-3);text-align:left;padding:13px 18px;background:var(--surface-2);
+    border-bottom:1px solid var(--line);white-space:nowrap}
+  thead th.r{text-align:right} thead th.c{text-align:center}
+  tbody td{padding:14px 18px;border-bottom:1px solid var(--line);vertical-align:middle;color:var(--ink-2)}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover td{background:color-mix(in oklab,var(--surface-2) 60%, transparent)}
+  td.r{text-align:right} td.c{text-align:center}
 
-  .fail-section h2 { background: var(--fail-bg); border-color: #fca5a5; }
-  .fail-section .tc-table { border-color: #fca5a5; }
-  hr.section-divider { border: none; border-top: 2px solid var(--border); margin: 40px 0; }
+  /* Module link */
+  .mod{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+  .mod-tag{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:600;
+    color:var(--ink);background:var(--surface-2);border:1px solid var(--line);padding:3px 7px;border-radius:5px}
+  .mod-name{font-size:13px;color:var(--ink-3);font-weight:500}
+  .mod:hover .mod-tag{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+  /* Coverage bar */
+  .cov{display:flex;align-items:center;gap:14px;justify-content:flex-end}
+  .cov-track{flex:1;max-width:240px;height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+  .cov-fill{height:100%;background:var(--pass-bar);border-radius:99px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+  .cov.warn .cov-fill{background:linear-gradient(90deg,#E2A33A 0%,#B26A00 100%)}
+  .cov.bad .cov-fill{background:linear-gradient(90deg,#E26B6B 0%,#C13030 100%)}
+  .cov-val{font-weight:600;font-size:13px;min-width:40px;text-align:right;color:var(--ink)}
+  .cov.warn .cov-val{color:var(--manual)}
+  .cov.bad  .cov-val{color:var(--fail)}
+
+  /* Numbers */
+  .n-pass{color:var(--pass);font-weight:600}
+  .n-fail{color:var(--fail);font-weight:600}
+  .n-manual{color:var(--manual);font-weight:600}
+  .n-skip{color:var(--skip);font-weight:600}
+  .n-del{color:var(--del);font-weight:600}
+  .dash{color:var(--ink-4)}
+
+  tfoot td{padding:14px 18px;background:var(--surface-2);font-weight:600;color:var(--ink);
+    border-top:1px solid var(--line-strong)}
+  tfoot td.r{text-align:right}
+
+  /* Distribution micro-bar */
+  .row-name{display:flex;flex-direction:column;gap:6px}
+  .dist{display:flex;height:4px;border-radius:99px;overflow:hidden;background:var(--line);width:200px;max-width:100%}
+  .dist span{display:block;height:100%}
+  .dist .p{background:var(--pass)}
+  .dist .f{background:var(--fail)}
+  .dist .d{background:var(--del)}
+  .dist .m{background:var(--manual)}
+  .dist .s{background:var(--skip)}
+
+  /* Status pill */
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:99px;
+    font-size:11.5px;font-weight:600;letter-spacing:.01em;line-height:1}
+  .pill .pip{width:6px;height:6px;border-radius:50%}
+  .pill.pass{background:var(--pass-bg);color:var(--pass)} .pill.pass .pip{background:var(--pass)}
+  .pill.fail{background:var(--fail-bg);color:var(--fail)} .pill.fail .pip{background:var(--fail)}
+  .pill.manual{background:var(--manual-bg);color:var(--manual)} .pill.manual .pip{background:var(--manual)}
+  .pill.skip{background:var(--skip-bg);color:var(--skip)} .pill.skip .pip{background:var(--skip)}
+  .pill.del{background:var(--del-bg);color:var(--del)} .pill.del .pip{background:var(--del)}
+
+  /* Fail cards */
+  .fails{display:flex;flex-direction:column;gap:8px}
+  .fail{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:start;
+    padding:16px 18px;background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    border-left:3px solid var(--fail)}
+  .fail-id{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:600;
+    color:var(--fail);background:var(--fail-bg);padding:4px 8px;border-radius:5px;white-space:nowrap}
+  .fail-body{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .fail-title{font-size:13.5px;font-weight:500;color:var(--ink)}
+  .fail-msg{font-family:"JetBrains Mono",monospace;font-size:11.5px;line-height:1.5;color:var(--ink-3);
+    background:var(--surface-2);padding:8px 10px;border-radius:6px;border:1px solid var(--line);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fail-link{font-size:12px;color:var(--ink-3);text-decoration:none;padding:4px 8px;border-radius:6px;
+    border:1px solid var(--line);white-space:nowrap;align-self:start}
+  .fail-link:hover{border-color:var(--ink-4);color:var(--ink)}
+
+  /* List tables */
+  .lt thead th{padding:11px 18px;font-size:11px}
+  .lt tbody td{padding:12px 18px}
+  .tc-id{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink);font-weight:500}
+  .reason{color:var(--ink-3);font-size:12.5px}
+  .group-row td{background:var(--surface-2);border-bottom:1px solid var(--line)!important;
+    font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;padding:10px 18px}
+  .group-row td .grp-num{color:var(--ink-4);margin-left:6px;font-weight:500;text-transform:none;letter-spacing:0}
+
+  /* Module section header */
+  .mod-head{display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:16px 20px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+  .mod-head-l{display:flex;align-items:center;gap:12px}
+  .mod-head-l .mod-tag{font-size:13px;padding:5px 10px}
+  .mod-head-l .mod-name{font-size:14px;color:var(--ink-2);font-weight:500}
+  .mod-head-r{display:flex;gap:8px;flex-wrap:wrap}
+
+  /* Module navigation */
+  .modnav{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+  .modnav a{font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:600;
+    text-decoration:none;color:var(--ink-3);background:var(--surface);border:1px solid var(--line);
+    padding:5px 9px;border-radius:6px;transition:.15s}
+  .modnav a:hover{color:var(--ink);border-color:var(--ink-4);background:var(--surface-2)}
+
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;font-size:12px;color:var(--ink-4)}
+  footer a{color:var(--ink-3);text-decoration:none}
+  footer a:hover{color:var(--ink)}
+
+  :target{scroll-margin-top:24px}
+
+  @media (max-width:880px){
+    .page{padding:32px 20px}
+    .hero{grid-template-columns:1fr;gap:24px}
+    .hero-r{justify-content:flex-start}
+    .kpi-row{grid-template-columns:repeat(2,1fr)}
+    .top-actions{display:none}
+    .fail{grid-template-columns:auto 1fr}
+    .fail-link{grid-column:1/-1;justify-self:end}
+  }
 </style>
 </head>
 <body>
-<div class="container">
+<div class="page">
 
-  <header>
-    <div>
-      <h1>Anchor QA 결과 리포트</h1>
-      <div class="meta">실행일시: ${now} &nbsp;|&nbsp; 자동화 ${autoTotal}건 / 수동 ${totalManual}건 / 스킵 ${totalSkip}건</div>
-      <div class="meta">docs/qa 기준 ${DOCS_TOTAL}건 중 ${totalAll}건 구현 (커버리지 ${coveragePct}%)</div>
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">A</div>
+      <div class="brand-name">Anchor <span class="brand-sep">/</span> <span class="brand-sub">QA Report</span></div>
     </div>
-    <div class="header-links">
-      <span class="badge-status ${overallStatus}">${overallStatus} ${overallStatus === 'PASS' ? '✓' : '✗'}</span>
-      <a href="./index.html" class="detail-link">📋 E2E 리포트</a>
-      <a href="./detail/index.html" class="detail-link" target="_blank">🔍 Playwright 리포트</a>
+    <div class="top-meta">
+      <div><span class="dot"></span>실행 <b>${escHtml(now)}</b></div>
+      <div>자동화 <b>${autoRun}</b> · 수동 <b>${totalManual}</b> · 스킵 <b>${totalSkip}</b></div>
     </div>
-  </header>
-
-  <div class="big-numbers">
-    <div class="big-num pass"><div class="num">${totalPass}</div><div class="lbl">✅ PASS</div></div>
-    <div class="big-num ${totalFail > 0 ? 'fail' : 'skip'}"><div class="num">${totalFail}</div><div class="lbl">❌ FAIL</div></div>
-    <div class="big-num deprecated"><div class="num">${totalDeprecated}</div><div class="lbl">🗑️ 요구기능 삭제</div></div>
-    <div class="big-num manual"><div class="num">${totalManual}</div><div class="lbl">⏭️ 수동 검증 필요</div></div>
-    <div class="big-num skip"><div class="num">${totalSkip}</div><div class="lbl">👤 스킵</div></div>
+    <div class="top-actions">
+      ${totalFail > 0 ? `<a class="btn btn-fail" href="#fail-details">FAIL ✗ ${totalFail}</a>` : ''}
+      <a class="btn" href="./index.html">📋 E2E</a>
+      <a class="btn" href="./detail/index.html">🔍 Playwright</a>
+    </div>
   </div>
 
-  <div class="module-nav">
-    <a href="#coverage">📊 커버리지</a>
-    ${moduleOrder.map(m => byModule.get(m)?.length ? `<a href="#module-${m}">${m}</a>` : '').join('')}
-    ${totalManual > 0 ? '<a href="#manual-checks">⏭️ 수동</a>' : ''}
-    ${totalDeprecated > 0 ? '<a href="#deprecated-list">🗑️ 삭제</a>' : ''}
-    ${totalSkip > 0 ? '<a href="#skip-list">👤 스킵</a>' : ''}
-    ${totalFail > 0 ? '<a href="#fail-details">❌ 실패</a>' : ''}
+  <div class="hero">
+    <div class="hero-l">
+      <h1>이번 빌드는 <em>${totalPass}건 통과</em>,<br/>${totalFail > 0 ? `실패 ${totalFail}건이 남아 있습니다.` : '실패 없이 모두 안정적입니다.'}</h1>
+      <p>docs/qa에 정의된 ${DOCS_TOTAL}건이 자동화 스펙 파일에 ${totalAll}건 구현되어 커버리지는 ${coveragePct}%입니다. 이 중 ${totalDeprecated}건은 요구사항 변경으로 삭제, ${totalManual}건은 수동 검증 영역입니다.</p>
+      <div class="modnav">
+        ${moduleOrder.filter(m => byModule.get(m)?.length).map(m => `<a href="#module-${m}">${m}</a>`).join('')}
+        ${totalManual > 0 ? '<a href="#manual-checks">수동</a>' : ''}
+        ${totalDeprecated > 0 ? '<a href="#deprecated-list">삭제</a>' : ''}
+        ${totalSkip > 0 ? '<a href="#skip-list">스킵</a>' : ''}
+        ${totalFail > 0 ? '<a href="#fail-details">실패</a>' : ''}
+      </div>
+    </div>
+    <div class="hero-r">
+      <div class="ring-wrap">
+        <div class="ring">
+          <svg width="120" height="120">
+            <defs>
+              <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#22A35A"/>
+                <stop offset="100%" stop-color="#1F8A4C"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-track" cx="60" cy="60" r="50" fill="none" stroke-width="8"/>
+            <circle class="ring-fill"  cx="60" cy="60" r="50" fill="none" stroke-width="8"
+                    stroke-dasharray="${dashLength}" stroke-dashoffset="${ringOffset}"/>
+          </svg>
+          <div class="ring-num num">${coveragePct}<small>%</small></div>
+        </div>
+        <div class="ring-cap">
+          <b>자동화 커버리지</b>
+          ${totalAll} / ${DOCS_TOTAL} 구현
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi pass">
+      <div class="kpi-l"><span class="pip"></span>PASS</div>
+      <div class="kpi-v num">${totalPass}</div>
+      <div class="kpi-d">${autoRun > 0 ? `자동화 ${autoRun}건 중 ${Math.round(totalPass/autoRun*100)}%` : '—'}</div>
+      <div class="kpi-bar"></div>
+    </div>
+    <div class="kpi fail">
+      <div class="kpi-l"><span class="pip"></span>FAIL</div>
+      <div class="kpi-v num">${totalFail}</div>
+      <div class="kpi-d">${totalFail > 0 ? '우선 처리 필요' : '안정'}</div>
+      <div class="kpi-bar"></div>
+    </div>
+    <div class="kpi del">
+      <div class="kpi-l"><span class="pip"></span>요구기능 삭제</div>
+      <div class="kpi-v num">${totalDeprecated}</div>
+      <div class="kpi-d">테스트 대상 제외</div>
+      <div class="kpi-bar"></div>
+    </div>
+    <div class="kpi manual">
+      <div class="kpi-l"><span class="pip"></span>수동 검증</div>
+      <div class="kpi-v num">${totalManual}</div>
+      <div class="kpi-d">자동화 불가 항목</div>
+      <div class="kpi-bar"></div>
+    </div>
+    <div class="kpi skip">
+      <div class="kpi-l"><span class="pip"></span>스킵</div>
+      <div class="kpi-v num">${totalSkip}</div>
+      <div class="kpi-d">정책상 제외</div>
+      <div class="kpi-bar"></div>
+    </div>
   </div>
 
   ${coverageTable()}
 
-  <hr class="section-divider">
-
-  <div class="summary-wrap">
-    <table class="summary-table">
-      <thead>
-        <tr><th>모듈</th><th class="num">전체</th><th class="num">✅ PASS</th><th class="num">❌ FAIL</th><th class="num">🗑️ 삭제</th><th class="num">⏭️ 수동</th><th class="num">👤 스킵</th></tr>
-      </thead>
-      <tbody>
-        ${summaryRows()}
-      </tbody>
-      <tfoot>
-        <tr>
-          <td>합계</td>
-          <td class="num">${totalAll}</td>
-          <td class="num pass-cell">${totalPass}</td>
-          <td class="num ${totalFail > 0 ? 'fail-cell' : ''}">${totalFail > 0 ? totalFail : '—'}</td>
-          <td class="num deprecated-cell">${totalDeprecated > 0 ? totalDeprecated : '—'}</td>
-          <td class="num manual-cell">${totalManual > 0 ? totalManual : '—'}</td>
-          <td class="num skip-cell">${totalSkip > 0 ? totalSkip : '—'}</td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
+  ${resultsTable()}
 
   ${totalFail > 0 ? failDetails() : ''}
 
@@ -713,9 +976,16 @@ const html = `<!DOCTYPE html>
 
   ${skipTable()}
 
-  <hr class="section-divider">
+  ${moduleOrder.map((mod, i) => moduleSection(mod, i + 7)).join('\n')}
 
-  ${moduleOrder.map(mod => moduleSection(mod)).join('\n')}
+  <footer>
+    <div>Anchor QA · 자동 생성 리포트 · ${escHtml(now)}</div>
+    <div>
+      <a href="./index.html">E2E</a>
+      <span style="margin:0 8px;color:var(--ink-4)">·</span>
+      <a href="./detail/index.html">Playwright</a>
+    </div>
+  </footer>
 
 </div>
 </body>

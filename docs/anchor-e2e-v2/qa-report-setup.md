@@ -110,11 +110,16 @@ npx playwright test tests/qa/ --reporter=list,json | tee /tmp/run.log
 npm run verify:coverage
 #   → 누락 0건이어야 다음 단계 진행 가능
 
-# 3) 리포트 생성
+# 3) (권장) AUDIT 모드 — [M] 분류 품질 검사
+npm run verify:coverage:audit
+#   → [M] 비율 5% 초과 또는 화이트리스트 외 사유 발견 시 경고
+#   → 자동화 가능한 항목이 [M]으로 잘못 분류된 것을 잡아냄
+
+# 4) 리포트 생성
 npm run report:qa
 #   → playwright-report/qa-report.html 생성
 
-# 4) 배포 (선택)
+# 5) 배포 (선택)
 vercel deploy playwright-report --prod
 ```
 
@@ -172,4 +177,7 @@ export default defineConfig({
 - [ ] `playwright.config.ts`에 JSON reporter 설정
 - [ ] docs/qa 형식 준수 (TC-ID 첫 셀, 삭제는 취소선)
 - [ ] spec 파일 `[ID][M/D/S]` 태그 컨벤션 준수
-- [ ] `npm run verify:coverage` 통과 확인 후 `npm run report:qa` 실행
+- [ ] `npm run verify:coverage` 통과 확인
+- [ ] `npm run verify:coverage:audit` 실행 → [M] 분류 경고 점검
+- [ ] [M] 분류 의심 항목은 `docs/anchor-e2e-v2/automation-patterns.md` 참고하여 재검토
+- [ ] `npm run report:qa` 실행

@@ -53,9 +53,11 @@ function collectDocsTcIds(docsDir) {
 // test('[ID]...') 또는 test.skip('[ID]...')
 
 const SPEC_TC_RE = /test(?:\.skip)?\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\][^'"]*)['"]/g;
+const SPEC_M_RE = /test\.skip\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\]\[M\][^'"]*)['"]/g;
 
 function collectSpecTcIds(specDir) {
   const ids = new Set();
+  const manualItems = []; // [M] 항목과 그 사유
 
   function walk(dir) {
     if (!existsSync(dir)) return;
@@ -64,21 +66,50 @@ function collectSpecTcIds(specDir) {
       if (entry.isDirectory()) walk(full);
       else if (entry.name.endsWith('.spec.ts')) {
         const content = readFileSync(full, 'utf-8');
+        const lines = content.split('\n');
         let m;
         while ((m = SPEC_TC_RE.exec(content)) !== null) ids.add(m[2]);
         SPEC_TC_RE.lastIndex = 0;
+        // [M] 항목 — 라인 단위로 사유까지 수집
+        for (let i = 0; i < lines.length; i++) {
+          const mm = lines[i].match(/test\.skip\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\]\[M\][^'"]*)['"]/);
+          if (!mm) continue;
+          let reason = '';
+          for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
+            const cm = lines[j].match(/\/\/\s*MANUAL:\s*(.+)/i);
+            if (cm) { reason = cm[1].trim(); break; }
+            if (lines[j].includes('});')) break;
+          }
+          manualItems.push({ id: mm[2], reason });
+        }
       }
     }
   }
 
   walk(specDir);
-  return ids;
+  return { ids, manualItems };
+}
+
+// [M] 사유 화이트리스트 — phase2-code-generation.md와 동기화
+const MANUAL_WHITELIST = [
+  /본인.*인증|OAuth|SMS|PASS|KMC|소셜.*로그인/i,
+  /PG.*결제|실거래|실결제|카드.*결제|계좌.*차감/i,
+  /PDF.*시각|PDF.*렌더|PDF.*잘림|PDF.*그래프|이미지.*시각|픽셀/i,
+  /외부.*시스템|환경.*의존|외부.*응답.*변동/i,
+  /CAPTCHA|봇.*차단|사람.*입력/i,
+];
+
+function isWhitelistedManualReason(reason) {
+  if (!reason) return false;
+  return MANUAL_WHITELIST.some(re => re.test(reason));
 }
 
 // ── 3. 대조 ───────────────────────────────────────────────────────────────────
 
+const auditMode = process.argv.includes('--audit');
+
 const { active: docIds, deleted: deletedIds } = collectDocsTcIds(resolve(root, 'docs/qa'));
-const specIds = collectSpecTcIds(resolve(root, 'tests/qa'));
+const { ids: specIds, manualItems } = collectSpecTcIds(resolve(root, 'tests/qa'));
 
 // docs 활성 TC 중 spec에 없는 것 → 누락
 const missing = [...docIds].filter(id => !specIds.has(id)).sort();
@@ -105,9 +136,48 @@ console.log(`  docs/qa  활성: ${docIds.size}건  삭제됨: ${deletedIds.size}
 console.log(`  tests/qa 구현: ${specIds.size}건`);
 console.log('');
 
-if (missing.length === 0 && unknown.length === 0) {
+// audit 모드: [M] 비율과 사유 화이트리스트 검증
+let auditWarnings = 0;
+if (auditMode) {
+  const totalActive = docIds.size;
+  const manualCount = manualItems.length;
+  const manualPct = totalActive > 0 ? (manualCount / totalActive * 100) : 0;
+  const THRESHOLD_PCT = 5;
+
+  console.log('━━ AUDIT 모드 ━━');
+  console.log(`  [M] 항목: ${manualCount}건 / docs 활성 ${totalActive}건 = ${manualPct.toFixed(1)}%`);
+  console.log(`  임계치: ${THRESHOLD_PCT}%`);
+
+  if (manualPct > THRESHOLD_PCT) {
+    console.log(`  ⚠️  [M] 비율이 ${THRESHOLD_PCT}%를 초과 — 분류 재검토 필요\n`);
+    auditWarnings++;
+  } else {
+    console.log(`  ✅ 임계치 이내\n`);
+  }
+
+  // 화이트리스트 외 사유 검출
+  const suspicious = manualItems.filter(it => !isWhitelistedManualReason(it.reason));
+  if (suspicious.length > 0) {
+    console.log(`⚠️  화이트리스트 외 [M] 사유 ${suspicious.length}건 — 자동화 가능성 재검토:`);
+    console.log('   허용 카테고리: 본인인증 / PG 실거래 / PDF 시각검증 / 외부시스템 / CAPTCHA\n');
+    for (const it of suspicious) {
+      console.log(`  ${it.id.padEnd(15)} 사유: "${it.reason || '(사유 미기재)'}"`);
+    }
+    console.log('\n   → docs/anchor-e2e-v2/automation-patterns.md 참고 후 재분류\n');
+    auditWarnings += suspicious.length;
+  } else {
+    console.log('✅ 모든 [M] 사유가 화이트리스트에 부합\n');
+  }
+}
+
+if (missing.length === 0 && unknown.length === 0 && auditWarnings === 0) {
   console.log('✅ 누락 없음 — 모든 활성 TC가 spec에 존재합니다.\n');
   process.exit(0);
+}
+
+if (missing.length === 0 && unknown.length === 0 && auditWarnings > 0) {
+  console.log(`⚠️  AUDIT 경고 ${auditWarnings}건 — 누락은 없지만 [M] 분류 재검토 필요\n`);
+  process.exit(auditMode ? 1 : 0);
 }
 
 if (missing.length > 0) {

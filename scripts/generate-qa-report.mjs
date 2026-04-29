@@ -23,11 +23,32 @@ if (!existsSync(jsonPath)) {
 
 const data = JSON.parse(readFileSync(jsonPath, 'utf-8'));
 
-// ── docs/qa 기준 총 TC-ID 수 (실제 파일 파싱 기준) ────────────────────────────
-const DOCS_COUNTS = {
-  'AUTH': 104, 'EI': 119, 'EO': 69, 'ER': 67, 'GO': 73,
-  'HOME-TA': 97, 'HOME-TP': 96, 'MY': 50, 'SP': 69, 'TA': 65, 'TF': 63,
-};
+// ── docs/qa 활성 TC-ID 수 — 파일 직접 파싱 (삭제된 TC 제외) ─────────────────
+const ACTIVE_ROW_RE2 = /^\|\s*([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\s*\|/;
+const DELETED_ROW_RE2 = /^\|\s*~~([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)~~\s*\|/;
+const TC_ID_RE2 = /^[A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*$/;
+
+function buildDocsCounts(docsDir) {
+  const seen = new Set();
+  const counts = {};
+  if (!existsSync(docsDir)) return counts;
+  for (const entry of readdirSync(docsDir, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
+    const lines = readFileSync(join(docsDir, entry.name), 'utf-8').split('\n');
+    for (const line of lines) {
+      if (DELETED_ROW_RE2.test(line)) continue;
+      const m = line.match(ACTIVE_ROW_RE2);
+      if (m && TC_ID_RE2.test(m[1]) && !seen.has(m[1])) {
+        seen.add(m[1]);
+        const mod = m[1].match(/^(HOME-TA|HOME-TP|[A-Z]+)/)?.[1] ?? '?';
+        counts[mod] = (counts[mod] ?? 0) + 1;
+      }
+    }
+  }
+  return counts;
+}
+
+const DOCS_COUNTS = buildDocsCounts(resolve(root, 'docs/qa'));
 const DOCS_TOTAL = Object.values(DOCS_COUNTS).reduce((a, b) => a + b, 0);
 
 // ── spec 파일 파싱 — test.skip() 이유 추출 ───────────────────────────────────
@@ -197,7 +218,8 @@ const totalManual = allTcs.filter(t => classifyResult(t) === 'manual').length;
 const totalSkip   = allTcs.filter(t => classifyResult(t) === 'skip').length;
 const autoTotal   = totalAll - totalManual - totalSkip;
 const overallStatus = totalFail > 0 ? 'FAIL' : 'PASS';
-const coveragePct = Math.round((totalAll / DOCS_TOTAL) * 100);
+const coveragePct = Math.min(100, Math.round((totalAll / DOCS_TOTAL) * 100));
+const notImpl = Math.max(0, DOCS_TOTAL - totalAll);
 
 // ── HTML 생성 헬퍼 ────────────────────────────────────────────────────────────
 
@@ -240,7 +262,7 @@ function coverageTable() {
     </tr>`;
   }).join('\n');
 
-  const totalNotImpl = DOCS_TOTAL - totalAll;
+  const totalNotImpl = notImpl;
   return `<section id="coverage">
     <h2 style="font-size:1rem;font-weight:700;padding:12px 16px;background:#f3f4f6;border:1px solid #e5e7eb;border-bottom:none;border-radius:8px 8px 0 0;">
       📊 자동화 커버리지 — docs/qa 기준 ${DOCS_TOTAL}건 중 ${totalAll}건 구현 (${coveragePct}%)
@@ -629,4 +651,4 @@ writeFileSync(htmlOut, html, 'utf-8');
 console.log(`✅ QA 리포트 → ${htmlOut}`);
 console.log(`   TC-ID 총 ${totalAll}건 (docs/qa ${DOCS_TOTAL}건 기준 커버리지 ${coveragePct}%)`);
 console.log(`   PASS ${totalPass} | FAIL ${totalFail} | 수동 ${totalManual} | 스킵 ${totalSkip}`);
-console.log(`   미구현 ${DOCS_TOTAL - totalAll}건 — 순차 구현 필요`);
+console.log(`   미구현 ${notImpl}건 — 순차 구현 필요`);

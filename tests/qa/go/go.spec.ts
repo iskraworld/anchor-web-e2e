@@ -750,7 +750,7 @@ test.describe('GO — 현직 공무원 탐색', () => {
       await expect(page.locator('body')).toBeVisible();
     });
 
-    test('[GO-2-11_normal] (납세자) 추천 세무사 0건 — 미노출 확인', async ({ page, context }) => {
+    test('[GO-2-11] (납세자) 추천 세무사 0건 — 미노출 확인', async ({ page, context }) => {
       await page.goto('/search/active-officials');
       const detailPage = await openProfileDetail(page, context);
       if (detailPage) {
@@ -884,7 +884,7 @@ test.describe('GO — 현직 공무원 탐색', () => {
       }
     }
 
-    test('[GO-2-11_data] 프로필 상세 — 현직 공무원 정보 표시 확인', async ({ page, context }) => {
+    test('[GO-2-11-D] 프로필 상세 — 현직 공무원 정보 표시 확인', async ({ page, context }) => {
       await page.goto('/search/active-officials');
       const detailPage = await openDetail(page, context);
       if (detailPage) {

@@ -20,7 +20,8 @@
     "report:md": "node scripts/generate-report.mjs",
     "report:qa": "node scripts/generate-qa-report.mjs",
     "report:deploy": "node scripts/generate-report.mjs",
-    "deploy": "vercel deploy playwright-report --prod"
+    "deploy": "vercel deploy playwright-report --prod",
+    "verify:coverage": "node scripts/verify-coverage.mjs"
   },
   "keywords": [],
   "author": "",

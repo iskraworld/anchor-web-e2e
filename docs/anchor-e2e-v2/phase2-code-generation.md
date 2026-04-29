@@ -8,9 +8,22 @@
 
 ## ⚠️ 핵심 원칙
 
-**spec 파일의 TC-ID 총 수 == qa-automation-map.md 의 총 TC 수 == docs/qa 기준 872개**
+**docs/qa 활성 TC-ID == tests/qa spec TC-ID (test + test.skip 합계)**
 
 이 숫자가 맞지 않으면 Phase 2가 완료된 것이 아니다.
+모든 활성 TC는 반드시 spec에 `test()` 또는 `test.skip()`으로 등록되어야 한다.
+누락된 TC는 `[M]`(자동화 불가) / `[S]`(스킵) 중 하나로 반드시 처리한다.
+
+### 검증 방법
+
+```bash
+npm run verify:coverage
+```
+
+- 누락 0건 → Phase 3 진행 가능
+- 누락 있음 → 처리 방법에 따라 [M]/[S]/test() 추가 후 재실행
+
+> `scripts/verify-coverage.mjs` — docs/qa 파싱 → spec 파싱 → 1:1 TC-ID 대조
 
 ---
 

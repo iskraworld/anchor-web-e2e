@@ -4,8 +4,8 @@
 
 ---
 
-## 마지막 실행: 2026-04-29 11:52
-## 마지막 업데이트: 2026-04-29 11:52
+## 마지막 실행: 2026-04-29 13:57
+## 마지막 업데이트: 2026-04-29 13:57
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
@@ -67,6 +67,7 @@
 - [x] ANSI 컬러 코드 자동 제거(cleanAnsi) + 반응형 880px 미디어쿼리
 - [x] React/Babel/Tweaks 패널 의도적 미구현 (디자인 README 지침대로 시각만 매칭)
 - [x] Vercel 배포 완료 (https://playwright-report-iota.vercel.app/qa-report.html)
+- [x] 워크로그 기록 및 커밋·푸시
 - [ ] HOME staging BLOCKED 11건 재테스트 (staging 회복 후)
 - [ ] CI 스케줄 설정 (백로그)
 - [ ] D-2/D-3 BLOCKED 해제 (UI 출시 후)

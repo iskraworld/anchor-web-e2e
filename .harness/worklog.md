@@ -4,6 +4,22 @@
 
 ---
 
+워크로그 항목 추가 완료.
+
+
+## Session 2026-04-29 13:57 — 워크로그 기록·커밋 및 스누즈 설정
+
+### 작업 요약
+- `.harness/worklog.md`, `decision.md`, `state.md` 업데이트 후 커밋·푸시
+- attention 스누즈 설정
+
+### 다음 액션
+- HOME staging 회복 후 BLOCKED 11건 재테스트
+- D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
+- ER PDF/링크 버튼 테스트 재활성화
+
+---
+
 ## Session 2026-04-29 11:52 — Claude Design 핸드오프 적용, QA 리포트 전면 재디자인
 
 ### 작업 요약

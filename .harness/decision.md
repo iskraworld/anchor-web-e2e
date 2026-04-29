@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-04-29: QA 리포트 디자인 — React 런타임 vs 정적 HTML
+
+- **선택**: 정적 HTML/CSS만 사용, React/Babel 런타임 + Tweaks 패널 미적용
+- **대안 검토**:
+  - 디자인 원본 그대로(React + Babel + tweaks-panel.jsx) → 다크모드/섹션 토글 가능하지만 빌드 산출물 무거워지고 unpkg CDN 의존성 발생, 정적 호스팅에서 깜빡임
+  - 정적 HTML/CSS로 시각만 매칭 → 가볍고 의존성 없음, 다크모드/토글은 손실
+- **선택 이유**: 디자인 README의 "Match the visual output; don't copy the prototype's internal structure unless it happens to fit" 지침. Tweaks 패널은 프로토타입용 컨트롤이고 프로덕션 리포트엔 불필요. React를 도입하면 빌드 파이프라인 추가 필요(현재는 단일 mjs로 생성).
+- **영향 범위**: `scripts/generate-qa-report.mjs` 출력
+- **되돌리는 방법**: React 도입 시 react/react-dom CDN 추가 + babel inline 컴파일 + tweaks-panel.jsx 포팅. 다크모드만 원하면 작은 vanilla JS 토글 + CSS 변수만 추가해도 가능.
+
+---
+
 ## 2026-04-29: DOCS_TOTAL 산정 — 활성 TC만 vs 활성+삭제 모두
 
 - **선택**: 활성+삭제 모두 합산 (전체 docs 기준 872건)

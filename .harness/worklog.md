@@ -4,6 +4,32 @@
 
 ---
 
+## Session 2026-04-29 11:52 — Claude Design 핸드오프 적용, QA 리포트 전면 재디자인
+
+### 작업 요약
+- Anthropic Design API에서 핸드오프 번들 다운로드 (`https://api.anthropic.com/v1/design/h/jNRKs1bKadN-y6jSWM0hvA`) → gzip 풀어 README + chats + project 확인
+- README 지침 준수: chat 트랜스크립트 먼저 읽기, primary 디자인 파일 분석, 브라우저 렌더링 없이 소스만 읽기, 시각 출력만 매칭(프로토타입 내부 구조 복제 금지)
+- 디자인 파일(`QA Report.html`) — Pretendard + JetBrains Mono, 따뜻한 뉴트럴 (#FAF9F6 배경), 5종 KPI strip, 도넛 커버리지, 카드형 실패 표시, 분포 미니바
+- `scripts/generate-qa-report.mjs` 렌더링부 전면 재작성:
+  * Topbar: Anchor 브랜드 + 실행 메타 + FAIL/E2E/Playwright 버튼
+  * Hero: 큰 헤드라인 + SVG 그라디언트 도넛
+  * KPI 5종 strip (PASS/FAIL/요구기능 삭제/수동/스킵)
+  * 커버리지 표 + 실행 결과 표 (모듈별 5색 분포 미니바)
+  * 카드형 실패 상세 (좌측 빨간 보더 + ANSI 코드 cleanAnsi 자동 제거)
+  * 수동/삭제/스킵 카드형 테이블 (스킵은 명시적/조건부 그룹 분리)
+  * 모듈별 상세 (헤더 chip + status pill)
+- React/Babel 런타임 + Tweaks 패널 의도적 미구현 (정적 HTML로 충분, 디자인 README의 "match visual output, don't copy internal structure" 지침)
+- 데이터 파싱 로직(tcMap, classifyResult, DOCS_COUNTS 동적 파싱)은 그대로 보존 — 집계 결과 동일
+- 커밋 3건: `b3ed759` design 재작성, `7af3444` qa-report.html 재생성, Vercel 배포 완료
+- 결과: PASS 771 + FAIL 13 + 삭제 28 + 수동 44 + 스킵 16 = 872 (커버리지 100%)
+
+### 다음 액션
+- HOME staging BLOCKED 11건 재테스트 (staging 회복 후)
+- D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
+- ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
+
+---
+
 ## Session 2026-04-29 11:36 — 리포트 카테고리 정비, [D] 도입, verify-coverage 스크립트화
 
 ### 작업 요약

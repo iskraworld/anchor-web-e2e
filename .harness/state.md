@@ -4,12 +4,12 @@
 
 ---
 
-## 마지막 실행: 2026-04-29 11:36
-## 마지막 업데이트: 2026-04-29 11:36
+## 마지막 실행: 2026-04-29 11:52
+## 마지막 업데이트: 2026-04-29 11:52
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **QA 리포트 정합성 100% 달성** — DOCS_TOTAL 872건과 spec 872건 1:1 매핑 완료. [D] 카테고리 도입, verify-coverage 스크립트 운영 시작.
+- **QA 리포트 디자인 전면 재작성 완료** — Claude Design 핸드오프 번들 적용. Pretendard 폰트, 도넛 커버리지, 5종 KPI strip, 카드형 실패 상세, 분포 미니바 등 디자인 모두 반영. 데이터 정합성 100% (872/872) 그대로 유지.
 
 ### 이어서 할 것
 1. HOME staging 회복 후 BLOCKED 11건 (HOME-TP-1-11/12/13/14/35 + HOME-TA-1-07/08/22/23) 재테스트
@@ -62,6 +62,10 @@
 - [x] 리포트 섹션 순서 변경: 실패 → 수동 → 삭제 → 스킵 → 모듈 상세
 - [x] 리포트 spec 직접 파싱 추가 — results.json 외 [D]/[M] 정적 분류 처리
 - [x] 최종 리포트 PASS 771 + FAIL 13 + 삭제 28 + 수동 44 + 스킵 16 = 872 (100%)
+- [x] Claude Design 핸드오프 번들 다운로드 + README 지침대로 분석
+- [x] QA 리포트 전면 재디자인 (Pretendard, 도넛 커버리지, 5종 KPI, 카드형 실패, 분포 미니바)
+- [x] ANSI 컬러 코드 자동 제거(cleanAnsi) + 반응형 880px 미디어쿼리
+- [x] React/Babel/Tweaks 패널 의도적 미구현 (디자인 README 지침대로 시각만 매칭)
 - [x] Vercel 배포 완료 (https://playwright-report-iota.vercel.app/qa-report.html)
 - [ ] HOME staging BLOCKED 11건 재테스트 (staging 회복 후)
 - [ ] CI 스케줄 설정 (백로그)

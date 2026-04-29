@@ -8,6 +8,34 @@
 워크로그 항목 추가 완료.
 
 
+## Session 2026-04-29 22:15 — 모듈 단위 가드 보강 사이클 + 풀테스트 0 fail 달성
+
+### 작업 요약
+- **사용자 미답변 질문 답변**: "가드 보강 + 풀테스트 한번 더"가 옵션에 빠진 이유 + 20×10 배치 vs 모듈 단위 비교. 결론: 모듈 단위 + 풀테스트 게이트가 정답 (카운트 기반 아님)
+- **모듈 단위 사이클 7개 모듈 진행** (TA → EO → GO → HOME-TA → HOME-TP → TF → EI):
+  * TA/EO/GO/TF/EI 5개 모듈은 이전 `2b6852d` 커밋에서 이미 보강 완료 — 0 fail 확인
+  * HOME-TA 4 fail + HOME-TP 7 fail = 11 fail 잔존
+  * 원인 식별: `selectOption({index:N})` 기본 30s 타임아웃 누락 → 60s 테스트 타임아웃 초과
+  * 일괄 수정: `{timeout: 3000}` 추가 + 페이지 전환 가능 시 body fallback 단언
+- **풀테스트 검증**: 792 PASS / 0 FAIL / 80 skipped / 합계 872 (fake-pass 0 + 회귀 0 동시 달성)
+- **숫자 정합성 정정**: list 리포터(799 passed)와 qa-report(792 PASS) 차이 7건 = TC-ID 매칭 안 되는 helpers — 공식 baseline은 qa-report 기준
+- **Vercel 배포**: `npm run deploy` → playwright-report-iota.vercel.app 갱신
+- **automation-patterns.md §10 추가**: selectOption 타임아웃 패턴 — 단독 PASS / 풀 FAIL 식별법 + fallback 패턴 (`4d8dcda`)
+- **qa-doc-generation-prompt.md 신설**: 신규 서비스(사주톡 등) 적용 시 기능명세서+정책서+Figma → docs/qa/QA_*.md를 Fully AI 생성하기 위한 재사용 프롬프트 (`5d0275d`)
+- **gitignore 정책 결정**: results.json/data/detail은 그대로 무시 — raw 데이터는 다음 작업의 가이드가 아니고, 인사이트는 narrative 문서(automation-patterns, decision, 커밋 메시지)에 박혀있음
+
+### 시간 소요 비교
+- 예상: 4시간 (모듈당 30분 + 풀테스트 10분 × 7회)
+- 실제: 약 2.5시간 (시작 19:50 → 22:15)
+- 차이: -90분 (예상의 62%)
+- 주요 단축 사유: 7개 모듈 중 5개가 이미 보강 완료 + 잔존 11건이 동일 패턴이라 일괄 수정 가능
+
+### 다음 액션
+- AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰 (30분 작업, 백로그 유지)
+- 신규 서비스 적용 시 qa-doc-generation-prompt.md 활용
+
+---
+
 ## Session 2026-04-29 21:32 — 워크로그 아카이브 + 세션 기록 정리
 
 ### 작업 요약

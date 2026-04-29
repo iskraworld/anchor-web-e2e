@@ -4,35 +4,29 @@
 
 ---
 
-## 마지막 실행: 2026-04-29 21:32
-## 마지막 업데이트: 2026-04-29 21:32
+## 마지막 실행: 2026-04-29 22:15
+## 마지막 업데이트: 2026-04-29 22:15
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **Fake PASS 검출 도구 + AMBIGUOUS_DOC 자동 분류 흐름 정착 완료** — 다음 프로젝트 영구 자산 확보. 이번 프로젝트 코드 회귀(130건+)는 다음 사이클로 이월.
+- **풀테스트 0 fail 달성** — 792 PASS / 0 FAIL / 합계 872. 다음 사이클 작업: AMBIGUOUS_DOC 156건 일괄 리뷰 + 신규 서비스 적용 준비
 
 ### 이어서 할 것
-1. **사용자 질문 미답변 회수** — 가드 보강 후 풀테스트 전략 + 배치 크기(20개씩 vs 일괄) 결정
-2. **AMBIGUOUS_DOC 156건 일괄 리뷰** — Eugene 30분 작업, 명확화 가능 결정 + anchor 팀 docs 명확화 요청
-3. **풀 테스트 회귀 130건+ 점진 디버깅** — EI 78건부터, 모듈별 1주 사이클로 진행
+1. **AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰** — 30분 작업, 명확화 가능 결정 + anchor 팀 docs 명확화 요청
+2. **신규 서비스(사주톡 등) 적용 시 qa-doc-generation-prompt.md 사용** — 모듈 코드 + 역할 코드만 교체
+3. **HOME staging BLOCKED 11건 재테스트** (staging 회복 후)
 
 ### 막힌 것
-- **풀 테스트 회귀 130건+**: 일괄 보강(257건) 후 발생. 단독 PASS / 풀 FAIL 패턴. 보강 단언이 staging UI/데이터에 strict해 false fail 다수. 다음 사이클 점진 디버깅 필요
-- **HOME staging BLOCKED 11건**: 소속 드롭다운 검색 API 500 — staging 회복 시 재테스트
-- **401 인증 오류 반복**: 이전 세션에서 4회 연속 발생 → 사용자 질문 응답 실패
+- **HOME staging BLOCKED 11건**: 소속 드롭다운 검색 API 500 — staging 회복 시 재테스트 필요
 
 ### 사람 판단 필요
-- 가드 보강 후 풀테스트 전략 + 배치 크기(20개씩 vs 일괄) 결정 — 이전 세션 401 오류로 미답변
-- AMBIGUOUS_DOC 156건 일괄 리뷰 (옵션 A/B/C 결정)
-  - A. 이 프로젝트 마무리 트랙 (3~4주 점진 디버깅)
-  - B. 다음 프로젝트 이동 트랙 (이 프로젝트 동결)
-  - C. 하이브리드 (1주: AMBIGUOUS 리뷰 + EI/MY만 디버깅) ⭐ 추천
+- AMBIGUOUS_DOC 156건 일괄 리뷰
 - D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
 - ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
 
 ### 백로그 요약
-- 대기 중: 5개
-- 최근 추가: 2026-04-29 — AMBIGUOUS_DOC 156건 일괄 리뷰 + 풀 테스트 회귀 130건 디버깅
+- 대기 중: 4개
+- 최근 추가: 2026-04-29 — HOME staging 회복 후 BLOCKED 테스트 재처리
 
 ### 진행 상황
 - [x] Phase 0~3 e2e-v2 가이드 완성
@@ -54,10 +48,12 @@
 - [x] 6개 모듈 가드 결합 보강 (TF/GO/EO/TA/HOME-TA/HOME-TP)
 - [x] 풀 테스트 결과 분석 — 보강 단언 staging 충돌로 회귀 130건+ 발견
 - [x] 일괄 보강 리스크 e2e-v2에 명문화 (영구 자산)
-- [x] worklog.md 아카이브 + 세션 기록 정리
-- [ ] 사용자 질문 미답변 회수 (가드 보강 + 풀테스트 전략)
+- [x] HOME-TA/HOME-TP selectOption 타임아웃 가드 보강 (`3162ae2`) ✅ 2026-04-29
+- [x] 풀테스트 0 fail 달성 — 792 PASS / 0 FAIL ✅ 2026-04-29
+- [x] qa-report 갱신 + Vercel 배포 ✅ 2026-04-29
+- [x] automation-patterns.md §10 selectOption 타임아웃 패턴 (`4d8dcda`) ✅ 2026-04-29
+- [x] qa-doc-generation-prompt.md 신설 (`5d0275d`) — 신규 서비스 QA 문서 AI 생성 ✅ 2026-04-29
 - [ ] AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰
-- [ ] 풀 테스트 회귀 130건+ 점진 디버깅 (EI 78건 우선)
 - [ ] HOME staging BLOCKED 11건 재테스트 (staging 회복 후)
 - [ ] D-2/D-3 BLOCKED 해제 (UI 출시 후)
 - [ ] ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)

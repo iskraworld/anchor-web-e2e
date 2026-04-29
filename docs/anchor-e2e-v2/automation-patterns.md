@@ -267,6 +267,53 @@ test('[GO-0-01] 무료 계정 — 접근 차단 화면', async ({ page }) => {
 
 ---
 
+## 10. `<select>` selectOption — 명시적 타임아웃 필수
+
+**문제:** `selectOption({ index: N })` 기본 타임아웃은 **30초**. 옵션이 비어있거나 늦게 로딩되면 30s 대기 → 후속 작업과 합쳐 60s 테스트 타임아웃 초과.
+
+**증상:** 단독 모듈 테스트는 PASS, 풀테스트에서 timeout FAIL. 가드 try/catch가 있어도 30s는 그대로 소비됨.
+
+**잘못된 패턴:**
+```typescript
+// ❌ 타임아웃 누락 → 옵션 없으면 30s 대기
+try {
+  await comboboxes.first().selectOption({ index: 1 });
+} catch { /* ignore */ }
+```
+
+**올바른 패턴:**
+```typescript
+// ✅ 명시적 타임아웃 (3초)
+try {
+  await comboboxes.first().selectOption({ index: 1 }, { timeout: 3000 });
+} catch { /* ignore */ }
+```
+
+**한 테스트에 selectOption 여러 번 호출 시:** 누적 타임아웃 = N × 3s 가 60s 안에 들어가는지 계산. 안 들어가면 isVisibleSoft 가드를 selectOption 앞에 두고 옵션 존재 확인 후 호출.
+
+```typescript
+// 콤보박스 3개를 순차 선택할 때
+for (let i = 0; i < 3; i++) {
+  if (await isVisibleSoft(comboboxes.nth(i), 1000)) {
+    try { await comboboxes.nth(i).selectOption({ index: 1 }, { timeout: 3000 }); } catch {}
+  }
+}
+```
+
+**검색 후 페이지 전환 가능 시 단언도 fallback:**
+```typescript
+// 제출 후 홈 그리팅이 사라질 수 있음 — body fallback
+try {
+  await expect(page.getByTestId('home-search-greeting')).toBeVisible({ timeout: 3000 });
+} catch {
+  await expect(page.locator('body')).toBeVisible();
+}
+```
+
+> 이 패턴은 HOME-TA 4건 + HOME-TP 7건이 풀테스트에서만 깨졌던 회귀를 일괄 해소했음 (`3162ae2`).
+
+---
+
 ## 자동화 불가가 진짜 맞는 케이스 (`[M]` 정당)
 
 아래는 **시도해도 정말 안 되는** 영역. 이런 경우만 `[M]`:

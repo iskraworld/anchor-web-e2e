@@ -4,6 +4,25 @@
 
 ---
 
+## Session 2026-04-29 08:21 — TA·EI 수정 완료, MY 거의 완료, HOME 그룹 진행 중
+
+### 작업 요약
+- 페이지별 fresh 진단 spec 작성 및 실행 → 19/19 성공, 실제 페이지 상태 확인
+- 페이지별 상태 파악: MY/TA/EI 정상, GO/EO/ER은 staging 500 오류 확인
+- 작동 페이지(~140건)만 수정하고 500 오류 페이지는 BLOCKED 마킹하는 방향으로 결정
+- MY 모듈: PoC 성공 후 Agent 일괄 수정 → 46→1 fail (45건 fix), 잔여 MY-1-24 수동 수정
+- TA(34건) + EI(13건) Agent 위임 → 검증 결과 0 FAIL ✅
+- HOME-TP(15건) + HOME-TA(11건) Agent 수정 진행 중
+
+### 실패한 시도
+- GO/EO/ER 약 100건: staging 서버 500 오류로 코드 수정 불가, BLOCKED 마킹 처리
+
+### 다음 액션
+- HOME 그룹 수정 결과 검증
+- SP(5건) + AUTH(16건) 수정
+- staging 서버 회복 후 GO/EO/ER 잔여 10건 재테스트
+
+
 ## Session 2026-04-29 06:20 — PASS 테스트 패턴 분석 및 ER/SP/AUTH 모듈 수정 착수
 
 ### 작업 요약

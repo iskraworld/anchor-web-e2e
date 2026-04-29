@@ -4,23 +4,22 @@
 
 ---
 
-## 마지막 실행: 2026-04-29 06:20
-## 마지막 업데이트: 2026-04-29 06:20
+## 마지막 실행: 2026-04-29 08:21
+## 마지막 업데이트: 2026-04-29 08:21
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **PASS 테스트 패턴 학습 및 ER/SP/AUTH 모듈 수정 진행 중** — PASS 패턴 분석 후 실패 모듈 일부 수정 시작, 10건 수정 완료 여부 미확인
+- **작동 페이지 중심 수정 진행 중** — MY(45건 fix)/TA(34건)/EI(13건) 완료, HOME-TP/HOME-TA Agent 수정 진행 중, SP+AUTH 수정 예정
 
 ### 이어서 할 것
-1. 10건 수정 완료 여부 확인 및 결과 검토
-2. 수정 후 문제 발생 시 사람에게 승인 요청
-3. 전체 테스트 재실행 및 잔여 실패 항목 수정
+1. HOME-TP(15) + HOME-TA(11) Agent 수정 결과 검증
+2. SP(5) + AUTH(16) 모듈 수정
+3. 수정 가능 전체 테스트 재실행 및 결과 확인
 
 ### 막힌 것
-- **SPA direct URL 진입 차단**: 모든 deep URL(`/my-info`, `/search/*`, `/tax-history-*`, `/membership` 등)이 `/`로 redirect → `page.goto('/deep-url')` 패턴 전체 무효
-- **setup hang**: 서버 로그인 hang 현상으로 setup이 매번 timeout — storageState 자체는 유효
-- **기존 547 PASS 신뢰성 의심**: 비로그인 페이지 또는 홈 텍스트 우연 매치 가능성 있음
-- **세션 중단**: 대화가 중간에 잘려 10건 수정 완료 여부 및 결과 미확인
+- **GO/EO/ER 약 100건 staging 500 오류** — 서버 이슈로 코드 수정 불가, staging 회복 후 재테스트 필요
+- **SPA direct URL 진입 차단**: 모든 deep URL이 `/`로 redirect → `page.goto('/deep-url')` 패턴 전체 무효 (기존 확인)
+- **setup hang**: 서버 로그인 hang 현상으로 setup이 매번 timeout — storageState 자체는 유효 (기존 확인)
 
 ### 사람 판단 필요
 - **[대기 중] navigation 전면 재작성 vs 현상 유지 리포트 vs PoC 검증** — A/C/D 옵션 중 어느 방향으로 진행할지 승인 필요
@@ -66,10 +65,16 @@
 - [x] 진단 spec 실행 — 모든 deep URL이 `/`로 redirect됨 확인 (SPA 라우팅 차단 원인 규명)
 - [x] setup hang 원인 확인 — storageState 유효, 서버 로그인 hang으로 setup 의존성 임시 비활성화
 - [x] PASS 테스트 패턴 학습 — `/tmp/find-pass-tests.mjs` 스크립트로 PASS 목록 추출, ER spec 구조 분석
+- [x] fresh per-page 진단 spec 19/19 성공 — 페이지별 실제 상태 확인 (MY/TA/EI 정상, GO/EO/ER staging 500 오류)
+- [x] A1 결정: 작동 페이지(~140건)만 수정, 500 오류 페이지는 BLOCKED 마킹
+- [x] MY 모듈: PoC 성공 후 Agent 일괄 수정 → 46→1 fail (45건 fix), 잔여 MY-1-24 수동 수정
+- [x] TA(34건) + EI(13건) Agent 위임 → 검증 결과 0 FAIL ✅
+- [ ] HOME-TP(15) + HOME-TA(11) Agent 수정 결과 검증
+- [ ] SP(5) + AUTH(16) 모듈 수정
 - [ ] ER/SP/AUTH 모듈 10건 수정 완료 여부 확인 (세션 중단으로 미확인)
 - [ ] navigation 전면 재작성 / 현상 유지 리포트 / PoC 검증 중 방향 결정 (사람 승인 대기)
-- [ ] Phase 3: GO 모듈 strict mode + 타임아웃 수정 (67건)
-- [ ] Phase 3: MY 모듈 selector 재확인 및 수정 (46건)
+- [ ] GO/EO/ER staging 회복 후 약 100건 재테스트
+- [ ] Phase 3: GO 모듈 strict mode + 타임아웃 수정 (67건) — staging 회복 후
 - [ ] Phase 3: 전체 테스트 재실행 결과 확인 및 잔여 실패 항목 수정
 - [ ] QA 리포트 생성 및 Vercel 배포
 - [ ] CI 스케줄 설정 (백로그)

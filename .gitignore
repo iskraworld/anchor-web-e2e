@@ -27,5 +27,8 @@ node_modules/
 .auth/
 docs/exploration-cache/
 
+# Diagnostic / temp test files
+tests/_diag/
+
 # TypeScript
 *.tsbuildinfo

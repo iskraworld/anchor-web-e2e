@@ -4,6 +4,39 @@
 
 ---
 
+## 2026-04-29: QA 리포트 다중 프로젝트 재사용 전략
+
+- **선택**: 방법 B — `qa-report.config.mjs`로 brand/modules/links 분리 후 5개 파일 복사 + config 작성
+- **대안 검토**:
+  - 방법 A (npm 패키지화): 버전 관리·배포 채널 필요, 초기 비용 큼, 프로젝트별 커스터마이징 어려움
+  - 방법 B (config 분리 + 복사): 즉시 사용 가능, 프로젝트별 자유도 높음, 단점은 코어 업데이트 시 수동 동기화
+- **선택 이유**: 현재 재사용 대상 프로젝트 수가 적고 각자 커스터마이징 폭이 클 가능성이 높아 패키지화 오버헤드보다 복사 후 독립 진화가 합리적
+- **영향 범위**: `scripts/qa-report.config.mjs` 신규, `scripts/generate-qa-report.mjs` 변경(하드코딩 제거), `docs/anchor-e2e-v2/qa-report-setup.md` 가이드 신규
+- **되돌리는 방법**: config 값을 다시 generate 스크립트에 인라인하면 원복. 추후 패키지화로 전환하려면 5개 파일을 별도 repo로 분리 후 npm publish
+
+## 2026-04-29: [M] 오분류 재발 방지 — 가드 4종 도입
+
+- **선택**: 문서 가이드(판단 트리 + 사유 화이트리스트) + 패턴 카탈로그 + 자동 감사 스크립트 4종 병행
+- **대안 검토**:
+  - 옵션 1 (문서만 추가): 비용 낮으나 강제력 없음, 동일 실수 재발 가능
+  - 옵션 2 (audit 스크립트만): 자동 감지 가능하나 판단 기준이 불명확하면 오탐/미탐 발생
+  - 옵션 3 (4종 병행): 판단 기준(A/B) + 패턴 학습(C) + 자동 감사(D)로 다층 방어
+- **선택 이유**: 14건 오분류의 원인이 단일하지 않음(보수 편향·도구 무지·룰 광범위)이므로 각 원인을 별도 가드로 차단해야 재발 방지 가능. audit 스크립트가 실제 9건 의심 항목 감지하여 효과 검증됨
+- **영향 범위**: `docs/anchor-e2e-v2/phase2-code-generation.md`(판단 트리 + 화이트리스트), `docs/anchor-e2e-v2/automation-patterns.md` 신규, `scripts/verify-coverage.mjs`(--audit 모드), `package.json`(verify:coverage:audit 스크립트)
+- **되돌리는 방법**: audit 스크립트 호출 제거 + 문서 섹션 삭제. 판단 트리는 phase2 문서 내 독립 섹션이라 부분 롤백 가능
+
+## 2026-04-29: [B] BLOCKED 카테고리 신설
+
+- **선택**: [M] 수동 카테고리에서 "UI 미출시 대기" 건을 [B] BLOCKED로 분리 (별도 KPI 박스 + 섹션)
+- **대안 검토**:
+  - 옵션 1 ([M] 유지): 수동 검증 부담으로 잘못 표시됨, QA 우선순위 왜곡
+  - 옵션 2 ([S] 스킵으로 통합): 영구 제외와 일시 대기 구분 불가
+  - 옵션 3 ([B] 신설): 자동화 가능하지만 대기 중임을 명시, UI 출시 시 즉시 자동화 전환 가능
+- **선택 이유**: [M] 44건 중 13건이 실제로는 자동화 가능하나 UI 미출시로 대기 상태 → 본질이 다른 항목을 같은 카테고리에 두면 [M] 비율이 부풀려져 의사결정 왜곡
+- **영향 범위**: 5개 spec 파일 태그 변경, `scripts/generate-qa-report.mjs`(KPI 박스 + blockedTable + 색상 토큰), `docs/anchor-e2e-v2/phase2-code-generation.md`, `docs/anchor-e2e-v2/qa-report-setup.md`
+- **되돌리는 방법**: spec 태그 [B] → [M] 일괄 치환 + generate 스크립트의 [B] 처리 로직 제거. 카테고리 정의는 phase2 문서 한 섹션이라 독립 롤백 가능
+
+
 ## 2026-04-29: QA 리포트 디자인 — React 런타임 vs 정적 HTML
 
 - **선택**: 정적 HTML/CSS만 사용, React/Babel 런타임 + Tweaks 패널 미적용

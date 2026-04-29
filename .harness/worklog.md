@@ -4,6 +4,23 @@
 
 ---
 
+## Session 2026-04-29 15:59 — QA 리포트 v2 디자인 적용 + [B] 카테고리 도입 + [M] 오분류 가드
+
+### 작업 요약
+- Claude Design v2 핸드오프 번들 적용: `scripts/generate-qa-report.mjs`에 6건 수정 (도넛 100% 정렬, KPI 카드 ink 톤, 본문 셀 색상, KPI 라벨 nowrap, `.fail` 셀렉터 범위 축소, Top FAIL 버튼 톤)
+- 타 프로젝트 재사용 리팩토링(방법 B): `qa-report.config.mjs` 신규로 brand/modules/links 분리, 하드코딩 제거, `docs/anchor-e2e-v2/qa-report-setup.md` 가이드 작성 — 다음 프로젝트는 5개 파일 + config 1개로 복제 가능
+- `[B] BLOCKED` 카테고리 도입: [M] 44건 중 UI 미출시 13건을 [B]로 재분류, 5개 spec(EI/ER/HOME-TA/HOME-TP/MY) 태그 갱신, 리포트 스크립트에 [B] 인식 + 6번째 KPI 박스 + `blockedTable()` 섹션 + 색상 토큰 추가
+- [M] 오분류 재발 방지 가드 4종: phase2-code-generation.md에 [M] 판단 트리, [M] 사유 화이트리스트 5종(인증/실거래/PDF시각/외부의존/CAPTCHA), `automation-patterns.md` 신규(9가지 패턴+예시), `verify-coverage.mjs --audit` 모드 + `verify:coverage:audit` 스크립트 추가 — audit가 9건 의심 자동 감지
+- 빠졌던 14건 실제 변환: SP 5건 + HOME 자동완성 2건 → `test()` 변환 후 PASS, ER PDF 4건은 [B]로 재분류, 시각검증 3건만 [M] 유지, audit 화이트리스트에 "관리자 승인" 패턴 추가
+- 풀 QA 스위트 재실행(auth setup 갱신 후) → results.json 갱신, 최종 PASS 781(+10) / FAIL 11 / 삭제 28 / 대기 17 / 수동 20 / 스킵 15 = 872, [M] 비율 2.5%
+- 커밋 `309e339` 푸시 + Vercel prod 배포 완료
+
+### 다음 액션
+- audit가 감지한 나머지 의심 [M] 항목 검토 (현재 [M] 20건이 화이트리스트 사유에 부합하는지 재확인)
+- `qa-report-setup.md` 가이드 기반으로 다른 프로젝트에 리포트 시스템 이식 시도 (실제 복제 검증)
+- [B] 항목 17건의 UI 출시 일정 추적 — 출시 시점에 [B] → 자동화 전환 트리거
+
+
 워크로그 항목 추가 완료.
 
 

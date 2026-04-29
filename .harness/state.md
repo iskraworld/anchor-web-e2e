@@ -4,12 +4,12 @@
 
 ---
 
-## 마지막 실행: 2026-04-29 13:57
-## 마지막 업데이트: 2026-04-29 13:57
+## 마지막 실행: 2026-04-29 15:59
+## 마지막 업데이트: 2026-04-29 15:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **QA 리포트 디자인 전면 재작성 완료** — Claude Design 핸드오프 번들 적용. Pretendard 폰트, 도넛 커버리지, 5종 KPI strip, 카드형 실패 상세, 분포 미니바 등 디자인 모두 반영. 데이터 정합성 100% (872/872) 그대로 유지.
+- **QA 리포트 디자인 v2 + [B] BLOCKED 카테고리 도입 + [M] 오분류 재발 방지 가드 완료** — 빠졌던 14건 실제 변환 후 풀 스위트 재실행. 최종 PASS 781 / FAIL 11 / 삭제 28 / 대기 17 / 수동 20 / 스킵 15 = 872 (100% 커버리지), [M] 비율 2.5%.
 
 ### 이어서 할 것
 1. HOME staging 회복 후 BLOCKED 11건 (HOME-TP-1-11/12/13/14/35 + HOME-TA-1-07/08/22/23) 재테스트
@@ -23,7 +23,7 @@
 ### 사람 판단 필요
 - D-2/D-3: 법인 리포트 1그룹/2그룹 분류 UI 미출시 — 기능 릴리즈 후 재검토
 - ER-1-05/1-06/2-05/2-06: PDF·링크 버튼 UI 미구현 — 릴리즈 후 `test.skip()` 해제
-- 다음 QA 프로젝트 진행 시 `docs/anchor-e2e-v2/` + `scripts/verify-coverage.mjs` 복사하면 동일 정합성 보장됨
+- 다음 QA 프로젝트 진행 시 `docs/anchor-e2e-v2/` + `scripts/verify-coverage.mjs` + `qa-report.config.mjs` 복사하면 동일 정합성·리포트 보장됨
 - AI가 기술적으로 할 수 있는 작업이 막힐 경우, Anchor 팀에 바로 넘기지 말고 승인 형식으로 사람에게 먼저 물어볼 것
 
 ### 백로그 요약
@@ -68,6 +68,16 @@
 - [x] React/Babel/Tweaks 패널 의도적 미구현 (디자인 README 지침대로 시각만 매칭)
 - [x] Vercel 배포 완료 (https://playwright-report-iota.vercel.app/qa-report.html)
 - [x] 워크로그 기록 및 커밋·푸시
+- [x] QA 리포트 디자인 v2 핸드오프 번들 6가지 수정 적용 (도넛 정렬, KPI 톤, 셀 색상, 라벨 nowrap, `.fail` 범위, Top FAIL 톤)
+- [x] `qa-report.config.mjs` 분리 + `generate-qa-report.mjs` config 기반 리팩토링 (방법 B)
+- [x] `docs/anchor-e2e-v2/qa-report-setup.md` 재사용 가이드 신규
+- [x] [B] BLOCKED 카테고리 도입 — 5개 spec(EI/ER/HOME-TA/HOME-TP/MY)에서 13건 [M]→[B] 재분류
+- [x] 리포트에 [B] 인식 + 6번째 KPI 박스 + blockedTable() 섹션 + 색상 토큰 추가
+- [x] [M] 오분류 재발 방지 가드 4종: phase2 판단 트리, 사유 화이트리스트 5종, `automation-patterns.md` 9패턴, `verify:coverage:audit` 스크립트
+- [x] 빠졌던 14건 실제 변환: SP 5건 + HOME 자동완성 2건 → `test()` 변환 PASS, ER PDF 4건 → [B] 재분류, 시각검증 3건만 [M] 유지
+- [x] audit 화이트리스트에 "관리자 승인" 패턴 추가 (EI 자격인증 정당화)
+- [x] 풀 QA 스위트 재실행 → 최종 PASS 781 / FAIL 11 / 삭제 28 / 대기 17 / 수동 20 / 스킵 15 = 872, [M] 비율 2.5%
+- [x] 커밋 `309e339` 푸시 + Vercel prod 배포 완료
 - [ ] HOME staging BLOCKED 11건 재테스트 (staging 회복 후)
 - [ ] CI 스케줄 설정 (백로그)
 - [ ] D-2/D-3 BLOCKED 해제 (UI 출시 후)

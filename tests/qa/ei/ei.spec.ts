@@ -825,13 +825,13 @@ test.describe('EI — 수동 검증 필요 (Manual)', () => {
   test.skip('[EI-1-17][M] 승인 상태 총 경력 항목 확인', async () => {
     // MANUAL: 세무사 자격 인증 — 관리자 승인 필요
   });
-  test.skip('[EI-1-31][M] 소개글 빈 값 저장 유효성 검증', async () => {
-    // MANUAL: 폼 유효성 검증 — UI 미구현
+  test.skip('[EI-1-31][B] 소개글 빈 값 저장 유효성 검증', async () => {
+    // BLOCKED: 폼 유효성 검증 UI 미구현 — 출시 후 자동화 가능
   });
-  test.skip('[EI-1-32][M] 유효하지 않은 전화번호 입력 검증', async () => {
-    // MANUAL: 폼 유효성 검증 — UI 미구현
+  test.skip('[EI-1-32][B] 유효하지 않은 전화번호 입력 검증', async () => {
+    // BLOCKED: 폼 유효성 검증 UI 미구현 — 출시 후 자동화 가능
   });
-  test.skip('[EI-1-33][M] 유효하지 않은 이메일 입력 검증', async () => {
-    // MANUAL: 폼 유효성 검증 — UI 미구현
+  test.skip('[EI-1-33][B] 유효하지 않은 이메일 입력 검증', async () => {
+    // BLOCKED: 폼 유효성 검증 UI 미구현 — 출시 후 자동화 가능
   });
 });

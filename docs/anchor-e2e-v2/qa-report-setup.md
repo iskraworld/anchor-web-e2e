@@ -56,13 +56,19 @@ TC-ID는 마크다운 표의 첫 번째 셀에 배치. 삭제된 TC는 취소선
 test('[AUTH-1-01] 일반 자동화 케이스', async ({ page }) => { ... });
 test.skip('[AUTH-4-05][M] 본인 인증 — 자동화 불가', async () => { /* MANUAL */ });
 test.skip('[AUTH-1-04][D] 요구사항 삭제됨', async () => { /* DEPRECATED */ });
+test.skip('[EI-1-31][B] UI 미출시 — 출시 후 자동화 가능', async () => { /* BLOCKED */ });
 test.skip('[AUTH-탈퇴-01][S] 위험성으로 스킵', async () => { /* SKIP */ });
 ```
 
 태그 의미:
-- `[M]` MANUAL — 자동화 불가, 수동 검증 필요 (PG 결제, OAuth, SMS 등)
-- `[D]` DEPRECATED — 요구사항 변경으로 서비스에서 제거됨
+- `[M]` MANUAL — 원리적으로 자동화 불가, 사람이 검증해야 하는 영역 (PG 결제, OAuth, SMS, PDF 시각 검증 등)
+- `[D]` DEPRECATED — 요구사항 변경으로 서비스에서 제거됨, 테스트 대상에서 공식 제외
+- `[B]` BLOCKED — UI 미출시 또는 의존 기능 미배포로 일시 비활성화. **출시 후 자동화 가능**
 - `[S]` SKIP — 정책상 자동 실행 제외 (회원 탈퇴 등 위험)
+
+**[M] vs [B] 판단 기준**:
+- `[M]`: 영구적으로 사람이 해야 함 (자동화 도구 한계)
+- `[B]`: UI/기능 출시되면 자동화 가능 (현재 일시 대기)
 
 ---
 
@@ -131,14 +137,15 @@ export default defineConfig({
 
 ## 6. 결과 분류 로직
 
-리포트는 각 TC를 5가지로 분류:
+리포트는 각 TC를 6가지로 분류:
 
 | 분류 | 조건 |
 |---|---|
 | **PASS** | spec에 `test()`로 작성, results.json에서 `passed` |
 | **FAIL** | spec에 `test()`로 작성, results.json에서 `failed`/`timedOut`/`interrupted` |
-| **수동(M)** | spec에 `test.skip('[ID][M]...')` |
 | **삭제(D)** | spec에 `test.skip('[ID][D]...')` |
+| **대기(B)** | spec에 `test.skip('[ID][B]...')` — UI 미출시, 출시 후 자동화 가능 |
+| **수동(M)** | spec에 `test.skip('[ID][M]...')` — 원리적 자동화 불가 |
 | **스킵(S)** | spec에 `test.skip('[ID][S]...')` 또는 런타임 조건부 skip |
 
 `DOCS_TOTAL`은 docs/qa의 활성+삭제 TC를 모두 합산해서 계산.

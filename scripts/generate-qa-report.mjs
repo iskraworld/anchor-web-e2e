@@ -101,8 +101,8 @@ function parseSpecReasons(specDir) {
         const cm = lines[j].match(/\/\/\s*(.+)/);
         if (cm) { reason = cm[1].trim(); break; }
       }
-      // Clean MANUAL:/SKIP:/DEPRECATED: prefixes
-      reason = reason.replace(/^MANUAL:\s*/i, '').replace(/^SKIP:\s*/i, '').replace(/^DEPRECATED:\s*/i, '');
+      // Clean MANUAL:/SKIP:/DEPRECATED:/BLOCKED: prefixes
+      reason = reason.replace(/^MANUAL:\s*/i, '').replace(/^SKIP:\s*/i, '').replace(/^DEPRECATED:\s*/i, '').replace(/^BLOCKED:\s*/i, '');
       reasons.set(tcId, reason || '사유 미기재');
     }
   }
@@ -115,7 +115,7 @@ const specReasons = parseSpecReasons(resolve(root, 'tests/qa'));
 
 // ── TC-ID 파서 ────────────────────────────────────────────────────────────────
 // HOME-TA / HOME-TP 같은 복합 prefix 지원 — (?:-[A-Z]+)* 추가
-const TC_RE = /^\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d-]+)\](\[M\]|\[S\]|\[D\])?/;
+const TC_RE = /^\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d-]+)\](\[M\]|\[S\]|\[D\]|\[B\])?/;
 
 function parseTcId(title) {
   const m = title.match(TC_RE);
@@ -171,7 +171,7 @@ for (const spec of allSpecs) {
 // 2) spec 파일 직접 파싱 — 결과 JSON에 없는 TC도 포함 ([D] 새로 추가된 것 등)
 function collectAllSpecTcs(specDir) {
   const out = [];
-  const RE = /test(?:\.skip)?\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\](\[M\]|\[S\]|\[D\])?[^'"]*)['"]/g;
+  const RE = /test(?:\.skip)?\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\](\[M\]|\[S\]|\[D\]|\[B\])?[^'"]*)['"]/g;
   function walk(d) {
     if (!existsSync(d)) return;
     for (const entry of readdirSync(d, { withFileTypes: true })) {
@@ -229,6 +229,7 @@ for (const [, tcs] of byModule) {
 
 function classifyResult(tc) {
   if (tc.tag === '[D]') return 'deprecated';
+  if (tc.tag === '[B]') return 'blocked';
   if (tc.tag === '[M]') return 'manual';
   if (tc.tag === '[S]') return 'skip';
   if (tc.status === 'passed') return 'pass';
@@ -238,11 +239,11 @@ function classifyResult(tc) {
 }
 
 function resultIcon(result) {
-  return { pass: '✅', fail: '❌', manual: '⏭️', skip: '👤', deprecated: '🗑️', unknown: '❓' }[result] ?? '❓';
+  return { pass: '✅', fail: '❌', manual: '⏭️', skip: '👤', deprecated: '🗑️', blocked: '🚧', unknown: '❓' }[result] ?? '❓';
 }
 
 function resultLabel(result) {
-  return { pass: 'PASS', fail: 'FAIL', manual: '수동', skip: '스킵', deprecated: '삭제', unknown: '?' }[result] ?? '?';
+  return { pass: 'PASS', fail: 'FAIL', manual: '수동', skip: '스킵', deprecated: '삭제', blocked: '대기', unknown: '?' }[result] ?? '?';
 }
 
 // 스킵 이유 분류
@@ -267,7 +268,8 @@ const totalFail       = allTcs.filter(t => classifyResult(t) === 'fail').length;
 const totalManual     = allTcs.filter(t => classifyResult(t) === 'manual').length;
 const totalSkip       = allTcs.filter(t => classifyResult(t) === 'skip').length;
 const totalDeprecated = allTcs.filter(t => classifyResult(t) === 'deprecated').length;
-const autoTotal       = totalAll - totalManual - totalSkip - totalDeprecated;
+const totalBlocked    = allTcs.filter(t => classifyResult(t) === 'blocked').length;
+const autoTotal       = totalAll - totalManual - totalSkip - totalDeprecated - totalBlocked;
 const overallStatus = totalFail > 0 ? 'FAIL' : 'PASS';
 const coveragePct = Math.min(100, Math.round((totalAll / DOCS_TOTAL) * 100));
 const notImpl = Math.max(0, DOCS_TOTAL - totalAll);
@@ -284,7 +286,7 @@ function escHtml(str) {
 }
 
 function shortTitle(title) {
-  return title.replace(/^\[[^\]]+\](\[M\]|\[S\]|\[D\])?\s*/, '');
+  return title.replace(/^\[[^\]]+\](\[M\]|\[S\]|\[D\]|\[B\])?\s*/, '');
 }
 
 function cleanAnsi(str) {
@@ -362,6 +364,7 @@ function resultsTable() {
     const p  = tcs.filter(t => classifyResult(t) === 'pass').length;
     const f  = tcs.filter(t => classifyResult(t) === 'fail').length;
     const d  = tcs.filter(t => classifyResult(t) === 'deprecated').length;
+    const b  = tcs.filter(t => classifyResult(t) === 'blocked').length;
     const m  = tcs.filter(t => classifyResult(t) === 'manual').length;
     const sk = tcs.filter(t => classifyResult(t) === 'skip').length;
     const tot = total || 1;
@@ -374,6 +377,7 @@ function resultsTable() {
             <span class="p" style="width:${p/tot*100}%"></span>
             <span class="f" style="width:${f/tot*100}%"></span>
             <span class="d" style="width:${d/tot*100}%"></span>
+            <span class="b" style="width:${b/tot*100}%"></span>
             <span class="m" style="width:${m/tot*100}%"></span>
             <span class="s" style="width:${sk/tot*100}%"></span>
           </div>
@@ -383,6 +387,7 @@ function resultsTable() {
       <td class="r num">${num(p,'pass')}</td>
       <td class="r num">${num(f,'fail')}</td>
       <td class="r num">${num(d,'del')}</td>
+      <td class="r num">${num(b,'blocked')}</td>
       <td class="r num">${num(m,'manual')}</td>
       <td class="r num">${num(sk,'skip')}</td>
     </tr>`;
@@ -392,12 +397,13 @@ function resultsTable() {
     <div class="sec-head">
       <div>
         <h2 class="sec-title"><span class="idx">02</span>실행 결과</h2>
-        <p class="sec-sub">docs/qa ${totalAll}건의 모듈별 PASS · FAIL · 삭제 · 수동 · 스킵 분포</p>
+        <p class="sec-sub">docs/qa ${totalAll}건의 모듈별 PASS · FAIL · 삭제 · 대기 · 수동 · 스킵 분포</p>
       </div>
       <div class="sec-tools">
         <span class="chip pass"><span class="pip"></span>PASS</span>
         <span class="chip fail"><span class="pip"></span>FAIL</span>
         <span class="chip del"><span class="pip"></span>삭제</span>
+        <span class="chip blocked"><span class="pip"></span>대기</span>
         <span class="chip manual"><span class="pip"></span>수동</span>
         <span class="chip skip"><span class="pip"></span>스킵</span>
       </div>
@@ -406,11 +412,12 @@ function resultsTable() {
       <table>
         <thead>
           <tr>
-            <th style="width:30%">모듈</th>
+            <th style="width:26%">모듈</th>
             <th class="r">전체</th>
             <th class="r">PASS</th>
             <th class="r">FAIL</th>
             <th class="r">삭제</th>
+            <th class="r">대기</th>
             <th class="r">수동</th>
             <th class="r">스킵</th>
           </tr>
@@ -423,6 +430,7 @@ function resultsTable() {
             <td class="r num n-pass">${totalPass}</td>
             <td class="r num n-fail">${totalFail || '<span class="dash">—</span>'}</td>
             <td class="r num n-del">${totalDeprecated || '<span class="dash">—</span>'}</td>
+            <td class="r num n-blocked">${totalBlocked || '<span class="dash">—</span>'}</td>
             <td class="r num n-manual">${totalManual || '<span class="dash">—</span>'}</td>
             <td class="r num n-skip">${totalSkip || '<span class="dash">—</span>'}</td>
           </tr>
@@ -442,6 +450,7 @@ function moduleSection(mod, idx) {
   const p  = tcs.filter(t => classifyResult(t) === 'pass').length;
   const f  = tcs.filter(t => classifyResult(t) === 'fail').length;
   const d  = tcs.filter(t => classifyResult(t) === 'deprecated').length;
+  const b  = tcs.filter(t => classifyResult(t) === 'blocked').length;
   const m  = tcs.filter(t => classifyResult(t) === 'manual').length;
   const sk = tcs.filter(t => classifyResult(t) === 'skip').length;
 
@@ -449,14 +458,15 @@ function moduleSection(mod, idx) {
     p  > 0 ? `<span class="chip pass"><span class="pip"></span>PASS ${p}</span>` : '',
     f  > 0 ? `<span class="chip fail"><span class="pip"></span>FAIL ${f}</span>` : '',
     d  > 0 ? `<span class="chip del"><span class="pip"></span>삭제 ${d}</span>` : '',
+    b  > 0 ? `<span class="chip blocked"><span class="pip"></span>대기 ${b}</span>` : '',
     m  > 0 ? `<span class="chip manual"><span class="pip"></span>수동 ${m}</span>` : '',
     sk > 0 ? `<span class="chip skip"><span class="pip"></span>스킵 ${sk}</span>` : '',
   ].filter(Boolean).join('');
 
   const rows = tcs.map(tc => {
     const result = classifyResult(tc);
-    const pillMap = { pass:'pass', fail:'fail', deprecated:'del', manual:'manual', skip:'skip' };
-    const pillLabel = { pass:'PASS', fail:'FAIL', deprecated:'삭제', manual:'수동', skip:'스킵' };
+    const pillMap = { pass:'pass', fail:'fail', deprecated:'del', blocked:'blocked', manual:'manual', skip:'skip' };
+    const pillLabel = { pass:'PASS', fail:'FAIL', deprecated:'삭제', blocked:'대기', manual:'수동', skip:'스킵' };
     const cls = pillMap[result] ?? 'skip';
     const lbl = pillLabel[result] ?? result;
     return `<tr id="tc-${escHtml(tc.id)}">
@@ -559,6 +569,39 @@ function manualTable() {
   </section>`;
 }
 
+// ── 디자인: 출시 대기 (Blocked) ──────────────────────────────────────────────
+
+function blockedTable() {
+  const blocks = allTcs.filter(t => classifyResult(t) === 'blocked');
+  if (!blocks.length) return '';
+  const rows = blocks.map(tc => `
+    <tr>
+      <td><span class="tc-id">${escHtml(tc.id)}</span></td>
+      <td>${escHtml(shortTitle(tc.title))}</td>
+      <td class="reason">${escHtml(tc.reason || 'UI 미출시 — 출시 후 자동화 가능')}</td>
+    </tr>`).join('\n');
+  return `<section id="blocked-list">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title"><span class="idx">05</span>출시 대기 <span class="chip" style="margin-left:6px">${blocks.length}건</span></h2>
+        <p class="sec-sub">UI 미출시 또는 의존 기능 미배포로 일시 비활성화 — 출시 후 즉시 자동화 활성화 가능</p>
+      </div>
+    </div>
+    <div class="card">
+      <table class="lt">
+        <thead>
+          <tr>
+            <th style="width:18%">TC-ID</th>
+            <th>설명</th>
+            <th style="width:34%">대기 사유</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </section>`;
+}
+
 // ── 디자인: 요구기능 삭제 ────────────────────────────────────────────────────
 
 function deprecatedTable() {
@@ -573,7 +616,7 @@ function deprecatedTable() {
   return `<section id="deprecated-list">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">05</span>요구기능 삭제 <span class="chip" style="margin-left:6px">${deps.length}건</span></h2>
+        <h2 class="sec-title"><span class="idx">06</span>요구기능 삭제 <span class="chip" style="margin-left:6px">${deps.length}건</span></h2>
         <p class="sec-sub">docs/qa에 정의되어 있으나 요구사항 변경으로 서비스에서 제거된 케이스 — 테스트 대상에서 공식 제외</p>
       </div>
     </div>
@@ -617,7 +660,7 @@ function skipTable() {
   return `<section id="skip-list">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">06</span>스킵 <span class="chip" style="margin-left:6px">${skips.length}건</span></h2>
+        <h2 class="sec-title"><span class="idx">07</span>스킵 <span class="chip" style="margin-left:6px">${skips.length}건</span></h2>
         <p class="sec-sub">현재 미구현 · 세션 파괴 위험 · 환경 불안정 등의 이유로 비활성화된 케이스</p>
       </div>
     </div>
@@ -674,6 +717,8 @@ const html = `<!doctype html>
     --skip-bg:#ECEDF0;
     --del:#7B5BB6;
     --del-bg:#EFEAF8;
+    --blocked:#3B82A6;
+    --blocked-bg:#E4F0F7;
   }
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
     font-family:Pretendard,ui-sans-serif,-apple-system,system-ui,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
@@ -726,7 +771,7 @@ const html = `<!doctype html>
   .ring-cap b{display:block;color:var(--ink);font-size:13px;font-weight:600;margin-bottom:4px}
 
   /* KPI strip */
-  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);
+  .kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--line);
     border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:20px}
   .kpi{background:var(--surface);padding:18px 20px;display:flex;flex-direction:column;gap:6px;position:relative;min-width:0}
   .kpi-l{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);
@@ -740,6 +785,7 @@ const html = `<!doctype html>
   .kpi.del    .pip{background:var(--del)}     .kpi.del    .kpi-bar{background:var(--del)}
   .kpi.manual .pip{background:var(--manual)}  .kpi.manual .kpi-bar{background:var(--manual)}
   .kpi.skip   .pip{background:var(--skip)}    .kpi.skip   .kpi-bar{background:var(--skip)}
+  .kpi.blocked .pip{background:var(--blocked)} .kpi.blocked .kpi-bar{background:var(--blocked)}
   /* keep all KPI values in the same ink tone for visual rhythm */
 
   /* Section */
@@ -757,6 +803,7 @@ const html = `<!doctype html>
   .chip.del .pip{background:var(--del)}
   .chip.manual .pip{background:var(--manual)}
   .chip.skip .pip{background:var(--skip)}
+  .chip.blocked .pip{background:var(--blocked)}
 
   /* Notice */
   .notice{display:flex;gap:12px;padding:14px 16px;border-radius:10px;
@@ -803,12 +850,14 @@ const html = `<!doctype html>
   .n-manual{color:var(--ink);font-weight:600}
   .n-skip{color:var(--ink);font-weight:600}
   .n-del{color:var(--ink);font-weight:600}
+  .n-blocked{color:var(--ink);font-weight:600}
   /* footer accents — gentle, even across all kinds */
   tfoot td.n-pass{color:var(--pass)}
   tfoot td.n-fail{color:var(--fail)}
   tfoot td.n-manual{color:var(--manual)}
   tfoot td.n-skip{color:var(--skip)}
   tfoot td.n-del{color:var(--del)}
+  tfoot td.n-blocked{color:var(--blocked)}
   .dash{color:var(--ink-4)}
 
   tfoot td{padding:14px 18px;background:var(--surface-2);font-weight:600;color:var(--ink);
@@ -824,6 +873,7 @@ const html = `<!doctype html>
   .dist .d{background:var(--del)}
   .dist .m{background:var(--manual)}
   .dist .s{background:var(--skip)}
+  .dist .b{background:var(--blocked)}
 
   /* Status pill */
   .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:99px;
@@ -834,6 +884,7 @@ const html = `<!doctype html>
   .pill.manual{background:var(--manual-bg);color:var(--manual)} .pill.manual .pip{background:var(--manual)}
   .pill.skip{background:var(--skip-bg);color:var(--skip)} .pill.skip .pip{background:var(--skip)}
   .pill.del{background:var(--del-bg);color:var(--del)} .pill.del .pip{background:var(--del)}
+  .pill.blocked{background:var(--blocked-bg);color:var(--blocked)} .pill.blocked .pip{background:var(--blocked)}
 
   /* Fail cards — scoped to .fails to avoid colliding with .kpi.fail */
   .fails{display:flex;flex-direction:column;gap:8px}
@@ -903,7 +954,7 @@ const html = `<!doctype html>
     </div>
     <div class="top-meta">
       <div><span class="dot"></span>실행 <b>${escHtml(now)}</b></div>
-      <div>자동화 <b>${autoRun}</b> · 수동 <b>${totalManual}</b> · 스킵 <b>${totalSkip}</b></div>
+      <div>자동화 <b>${autoRun}</b> · 대기 <b>${totalBlocked}</b> · 수동 <b>${totalManual}</b> · 스킵 <b>${totalSkip}</b></div>
     </div>
     <div class="top-actions">
       ${totalFail > 0 ? `<a class="btn" href="#fail-details"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--fail)"></span>FAIL ${totalFail}</a>` : ''}
@@ -915,10 +966,11 @@ const html = `<!doctype html>
   <div class="hero">
     <div class="hero-l">
       <h1>이번 빌드는 <em>${totalPass}건 통과</em>,<br/>${totalFail > 0 ? `실패 ${totalFail}건이 남아 있습니다.` : '실패 없이 모두 안정적입니다.'}</h1>
-      <p>docs/qa에 정의된 ${DOCS_TOTAL}건이 자동화 스펙 파일에 ${totalAll}건 구현되어 커버리지는 ${coveragePct}%입니다. 이 중 ${totalDeprecated}건은 요구사항 변경으로 삭제, ${totalManual}건은 수동 검증 영역입니다.</p>
+      <p>docs/qa에 정의된 ${DOCS_TOTAL}건이 자동화 스펙 파일에 ${totalAll}건 구현되어 커버리지는 ${coveragePct}%입니다. 이 중 ${totalDeprecated}건은 요구사항 변경으로 삭제, ${totalBlocked}건은 UI 출시 대기, ${totalManual}건은 수동 검증 영역입니다.</p>
       <div class="modnav">
         ${moduleOrder.filter(m => byModule.get(m)?.length).map(m => `<a href="#module-${m}">${m}</a>`).join('')}
         ${totalManual > 0 ? '<a href="#manual-checks">수동</a>' : ''}
+        ${totalBlocked > 0 ? '<a href="#blocked-list">대기</a>' : ''}
         ${totalDeprecated > 0 ? '<a href="#deprecated-list">삭제</a>' : ''}
         ${totalSkip > 0 ? '<a href="#skip-list">스킵</a>' : ''}
         ${totalFail > 0 ? '<a href="#fail-details">실패</a>' : ''}
@@ -967,6 +1019,12 @@ const html = `<!doctype html>
       <div class="kpi-d">테스트 대상 제외</div>
       <div class="kpi-bar"></div>
     </div>
+    <div class="kpi blocked">
+      <div class="kpi-l"><span class="pip"></span>출시 대기</div>
+      <div class="kpi-v num">${totalBlocked}</div>
+      <div class="kpi-d">UI 출시 후 자동화</div>
+      <div class="kpi-bar"></div>
+    </div>
     <div class="kpi manual">
       <div class="kpi-l"><span class="pip"></span>수동 검증</div>
       <div class="kpi-v num">${totalManual}</div>
@@ -989,11 +1047,13 @@ const html = `<!doctype html>
 
   ${manualTable()}
 
+  ${blockedTable()}
+
   ${deprecatedTable()}
 
   ${skipTable()}
 
-  ${moduleOrder.map((mod, i) => moduleSection(mod, i + 7)).join('\n')}
+  ${moduleOrder.map((mod, i) => moduleSection(mod, i + 8)).join('\n')}
 
   <footer>
     <div>${escHtml(BRAND.name)} QA · 자동 생성 리포트 · ${escHtml(now)}</div>
@@ -1012,5 +1072,5 @@ writeFileSync(htmlOut, html, 'utf-8');
 
 console.log(`✅ QA 리포트 → ${htmlOut}`);
 console.log(`   TC-ID 총 ${totalAll}건 (docs/qa ${DOCS_TOTAL}건 기준 커버리지 ${coveragePct}%)`);
-console.log(`   PASS ${totalPass} | FAIL ${totalFail} | 삭제 ${totalDeprecated} | 수동 ${totalManual} | 스킵 ${totalSkip}`);
-console.log(`   합계: ${totalPass + totalFail + totalDeprecated + totalManual + totalSkip} / 미구현 ${notImpl}건`);
+console.log(`   PASS ${totalPass} | FAIL ${totalFail} | 삭제 ${totalDeprecated} | 대기 ${totalBlocked} | 수동 ${totalManual} | 스킵 ${totalSkip}`);
+console.log(`   합계: ${totalPass + totalFail + totalDeprecated + totalBlocked + totalManual + totalSkip} / 미구현 ${notImpl}건`);

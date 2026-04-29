@@ -768,13 +768,13 @@ test.describe('MY — 내 정보', () => {
 // ─── 누락 TC 보강 — docs/qa 기준 ────────────────────────────────
 
 test.describe('MY — 수동 검증 필요 (Manual)', () => {
-  test.skip('[MY-1-27][M] 내 정보 — 항목 (UI 미출시)', async () => {
-    // MANUAL: 관련 UI 미출시
+  test.skip('[MY-1-27][B] 내 정보 — 항목 (UI 미출시)', async () => {
+    // BLOCKED: 관련 UI 미출시 — 출시 후 자동화 가능
   });
-  test.skip('[MY-1-31][M] 내 정보 — 항목 (UI 미출시)', async () => {
-    // MANUAL: 관련 UI 미출시
+  test.skip('[MY-1-31][B] 내 정보 — 항목 (UI 미출시)', async () => {
+    // BLOCKED: 관련 UI 미출시 — 출시 후 자동화 가능
   });
-  test.skip('[MY-1-32][M] 내 정보 — 항목 (UI 미출시)', async () => {
-    // MANUAL: 관련 UI 미출시
+  test.skip('[MY-1-32][B] 내 정보 — 항목 (UI 미출시)', async () => {
+    // BLOCKED: 관련 UI 미출시 — 출시 후 자동화 가능
   });
 });

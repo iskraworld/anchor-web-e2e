@@ -30,6 +30,8 @@
     --skip-bg:#ECEDF0;
     --del:#7B5BB6;
     --del-bg:#EFEAF8;
+    --blocked:#3B82A6;
+    --blocked-bg:#E4F0F7;
   }
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
     font-family:Pretendard,ui-sans-serif,-apple-system,system-ui,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
@@ -82,7 +84,7 @@
   .ring-cap b{display:block;color:var(--ink);font-size:13px;font-weight:600;margin-bottom:4px}
 
   /* KPI strip */
-  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);
+  .kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--line);
     border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:20px}
   .kpi{background:var(--surface);padding:18px 20px;display:flex;flex-direction:column;gap:6px;position:relative;min-width:0}
   .kpi-l{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);
@@ -96,6 +98,7 @@
   .kpi.del    .pip{background:var(--del)}     .kpi.del    .kpi-bar{background:var(--del)}
   .kpi.manual .pip{background:var(--manual)}  .kpi.manual .kpi-bar{background:var(--manual)}
   .kpi.skip   .pip{background:var(--skip)}    .kpi.skip   .kpi-bar{background:var(--skip)}
+  .kpi.blocked .pip{background:var(--blocked)} .kpi.blocked .kpi-bar{background:var(--blocked)}
   /* keep all KPI values in the same ink tone for visual rhythm */
 
   /* Section */
@@ -113,6 +116,7 @@
   .chip.del .pip{background:var(--del)}
   .chip.manual .pip{background:var(--manual)}
   .chip.skip .pip{background:var(--skip)}
+  .chip.blocked .pip{background:var(--blocked)}
 
   /* Notice */
   .notice{display:flex;gap:12px;padding:14px 16px;border-radius:10px;
@@ -159,12 +163,14 @@
   .n-manual{color:var(--ink);font-weight:600}
   .n-skip{color:var(--ink);font-weight:600}
   .n-del{color:var(--ink);font-weight:600}
+  .n-blocked{color:var(--ink);font-weight:600}
   /* footer accents — gentle, even across all kinds */
   tfoot td.n-pass{color:var(--pass)}
   tfoot td.n-fail{color:var(--fail)}
   tfoot td.n-manual{color:var(--manual)}
   tfoot td.n-skip{color:var(--skip)}
   tfoot td.n-del{color:var(--del)}
+  tfoot td.n-blocked{color:var(--blocked)}
   .dash{color:var(--ink-4)}
 
   tfoot td{padding:14px 18px;background:var(--surface-2);font-weight:600;color:var(--ink);
@@ -180,6 +186,7 @@
   .dist .d{background:var(--del)}
   .dist .m{background:var(--manual)}
   .dist .s{background:var(--skip)}
+  .dist .b{background:var(--blocked)}
 
   /* Status pill */
   .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:99px;
@@ -190,6 +197,7 @@
   .pill.manual{background:var(--manual-bg);color:var(--manual)} .pill.manual .pip{background:var(--manual)}
   .pill.skip{background:var(--skip-bg);color:var(--skip)} .pill.skip .pip{background:var(--skip)}
   .pill.del{background:var(--del-bg);color:var(--del)} .pill.del .pip{background:var(--del)}
+  .pill.blocked{background:var(--blocked-bg);color:var(--blocked)} .pill.blocked .pip{background:var(--blocked)}
 
   /* Fail cards — scoped to .fails to avoid colliding with .kpi.fail */
   .fails{display:flex;flex-direction:column;gap:8px}
@@ -258,8 +266,8 @@
       <div class="brand-name">Anchor <span class="brand-sep">/</span> <span class="brand-sub">QA Report</span></div>
     </div>
     <div class="top-meta">
-      <div><span class="dot"></span>실행 <b>2026. 04. 29. PM 03:22</b></div>
-      <div>자동화 <b>784</b> · 수동 <b>44</b> · 스킵 <b>16</b></div>
+      <div><span class="dot"></span>실행 <b>2026. 04. 29. PM 03:34</b></div>
+      <div>자동화 <b>784</b> · 대기 <b>13</b> · 수동 <b>31</b> · 스킵 <b>16</b></div>
     </div>
     <div class="top-actions">
       <a class="btn" href="#fail-details"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--fail)"></span>FAIL 13</a>
@@ -271,10 +279,11 @@
   <div class="hero">
     <div class="hero-l">
       <h1>이번 빌드는 <em>771건 통과</em>,<br/>실패 13건이 남아 있습니다.</h1>
-      <p>docs/qa에 정의된 872건이 자동화 스펙 파일에 872건 구현되어 커버리지는 100%입니다. 이 중 28건은 요구사항 변경으로 삭제, 44건은 수동 검증 영역입니다.</p>
+      <p>docs/qa에 정의된 872건이 자동화 스펙 파일에 872건 구현되어 커버리지는 100%입니다. 이 중 28건은 요구사항 변경으로 삭제, 13건은 UI 출시 대기, 31건은 수동 검증 영역입니다.</p>
       <div class="modnav">
         <a href="#module-AUTH">AUTH</a><a href="#module-MY">MY</a><a href="#module-HOME-TP">HOME-TP</a><a href="#module-HOME-TA">HOME-TA</a><a href="#module-TA">TA</a><a href="#module-GO">GO</a><a href="#module-EO">EO</a><a href="#module-EI">EI</a><a href="#module-ER">ER</a><a href="#module-SP">SP</a><a href="#module-TF">TF</a>
         <a href="#manual-checks">수동</a>
+        <a href="#blocked-list">대기</a>
         <a href="#deprecated-list">삭제</a>
         <a href="#skip-list">스킵</a>
         <a href="#fail-details">실패</a>
@@ -323,9 +332,15 @@
       <div class="kpi-d">테스트 대상 제외</div>
       <div class="kpi-bar"></div>
     </div>
+    <div class="kpi blocked">
+      <div class="kpi-l"><span class="pip"></span>출시 대기</div>
+      <div class="kpi-v num">13</div>
+      <div class="kpi-d">UI 출시 후 자동화</div>
+      <div class="kpi-bar"></div>
+    </div>
     <div class="kpi manual">
       <div class="kpi-l"><span class="pip"></span>수동 검증</div>
-      <div class="kpi-v num">44</div>
+      <div class="kpi-v num">31</div>
       <div class="kpi-d">자동화 불가 항목</div>
       <div class="kpi-bar"></div>
     </div>
@@ -453,12 +468,13 @@
     <div class="sec-head">
       <div>
         <h2 class="sec-title"><span class="idx">02</span>실행 결과</h2>
-        <p class="sec-sub">docs/qa 872건의 모듈별 PASS · FAIL · 삭제 · 수동 · 스킵 분포</p>
+        <p class="sec-sub">docs/qa 872건의 모듈별 PASS · FAIL · 삭제 · 대기 · 수동 · 스킵 분포</p>
       </div>
       <div class="sec-tools">
         <span class="chip pass"><span class="pip"></span>PASS</span>
         <span class="chip fail"><span class="pip"></span>FAIL</span>
         <span class="chip del"><span class="pip"></span>삭제</span>
+        <span class="chip blocked"><span class="pip"></span>대기</span>
         <span class="chip manual"><span class="pip"></span>수동</span>
         <span class="chip skip"><span class="pip"></span>스킵</span>
       </div>
@@ -467,11 +483,12 @@
       <table>
         <thead>
           <tr>
-            <th style="width:30%">모듈</th>
+            <th style="width:26%">모듈</th>
             <th class="r">전체</th>
             <th class="r">PASS</th>
             <th class="r">FAIL</th>
             <th class="r">삭제</th>
+            <th class="r">대기</th>
             <th class="r">수동</th>
             <th class="r">스킵</th>
           </tr>
@@ -484,6 +501,7 @@
             <span class="p" style="width:82.6923076923077%"></span>
             <span class="f" style="width:0%"></span>
             <span class="d" style="width:12.5%"></span>
+            <span class="b" style="width:0%"></span>
             <span class="m" style="width:4.807692307692308%"></span>
             <span class="s" style="width:0%"></span>
           </div>
@@ -493,6 +511,7 @@
       <td class="r num"><span class="n-pass">86</span></td>
       <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="n-del">13</span></td>
+      <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="n-manual">5</span></td>
       <td class="r num"><span class="dash">—</span></td>
     </tr>
@@ -504,7 +523,8 @@
             <span class="p" style="width:88%"></span>
             <span class="f" style="width:2%"></span>
             <span class="d" style="width:0%"></span>
-            <span class="m" style="width:8%"></span>
+            <span class="b" style="width:6%"></span>
+            <span class="m" style="width:2%"></span>
             <span class="s" style="width:2%"></span>
           </div>
         </div>
@@ -513,7 +533,8 @@
       <td class="r num"><span class="n-pass">44</span></td>
       <td class="r num"><span class="n-fail">1</span></td>
       <td class="r num"><span class="dash">—</span></td>
-      <td class="r num"><span class="n-manual">4</span></td>
+      <td class="r num"><span class="n-blocked">3</span></td>
+      <td class="r num"><span class="n-manual">1</span></td>
       <td class="r num"><span class="n-skip">1</span></td>
     </tr>
 <tr>
@@ -524,7 +545,8 @@
             <span class="p" style="width:89.58333333333334%"></span>
             <span class="f" style="width:7.291666666666667%"></span>
             <span class="d" style="width:0%"></span>
-            <span class="m" style="width:3.125%"></span>
+            <span class="b" style="width:2.083333333333333%"></span>
+            <span class="m" style="width:1.0416666666666665%"></span>
             <span class="s" style="width:0%"></span>
           </div>
         </div>
@@ -533,7 +555,8 @@
       <td class="r num"><span class="n-pass">86</span></td>
       <td class="r num"><span class="n-fail">7</span></td>
       <td class="r num"><span class="dash">—</span></td>
-      <td class="r num"><span class="n-manual">3</span></td>
+      <td class="r num"><span class="n-blocked">2</span></td>
+      <td class="r num"><span class="n-manual">1</span></td>
       <td class="r num"><span class="dash">—</span></td>
     </tr>
 <tr>
@@ -544,7 +567,8 @@
             <span class="p" style="width:92.78350515463917%"></span>
             <span class="f" style="width:4.123711340206185%"></span>
             <span class="d" style="width:0%"></span>
-            <span class="m" style="width:3.0927835051546393%"></span>
+            <span class="b" style="width:2.0618556701030926%"></span>
+            <span class="m" style="width:1.0309278350515463%"></span>
             <span class="s" style="width:0%"></span>
           </div>
         </div>
@@ -553,7 +577,8 @@
       <td class="r num"><span class="n-pass">90</span></td>
       <td class="r num"><span class="n-fail">4</span></td>
       <td class="r num"><span class="dash">—</span></td>
-      <td class="r num"><span class="n-manual">3</span></td>
+      <td class="r num"><span class="n-blocked">2</span></td>
+      <td class="r num"><span class="n-manual">1</span></td>
       <td class="r num"><span class="dash">—</span></td>
     </tr>
 <tr>
@@ -564,6 +589,7 @@
             <span class="p" style="width:86.15384615384616%"></span>
             <span class="f" style="width:0%"></span>
             <span class="d" style="width:0%"></span>
+            <span class="b" style="width:0%"></span>
             <span class="m" style="width:0%"></span>
             <span class="s" style="width:13.846153846153847%"></span>
           </div>
@@ -571,6 +597,7 @@
       </td>
       <td class="r num">65</td>
       <td class="r num"><span class="n-pass">56</span></td>
+      <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="dash">—</span></td>
@@ -584,6 +611,7 @@
             <span class="p" style="width:90.41095890410958%"></span>
             <span class="f" style="width:1.36986301369863%"></span>
             <span class="d" style="width:6.8493150684931505%"></span>
+            <span class="b" style="width:0%"></span>
             <span class="m" style="width:0%"></span>
             <span class="s" style="width:1.36986301369863%"></span>
           </div>
@@ -593,6 +621,7 @@
       <td class="r num"><span class="n-pass">66</span></td>
       <td class="r num"><span class="n-fail">1</span></td>
       <td class="r num"><span class="n-del">5</span></td>
+      <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="n-skip">1</span></td>
     </tr>
@@ -604,6 +633,7 @@
             <span class="p" style="width:94.20289855072464%"></span>
             <span class="f" style="width:0%"></span>
             <span class="d" style="width:0%"></span>
+            <span class="b" style="width:0%"></span>
             <span class="m" style="width:0%"></span>
             <span class="s" style="width:5.797101449275362%"></span>
           </div>
@@ -611,6 +641,7 @@
       </td>
       <td class="r num">69</td>
       <td class="r num"><span class="n-pass">65</span></td>
+      <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="dash">—</span></td>
@@ -624,7 +655,8 @@
             <span class="p" style="width:92.43697478991596%"></span>
             <span class="f" style="width:0%"></span>
             <span class="d" style="width:2.5210084033613445%"></span>
-            <span class="m" style="width:5.042016806722689%"></span>
+            <span class="b" style="width:2.5210084033613445%"></span>
+            <span class="m" style="width:2.5210084033613445%"></span>
             <span class="s" style="width:0%"></span>
           </div>
         </div>
@@ -633,7 +665,8 @@
       <td class="r num"><span class="n-pass">110</span></td>
       <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="n-del">3</span></td>
-      <td class="r num"><span class="n-manual">6</span></td>
+      <td class="r num"><span class="n-blocked">3</span></td>
+      <td class="r num"><span class="n-manual">3</span></td>
       <td class="r num"><span class="dash">—</span></td>
     </tr>
 <tr>
@@ -644,7 +677,8 @@
             <span class="p" style="width:85.07462686567165%"></span>
             <span class="f" style="width:0%"></span>
             <span class="d" style="width:0%"></span>
-            <span class="m" style="width:14.925373134328357%"></span>
+            <span class="b" style="width:4.477611940298507%"></span>
+            <span class="m" style="width:10.44776119402985%"></span>
             <span class="s" style="width:0%"></span>
           </div>
         </div>
@@ -653,7 +687,8 @@
       <td class="r num"><span class="n-pass">57</span></td>
       <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="dash">—</span></td>
-      <td class="r num"><span class="n-manual">10</span></td>
+      <td class="r num"><span class="n-blocked">3</span></td>
+      <td class="r num"><span class="n-manual">7</span></td>
       <td class="r num"><span class="dash">—</span></td>
     </tr>
 <tr>
@@ -664,6 +699,7 @@
             <span class="p" style="width:78.26086956521739%"></span>
             <span class="f" style="width:0%"></span>
             <span class="d" style="width:4.3478260869565215%"></span>
+            <span class="b" style="width:0%"></span>
             <span class="m" style="width:17.391304347826086%"></span>
             <span class="s" style="width:0%"></span>
           </div>
@@ -673,6 +709,7 @@
       <td class="r num"><span class="n-pass">54</span></td>
       <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="n-del">3</span></td>
+      <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="n-manual">12</span></td>
       <td class="r num"><span class="dash">—</span></td>
     </tr>
@@ -684,6 +721,7 @@
             <span class="p" style="width:90.47619047619048%"></span>
             <span class="f" style="width:0%"></span>
             <span class="d" style="width:6.349206349206349%"></span>
+            <span class="b" style="width:0%"></span>
             <span class="m" style="width:1.5873015873015872%"></span>
             <span class="s" style="width:1.5873015873015872%"></span>
           </div>
@@ -693,6 +731,7 @@
       <td class="r num"><span class="n-pass">57</span></td>
       <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="n-del">4</span></td>
+      <td class="r num"><span class="dash">—</span></td>
       <td class="r num"><span class="n-manual">1</span></td>
       <td class="r num"><span class="n-skip">1</span></td>
     </tr></tbody>
@@ -703,7 +742,8 @@
             <td class="r num n-pass">771</td>
             <td class="r num n-fail">13</td>
             <td class="r num n-del">28</td>
-            <td class="r num n-manual">44</td>
+            <td class="r num n-blocked">13</td>
+            <td class="r num n-manual">31</td>
             <td class="r num n-skip">16</td>
           </tr>
         </tfoot>
@@ -827,7 +867,7 @@
   <section id="manual-checks">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">04</span>수동 검증 필요 <span class="chip" style="margin-left:6px">44건</span></h2>
+        <h2 class="sec-title"><span class="idx">04</span>수동 검증 필요 <span class="chip" style="margin-left:6px">31건</span></h2>
         <p class="sec-sub">OAuth · 이메일 인증 · SMS · PG 결제 · PDF 내용 등 자동화가 불가하거나 권장되지 않는 케이스</p>
       </div>
     </div>
@@ -954,84 +994,6 @@
     </tr>
 
     <tr>
-      <td><span class="tc-id">EI-1-31</span></td>
-      <td>소개글 빈 값 저장 유효성 검증</td>
-      <td class="reason">폼 유효성 검증 — UI 미구현</td>
-    </tr>
-
-    <tr>
-      <td><span class="tc-id">EI-1-32</span></td>
-      <td>유효하지 않은 전화번호 입력 검증</td>
-      <td class="reason">폼 유효성 검증 — UI 미구현</td>
-    </tr>
-
-    <tr>
-      <td><span class="tc-id">EI-1-33</span></td>
-      <td>유효하지 않은 이메일 입력 검증</td>
-      <td class="reason">폼 유효성 검증 — UI 미구현</td>
-    </tr>
-
-    <tr>
-      <td><span class="tc-id">ER-0-02</span></td>
-      <td>ER 권한 검증 (UI 미출시)</td>
-      <td class="reason">PDF/링크 공유 UI 미출시</td>
-    </tr>
-
-    <tr>
-      <td><span class="tc-id">ER-1-07</span></td>
-      <td>ER 1번 시나리오 (UI 미출시)</td>
-      <td class="reason">PDF/링크 공유 UI 미출시</td>
-    </tr>
-
-    <tr>
-      <td><span class="tc-id">ER-1-14</span></td>
-      <td>ER 1번 시나리오 (UI 미출시)</td>
-      <td class="reason">PDF/링크 공유 UI 미출시</td>
-    </tr>
-
-    <tr>
-      <td><span class="tc-id">HOME-TA-3-16</span></td>
-      <td>세무사 홈 — 항목 (UI 미출시)</td>
-      <td class="reason">관련 UI 미출시</td>
-    </tr>
-
-    <tr>
-      <td><span class="tc-id">HOME-TA-3-18</span></td>
-      <td>세무사 홈 — 항목 (UI 미출시)</td>
-      <td class="reason">관련 UI 미출시</td>
-    </tr>
-
-    <tr>
-      <td><span class="tc-id">HOME-TP-1-05</span></td>
-      <td>납세자 홈 — 항목 (UI 미출시)</td>
-      <td class="reason">관련 UI 미출시</td>
-    </tr>
-
-    <tr>
-      <td><span class="tc-id">HOME-TP-1-23</span></td>
-      <td>납세자 홈 — 항목 (UI 미출시)</td>
-      <td class="reason">관련 UI 미출시</td>
-    </tr>
-
-    <tr>
-      <td><span class="tc-id">MY-1-27</span></td>
-      <td>내 정보 — 항목 (UI 미출시)</td>
-      <td class="reason">관련 UI 미출시</td>
-    </tr>
-
-    <tr>
-      <td><span class="tc-id">MY-1-31</span></td>
-      <td>내 정보 — 항목 (UI 미출시)</td>
-      <td class="reason">관련 UI 미출시</td>
-    </tr>
-
-    <tr>
-      <td><span class="tc-id">MY-1-32</span></td>
-      <td>내 정보 — 항목 (UI 미출시)</td>
-      <td class="reason">관련 UI 미출시</td>
-    </tr>
-
-    <tr>
       <td><span class="tc-id">SP-1-03</span></td>
       <td></td>
       <td class="reason">결제 페이지 — PG 결제 자동화 불가</td>
@@ -1112,10 +1074,108 @@
     </div>
   </section>
 
+  <section id="blocked-list">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title"><span class="idx">05</span>출시 대기 <span class="chip" style="margin-left:6px">13건</span></h2>
+        <p class="sec-sub">UI 미출시 또는 의존 기능 미배포로 일시 비활성화 — 출시 후 즉시 자동화 활성화 가능</p>
+      </div>
+    </div>
+    <div class="card">
+      <table class="lt">
+        <thead>
+          <tr>
+            <th style="width:18%">TC-ID</th>
+            <th>설명</th>
+            <th style="width:34%">대기 사유</th>
+          </tr>
+        </thead>
+        <tbody>
+    <tr>
+      <td><span class="tc-id">EI-1-31</span></td>
+      <td>소개글 빈 값 저장 유효성 검증</td>
+      <td class="reason">폼 유효성 검증 UI 미구현 — 출시 후 자동화 가능</td>
+    </tr>
+
+    <tr>
+      <td><span class="tc-id">EI-1-32</span></td>
+      <td>유효하지 않은 전화번호 입력 검증</td>
+      <td class="reason">폼 유효성 검증 UI 미구현 — 출시 후 자동화 가능</td>
+    </tr>
+
+    <tr>
+      <td><span class="tc-id">EI-1-33</span></td>
+      <td>유효하지 않은 이메일 입력 검증</td>
+      <td class="reason">폼 유효성 검증 UI 미구현 — 출시 후 자동화 가능</td>
+    </tr>
+
+    <tr>
+      <td><span class="tc-id">ER-0-02</span></td>
+      <td>ER 권한 검증 (UI 미출시)</td>
+      <td class="reason">PDF/링크 공유 UI 미출시 — 출시 후 자동화 가능</td>
+    </tr>
+
+    <tr>
+      <td><span class="tc-id">ER-1-07</span></td>
+      <td>ER 1번 시나리오 (UI 미출시)</td>
+      <td class="reason">PDF/링크 공유 UI 미출시 — 출시 후 자동화 가능</td>
+    </tr>
+
+    <tr>
+      <td><span class="tc-id">ER-1-14</span></td>
+      <td>ER 1번 시나리오 (UI 미출시)</td>
+      <td class="reason">PDF/링크 공유 UI 미출시 — 출시 후 자동화 가능</td>
+    </tr>
+
+    <tr>
+      <td><span class="tc-id">HOME-TA-3-16</span></td>
+      <td>세무사 홈 — 항목 (UI 미출시)</td>
+      <td class="reason">관련 UI 미출시 — 출시 후 자동화 가능</td>
+    </tr>
+
+    <tr>
+      <td><span class="tc-id">HOME-TA-3-18</span></td>
+      <td>세무사 홈 — 항목 (UI 미출시)</td>
+      <td class="reason">관련 UI 미출시 — 출시 후 자동화 가능</td>
+    </tr>
+
+    <tr>
+      <td><span class="tc-id">HOME-TP-1-05</span></td>
+      <td>납세자 홈 — 항목 (UI 미출시)</td>
+      <td class="reason">관련 UI 미출시 — 출시 후 자동화 가능</td>
+    </tr>
+
+    <tr>
+      <td><span class="tc-id">HOME-TP-1-23</span></td>
+      <td>납세자 홈 — 항목 (UI 미출시)</td>
+      <td class="reason">관련 UI 미출시 — 출시 후 자동화 가능</td>
+    </tr>
+
+    <tr>
+      <td><span class="tc-id">MY-1-27</span></td>
+      <td>내 정보 — 항목 (UI 미출시)</td>
+      <td class="reason">관련 UI 미출시 — 출시 후 자동화 가능</td>
+    </tr>
+
+    <tr>
+      <td><span class="tc-id">MY-1-31</span></td>
+      <td>내 정보 — 항목 (UI 미출시)</td>
+      <td class="reason">관련 UI 미출시 — 출시 후 자동화 가능</td>
+    </tr>
+
+    <tr>
+      <td><span class="tc-id">MY-1-32</span></td>
+      <td>내 정보 — 항목 (UI 미출시)</td>
+      <td class="reason">관련 UI 미출시 — 출시 후 자동화 가능</td>
+    </tr></tbody>
+      </table>
+    </div>
+  </section>
+
   <section id="deprecated-list">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">05</span>요구기능 삭제 <span class="chip" style="margin-left:6px">28건</span></h2>
+        <h2 class="sec-title"><span class="idx">06</span>요구기능 삭제 <span class="chip" style="margin-left:6px">28건</span></h2>
         <p class="sec-sub">docs/qa에 정의되어 있으나 요구사항 변경으로 서비스에서 제거된 케이스 — 테스트 대상에서 공식 제외</p>
       </div>
     </div>
@@ -1303,7 +1363,7 @@
   <section id="skip-list">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">06</span>스킵 <span class="chip" style="margin-left:6px">16건</span></h2>
+        <h2 class="sec-title"><span class="idx">07</span>스킵 <span class="chip" style="margin-left:6px">16건</span></h2>
         <p class="sec-sub">현재 미구현 · 세션 파괴 위험 · 환경 불안정 등의 이유로 비활성화된 케이스</p>
       </div>
     </div>
@@ -1418,7 +1478,7 @@
   <section id="module-AUTH">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">07</span>AUTH 모듈 상세</h2>
+        <h2 class="sec-title"><span class="idx">08</span>AUTH 모듈 상세</h2>
         <p class="sec-sub">로그인 / 회원가입 — TC-ID · 결과 · 설명</p>
       </div>
     </div>
@@ -1964,7 +2024,7 @@
 <section id="module-MY">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">08</span>MY 모듈 상세</h2>
+        <h2 class="sec-title"><span class="idx">09</span>MY 모듈 상세</h2>
         <p class="sec-sub">내 정보 — TC-ID · 결과 · 설명</p>
       </div>
     </div>
@@ -1974,7 +2034,7 @@
           <span class="mod-tag">MY</span>
           <span class="mod-name">내 정보</span>
         </div>
-        <div class="mod-head-r"><span class="chip pass"><span class="pip"></span>PASS 44</span><span class="chip fail"><span class="pip"></span>FAIL 1</span><span class="chip manual"><span class="pip"></span>수동 4</span><span class="chip skip"><span class="pip"></span>스킵 1</span></div>
+        <div class="mod-head-r"><span class="chip pass"><span class="pip"></span>PASS 44</span><span class="chip fail"><span class="pip"></span>FAIL 1</span><span class="chip blocked"><span class="pip"></span>대기 3</span><span class="chip manual"><span class="pip"></span>수동 1</span><span class="chip skip"><span class="pip"></span>스킵 1</span></div>
       </div>
       <table class="lt">
         <thead>
@@ -2176,7 +2236,7 @@
     </tr>
 <tr id="tc-MY-1-27">
       <td><span class="tc-id">MY-1-27</span></td>
-      <td><span class="pill manual"><span class="pip"></span>수동</span></td>
+      <td><span class="pill blocked"><span class="pip"></span>대기</span></td>
       <td>내 정보 — 항목 (UI 미출시)</td>
     </tr>
 <tr id="tc-MY-1-28">
@@ -2191,12 +2251,12 @@
     </tr>
 <tr id="tc-MY-1-31">
       <td><span class="tc-id">MY-1-31</span></td>
-      <td><span class="pill manual"><span class="pip"></span>수동</span></td>
+      <td><span class="pill blocked"><span class="pip"></span>대기</span></td>
       <td>내 정보 — 항목 (UI 미출시)</td>
     </tr>
 <tr id="tc-MY-1-32">
       <td><span class="tc-id">MY-1-32</span></td>
-      <td><span class="pill manual"><span class="pip"></span>수동</span></td>
+      <td><span class="pill blocked"><span class="pip"></span>대기</span></td>
       <td>내 정보 — 항목 (UI 미출시)</td>
     </tr>
 <tr id="tc-MY-1-33">
@@ -2240,7 +2300,7 @@
 <section id="module-HOME-TP">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">09</span>HOME-TP 모듈 상세</h2>
+        <h2 class="sec-title"><span class="idx">10</span>HOME-TP 모듈 상세</h2>
         <p class="sec-sub">홈·GNB·알림 (납세자) — TC-ID · 결과 · 설명</p>
       </div>
     </div>
@@ -2250,7 +2310,7 @@
           <span class="mod-tag">HOME-TP</span>
           <span class="mod-name">홈·GNB·알림 (납세자)</span>
         </div>
-        <div class="mod-head-r"><span class="chip pass"><span class="pip"></span>PASS 86</span><span class="chip fail"><span class="pip"></span>FAIL 7</span><span class="chip manual"><span class="pip"></span>수동 3</span></div>
+        <div class="mod-head-r"><span class="chip pass"><span class="pip"></span>PASS 86</span><span class="chip fail"><span class="pip"></span>FAIL 7</span><span class="chip blocked"><span class="pip"></span>대기 2</span><span class="chip manual"><span class="pip"></span>수동 1</span></div>
       </div>
       <table class="lt">
         <thead>
@@ -2352,7 +2412,7 @@
     </tr>
 <tr id="tc-HOME-TP-1-05">
       <td><span class="tc-id">HOME-TP-1-05</span></td>
-      <td><span class="pill manual"><span class="pip"></span>수동</span></td>
+      <td><span class="pill blocked"><span class="pip"></span>대기</span></td>
       <td>납세자 홈 — 항목 (UI 미출시)</td>
     </tr>
 <tr id="tc-HOME-TP-1-06">
@@ -2457,7 +2517,7 @@
     </tr>
 <tr id="tc-HOME-TP-1-23">
       <td><span class="tc-id">HOME-TP-1-23</span></td>
-      <td><span class="pill manual"><span class="pip"></span>수동</span></td>
+      <td><span class="pill blocked"><span class="pip"></span>대기</span></td>
       <td>납세자 홈 — 항목 (UI 미출시)</td>
     </tr>
 <tr id="tc-HOME-TP-1-24">
@@ -2746,7 +2806,7 @@
 <section id="module-HOME-TA">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">10</span>HOME-TA 모듈 상세</h2>
+        <h2 class="sec-title"><span class="idx">11</span>HOME-TA 모듈 상세</h2>
         <p class="sec-sub">홈·GNB·알림 (세무사) — TC-ID · 결과 · 설명</p>
       </div>
     </div>
@@ -2756,7 +2816,7 @@
           <span class="mod-tag">HOME-TA</span>
           <span class="mod-name">홈·GNB·알림 (세무사)</span>
         </div>
-        <div class="mod-head-r"><span class="chip pass"><span class="pip"></span>PASS 90</span><span class="chip fail"><span class="pip"></span>FAIL 4</span><span class="chip manual"><span class="pip"></span>수동 3</span></div>
+        <div class="mod-head-r"><span class="chip pass"><span class="pip"></span>PASS 90</span><span class="chip fail"><span class="pip"></span>FAIL 4</span><span class="chip blocked"><span class="pip"></span>대기 2</span><span class="chip manual"><span class="pip"></span>수동 1</span></div>
       </div>
       <table class="lt">
         <thead>
@@ -3168,7 +3228,7 @@
     </tr>
 <tr id="tc-HOME-TA-3-16">
       <td><span class="tc-id">HOME-TA-3-16</span></td>
-      <td><span class="pill manual"><span class="pip"></span>수동</span></td>
+      <td><span class="pill blocked"><span class="pip"></span>대기</span></td>
       <td>세무사 홈 — 항목 (UI 미출시)</td>
     </tr>
 <tr id="tc-HOME-TA-3-17">
@@ -3178,7 +3238,7 @@
     </tr>
 <tr id="tc-HOME-TA-3-18">
       <td><span class="tc-id">HOME-TA-3-18</span></td>
-      <td><span class="pill manual"><span class="pip"></span>수동</span></td>
+      <td><span class="pill blocked"><span class="pip"></span>대기</span></td>
       <td>세무사 홈 — 항목 (UI 미출시)</td>
     </tr>
 <tr id="tc-HOME-TA-3-19">
@@ -3257,7 +3317,7 @@
 <section id="module-TA">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">11</span>TA 모듈 상세</h2>
+        <h2 class="sec-title"><span class="idx">12</span>TA 모듈 상세</h2>
         <p class="sec-sub">세무대리인 찾기 — TC-ID · 결과 · 설명</p>
       </div>
     </div>
@@ -3608,7 +3668,7 @@
 <section id="module-GO">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">12</span>GO 모듈 상세</h2>
+        <h2 class="sec-title"><span class="idx">13</span>GO 모듈 상세</h2>
         <p class="sec-sub">현직 공무원 탐색 — TC-ID · 결과 · 설명</p>
       </div>
     </div>
@@ -3999,7 +4059,7 @@
 <section id="module-EO">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">13</span>EO 모듈 상세</h2>
+        <h2 class="sec-title"><span class="idx">14</span>EO 모듈 상세</h2>
         <p class="sec-sub">전직 공무원 찾기 — TC-ID · 결과 · 설명</p>
       </div>
     </div>
@@ -4370,7 +4430,7 @@
 <section id="module-EI">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">14</span>EI 모듈 상세</h2>
+        <h2 class="sec-title"><span class="idx">15</span>EI 모듈 상세</h2>
         <p class="sec-sub">전문 이력 관리 — TC-ID · 결과 · 설명</p>
       </div>
     </div>
@@ -4380,7 +4440,7 @@
           <span class="mod-tag">EI</span>
           <span class="mod-name">전문 이력 관리</span>
         </div>
-        <div class="mod-head-r"><span class="chip pass"><span class="pip"></span>PASS 110</span><span class="chip del"><span class="pip"></span>삭제 3</span><span class="chip manual"><span class="pip"></span>수동 6</span></div>
+        <div class="mod-head-r"><span class="chip pass"><span class="pip"></span>PASS 110</span><span class="chip del"><span class="pip"></span>삭제 3</span><span class="chip blocked"><span class="pip"></span>대기 3</span><span class="chip manual"><span class="pip"></span>수동 3</span></div>
       </div>
       <table class="lt">
         <thead>
@@ -4582,17 +4642,17 @@
     </tr>
 <tr id="tc-EI-1-31">
       <td><span class="tc-id">EI-1-31</span></td>
-      <td><span class="pill manual"><span class="pip"></span>수동</span></td>
+      <td><span class="pill blocked"><span class="pip"></span>대기</span></td>
       <td>소개글 빈 값 저장 유효성 검증</td>
     </tr>
 <tr id="tc-EI-1-32">
       <td><span class="tc-id">EI-1-32</span></td>
-      <td><span class="pill manual"><span class="pip"></span>수동</span></td>
+      <td><span class="pill blocked"><span class="pip"></span>대기</span></td>
       <td>유효하지 않은 전화번호 입력 검증</td>
     </tr>
 <tr id="tc-EI-1-33">
       <td><span class="tc-id">EI-1-33</span></td>
-      <td><span class="pill manual"><span class="pip"></span>수동</span></td>
+      <td><span class="pill blocked"><span class="pip"></span>대기</span></td>
       <td>유효하지 않은 이메일 입력 검증</td>
     </tr>
 <tr id="tc-EI-1-34">
@@ -4991,7 +5051,7 @@
 <section id="module-ER">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">15</span>ER 모듈 상세</h2>
+        <h2 class="sec-title"><span class="idx">16</span>ER 모듈 상세</h2>
         <p class="sec-sub">전문 이력 리포트 — TC-ID · 결과 · 설명</p>
       </div>
     </div>
@@ -5001,7 +5061,7 @@
           <span class="mod-tag">ER</span>
           <span class="mod-name">전문 이력 리포트</span>
         </div>
-        <div class="mod-head-r"><span class="chip pass"><span class="pip"></span>PASS 57</span><span class="chip manual"><span class="pip"></span>수동 10</span></div>
+        <div class="mod-head-r"><span class="chip pass"><span class="pip"></span>PASS 57</span><span class="chip blocked"><span class="pip"></span>대기 3</span><span class="chip manual"><span class="pip"></span>수동 7</span></div>
       </div>
       <table class="lt">
         <thead>
@@ -5018,7 +5078,7 @@
     </tr>
 <tr id="tc-ER-0-02">
       <td><span class="tc-id">ER-0-02</span></td>
-      <td><span class="pill manual"><span class="pip"></span>수동</span></td>
+      <td><span class="pill blocked"><span class="pip"></span>대기</span></td>
       <td>ER 권한 검증 (UI 미출시)</td>
     </tr>
 <tr id="tc-ER-0-03">
@@ -5088,7 +5148,7 @@
     </tr>
 <tr id="tc-ER-1-07">
       <td><span class="tc-id">ER-1-07</span></td>
-      <td><span class="pill manual"><span class="pip"></span>수동</span></td>
+      <td><span class="pill blocked"><span class="pip"></span>대기</span></td>
       <td>ER 1번 시나리오 (UI 미출시)</td>
     </tr>
 <tr id="tc-ER-1-11">
@@ -5108,7 +5168,7 @@
     </tr>
 <tr id="tc-ER-1-14">
       <td><span class="tc-id">ER-1-14</span></td>
-      <td><span class="pill manual"><span class="pip"></span>수동</span></td>
+      <td><span class="pill blocked"><span class="pip"></span>대기</span></td>
       <td>ER 1번 시나리오 (UI 미출시)</td>
     </tr>
 <tr id="tc-ER-1-15">
@@ -5352,7 +5412,7 @@
 <section id="module-SP">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">16</span>SP 모듈 상세</h2>
+        <h2 class="sec-title"><span class="idx">17</span>SP 모듈 상세</h2>
         <p class="sec-sub">구독 관리 — TC-ID · 결과 · 설명</p>
       </div>
     </div>
@@ -5723,7 +5783,7 @@
 <section id="module-TF">
     <div class="sec-head">
       <div>
-        <h2 class="sec-title"><span class="idx">17</span>TF 모듈 상세</h2>
+        <h2 class="sec-title"><span class="idx">18</span>TF 모듈 상세</h2>
         <p class="sec-sub">법인&amp;팀연동관리 — TC-ID · 결과 · 설명</p>
       </div>
     </div>
@@ -6063,7 +6123,7 @@
   </section>
 
   <footer>
-    <div>Anchor QA · 자동 생성 리포트 · 2026. 04. 29. PM 03:22</div>
+    <div>Anchor QA · 자동 생성 리포트 · 2026. 04. 29. PM 03:34</div>
     <div>
       <a href="./index.html">E2E</a>
       <span style="margin:0 8px;color:var(--ink-4)">·</span>

@@ -491,13 +491,13 @@ test.describe('ER — 전문이력리포트', () => {
 // ─── 누락 TC 보강 — docs/qa 기준 ────────────────────────────────
 
 test.describe('ER — 수동 검증 필요 (Manual)', () => {
-  test.skip('[ER-0-02][M] ER 권한 검증 (UI 미출시)', async () => {
-    // MANUAL: PDF/링크 공유 UI 미출시
+  test.skip('[ER-0-02][B] ER 권한 검증 (UI 미출시)', async () => {
+    // BLOCKED: PDF/링크 공유 UI 미출시 — 출시 후 자동화 가능
   });
-  test.skip('[ER-1-07][M] ER 1번 시나리오 (UI 미출시)', async () => {
-    // MANUAL: PDF/링크 공유 UI 미출시
+  test.skip('[ER-1-07][B] ER 1번 시나리오 (UI 미출시)', async () => {
+    // BLOCKED: PDF/링크 공유 UI 미출시 — 출시 후 자동화 가능
   });
-  test.skip('[ER-1-14][M] ER 1번 시나리오 (UI 미출시)', async () => {
-    // MANUAL: PDF/링크 공유 UI 미출시
+  test.skip('[ER-1-14][B] ER 1번 시나리오 (UI 미출시)', async () => {
+    // BLOCKED: PDF/링크 공유 UI 미출시 — 출시 후 자동화 가능
   });
 });

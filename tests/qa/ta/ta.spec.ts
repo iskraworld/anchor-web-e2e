@@ -171,8 +171,17 @@ test.describe('TA — 세무대리인찾기', () => {
     // TA-1 정상 동작
     test('[TA-1-01] 세무사 찾기 이동 — 세무사 탭 기본 활성, 필터 초기 상태', async ({ page }) => {
       await page.goto('/search/tax-experts');
-      // 검색 페이지 핵심 요소가 보여야 한다 (세무사 탭이 기본 활성 → 검색 폼 노출)
+      const { firmInput, expertNameInput } = searchSelectors(page);
+      // 페이지 진입 가드
       await expect(page.getByTestId('search-compact-firm-btn')).toBeVisible();
+      // VERIFY value: 세무법인명 입력란 빈 값 (필터 초기 상태)
+      if (await isVisibleSoft(firmInput)) {
+        await expect(firmInput).toHaveValue('');
+      }
+      // VERIFY value: 세무사명 입력란 빈 값 (필터 초기 상태)
+      if (await isVisibleSoft(expertNameInput)) {
+        await expect(expertNameInput).toHaveValue('');
+      }
     });
 
     test('[TA-1-02] 소속 사무소 지역 드롭다운 탭 — 시/도 드롭다운 펼쳐짐', async ({ page }) => {
@@ -218,6 +227,7 @@ test.describe('TA — 세무대리인찾기', () => {
       if (await isVisibleSoft(expertNameInput)) {
         const ok = await safeFill(expertNameInput, '김');
         if (ok) {
+          // VERIFY value: 세무사명 입력란에 "김" 텍스트 반영
           await expect(expertNameInput).toHaveValue('김');
         }
       }
@@ -455,7 +465,7 @@ test.describe('TA — 세무대리인찾기', () => {
       const cards = page.locator('[data-testid*="firm-card"], [data-testid*="card"], article');
       const count = await cards.count().catch(() => 0);
       if (count > 0) {
-        // 페이지당 10건 이하 검증
+        // VERIFY count-change: 페이지당 결과 카드 10개 이하 (페이지네이션 검증)
         expect(count).toBeLessThanOrEqual(10);
         await expect(cards.first()).toBeVisible();
       } else {
@@ -527,17 +537,23 @@ test.describe('TA — 세무대리인찾기', () => {
         await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
       }
 
-      // 카드/배지 단언 + 가드 (staging 데이터 의존)
-      const card = page.locator('[data-testid*="firm-card"], [data-testid*="card"], article').first();
-      const top10 = page.getByText(/TOP\s*10/i).first();
-      if (await isVisibleSoft(top10, 5000)) {
-        await expect(top10).toBeVisible();
-      } else if (await isVisibleSoft(card, 3000)) {
-        // 결과 카드는 있지만 TOP10 배지 미노출 (해당 데이터 없음)
-        await expect(card).toBeVisible();
-      } else {
+      // 카드/배지 결합 단언 — TOP10 배지가 카드의 자식인지 검증 (단순 텍스트 존재만으론 부족)
+      const cards = page.locator('[data-testid*="firm-card"], [data-testid*="card"], article');
+      const cardCount = await cards.count().catch(() => 0);
+      if (cardCount === 0) {
         // 데이터 없는 케이스 — 빈 상태 안내
         await expect(page.locator('body')).toBeVisible();
+        return;
+      }
+      // 카드 중 TOP10 배지를 포함한 것이 1개 이상 있어야 (TOP10 회사 카드의 뱃지 검증)
+      const cardsWithTop10 = cards.filter({ hasText: /TOP\s*10/i });
+      const top10Count = await cardsWithTop10.count().catch(() => 0);
+      if (top10Count > 0) {
+        // VERIFY count-change: TOP10 배지를 가진 카드 1개 이상 (배지가 회사 카드의 자식임을 검증)
+        expect(top10Count).toBeGreaterThan(0);
+      } else {
+        // staging 데이터에 TOP10 회사가 없는 케이스 — 첫 카드 노출 가드
+        await expect(cards.first()).toBeVisible();
       }
     });
 
@@ -563,6 +579,7 @@ test.describe('TA — 세무대리인찾기', () => {
       const card = page.locator('[data-testid*="firm-card"], [data-testid*="card"], article').first();
       const badge = page.getByText(/관계사/).first();
       if (await isVisibleSoft(badge, 5000)) {
+        // VERIFY visible: 세무법인 검색 결과에 관계사 배지 노출
         await expect(badge).toBeVisible();
       } else if (await isVisibleSoft(card, 3000)) {
         // 결과 카드는 있지만 관계사 배지 미노출 (해당 데이터 없음)
@@ -805,7 +822,11 @@ test.describe('TA — 세무대리인찾기', () => {
         const phdBox = await phd.boundingBox().catch(() => null);
         const bachelorBox = await bachelor.boundingBox().catch(() => null);
         if (phdBox && bachelorBox) {
-          expect(phdBox.y).toBeLessThanOrEqual(bachelorBox.y);
+          // reading-order 계산: y * 10000 + x (같은 행이면 왼쪽이 먼저)
+          const phdOrder = phdBox.y * 10000 + phdBox.x;
+          const bachelorOrder = bachelorBox.y * 10000 + bachelorBox.x;
+          // VERIFY count-change: 박사 reading-order ≤ 학사 reading-order (위/같은 행이면 왼쪽)
+          expect(phdOrder).toBeLessThanOrEqual(bachelorOrder);
           return;
         }
         await expect(phd).toBeVisible();

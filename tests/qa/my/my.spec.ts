@@ -39,7 +39,7 @@ test.describe('MY — 내 정보', () => {
     test('[MY-0-01] 납세자 내 정보 화면 진입 및 기본 구성', async ({ page }) => {
       await page.goto('/my-info');
       await expect(page.locator('body')).toBeVisible();
-      // 계정 정보 영역 (testId 기반)
+      // VERIFY visible: 내 정보 화면 진입 후 핵심 항목(이메일/비밀번호/이름/전화번호/탈퇴) 노출
       await expect(page.getByTestId('myinfo-email-label')).toBeVisible();
       await expect(page.getByTestId('myinfo-password-label')).toBeVisible();
       await expect(page.getByTestId('myinfo-name-label')).toBeVisible();
@@ -320,7 +320,7 @@ test.describe('MY — 내 정보', () => {
           await cancelBtn.first().click({ timeout: 5000 });
         }
       } catch {}
-      // 페이지 자체가 유지되는지만 확인
+      // VERIFY visible: 취소 후 페이지 복귀 — 이메일 라벨 유지
       await expect(page.getByTestId('myinfo-email-label')).toBeVisible();
     });
 
@@ -436,6 +436,7 @@ test.describe('MY — 내 정보', () => {
           return;
         }
         await searchInput.first().fill('서울 강남', { timeout: 5000 });
+        // VERIFY value: 주소 검색 입력값 반영 (docs "도로명주소 선택 후 변경 완료" 1차 단계)
         await expect(searchInput.first()).toHaveValue(/서울 강남/);
       } catch {
         await expect(page.locator('body')).toBeVisible();
@@ -455,7 +456,7 @@ test.describe('MY — 내 정보', () => {
         // 모달이 열려 있어야 함 (취소 버튼이 보이므로)
         const modalSearch = page.getByPlaceholder(/주소 검색/);
         await cancelBtn.first().click({ timeout: 5000 });
-        // docs 기대: 취소 → 모달 닫힘 (검색 input not visible)
+        // VERIFY hidden: 취소 클릭 후 주소 검색 input 사라짐 (모달 닫힘)
         await expect(modalSearch.first()).not.toBeVisible({ timeout: 5000 });
       } catch {
         await expect(page.locator('body')).toBeVisible();
@@ -590,7 +591,7 @@ test.describe('MY — 내 정보', () => {
           return;
         }
         await confirm.first().click({ timeout: 5000 });
-        // docs 기대: 해제 진행 → 확인 팝업 닫힘
+        // VERIFY hidden: 해제 클릭 후 확인 팝업 닫힘
         await expect(confirm.first()).not.toBeVisible({ timeout: 5000 });
       } catch {
         await expect(page.locator('body')).toBeVisible();
@@ -624,10 +625,10 @@ test.describe('MY — 내 정보', () => {
     test('[MY-1-23] 세무사 정보 영역 — 세무사 번호 읽기 전용 표시', async ({ page }) => {
       await page.goto('/my-info');
       await expect(page.locator('body')).toBeVisible();
-      // 세무사 번호 라벨 표시
+      // VERIFY visible: 세무사 번호 라벨 노출
       await expect(page.getByTestId('myinfo-tax-license-label')).toBeVisible();
-      // 변경 버튼 미제공 확인 (label 인접 영역 내)
       const licenseChangeBtn = changeButtonNear(page, 'myinfo-tax-license-label');
+      // VERIFY count: 변경 버튼 0개 (읽기 전용 검증)
       await expect(licenseChangeBtn).toHaveCount(0);
     });
 
@@ -723,7 +724,7 @@ test.describe('MY — 내 정보', () => {
         await inputs.nth(0).fill('CurrentPw123!', { timeout: 5000 });
         await inputs.nth(1).fill('abc', { timeout: 5000 });
         await inputs.nth(2).fill('abc', { timeout: 5000 });
-        // docs 기대: 인라인 에러 표시 (유효성 미충족)
+        // VERIFY visible: 유효성 미충족 시 인라인 에러 메시지 노출
         const errorMsg = page.locator('[role="alert"], [class*="error"], [class*="invalid"]').first()
           .or(page.getByText(/규칙|유효|영문|숫자|특수문자|글자/i).first());
         await expect(errorMsg).toBeVisible({ timeout: 5000 });

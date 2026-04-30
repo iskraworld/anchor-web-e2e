@@ -176,6 +176,86 @@ automation-patterns.md §⚡ 핵심 원칙 참고.
 
 ---
 
+### VERIFY 코멘트 컨벤션 — AI 판단 근거 명시
+
+**왜 필요한가:**
+fake-pass 검출은 단언 코드만 본다. 그러나 **단언이 정말 docs 기대 결과를 검증하는가**는 AI의 해석. 사람이 샘플 검토할 때 "왜 이게 PASS인가?"를 즉시 파악할 수 있어야 한다.
+
+**해결책:** 모든 단언에 `// VERIFY` 코멘트로 검증 근거를 한 줄로 표기. audit가 코멘트와 단언의 정합성을 검증.
+
+#### 표준 키워드 셋
+
+| 키워드 | 의미 | 매칭 단언 |
+|---|---|---|
+| `count` | 요소 개수 | `toHaveCount` |
+| `count-change` | 개수 변화 (before/after 비교) | `toBeLessThan` / `toBeGreaterThan` + 변수 비교 |
+| `text` | 텍스트 내용 | `toHaveText` / `toContainText` |
+| `visible` | 요소 노출 | `toBeVisible` |
+| `hidden` | 요소 숨김 | `toBeHidden` / `not.toBeVisible` |
+| `url` | URL 변경 | `toHaveURL` |
+| `attr` | 속성 값 | `toHaveAttribute` |
+| `value` | 입력값 | `toHaveValue` |
+| `enabled` | 버튼·입력 활성 | `toBeEnabled` |
+| `disabled` | 버튼·입력 비활성 | `toBeDisabled` |
+
+#### 형식
+
+```
+// VERIFY <keyword>: <자연어 설명>
+<해당 단언>
+```
+
+#### 예시
+
+```typescript
+test('[TA-1-09] 세무법인 탭 선택 — 결과 전환', async ({ page }) => {
+  // 페이지 진입 가드
+  if (!(await isVisibleSoft(compactFirmBtn, 5000))) {
+    await expect(page.locator('body')).toBeVisible();
+    return;
+  }
+  await safeClick(compactFirmBtn);
+
+  // VERIFY visible: 세무법인 탭 클릭 후 firm-card 노출 (docs "세무법인 결과로 전환" 검증)
+  await expect(page.getByTestId('firm-card').first()).toBeVisible();
+});
+```
+
+다중 검증 시 라인 여러 개 허용:
+```typescript
+// VERIFY url: /search/123 으로 이동
+await expect(page).toHaveURL(/\/search\/123/);
+// VERIFY visible: 결과 카드 노출
+await expect(page.getByTestId('result-card')).toBeVisible();
+```
+
+#### AMBIGUOUS_DOC와의 관계
+
+기존 `AMBIGUOUS_DOC` 코멘트는 **docs 모호 시 AI 해석 근거**를 표기. VERIFY는 **단언 자체가 무엇을 검증하는가**를 표기. 둘은 보완 관계:
+
+```typescript
+test('[GO-1-22] 조건에 따른 결과 필터링', async ({ page }) => {
+  // AMBIGUOUS_DOC: docs "필터링" — 행 수 변화/특정 결과 표시 둘 다 가능, 신뢰도 70%로 행 수 변화로 해석
+  const before = await rows.count();
+  await applyFilter();
+  const after = await rows.count();
+
+  // VERIFY count-change: 필터 적용 후 행 수 감소
+  expect(after).toBeLessThan(before);
+});
+```
+
+#### audit 정합성 검증
+
+`verify-coverage.mjs --audit`이 다음을 자동 검사:
+- VERIFY 코멘트 직후의 단언이 키워드와 매칭되는가
+- 예: `// VERIFY count-change` 다음에 `toBeLessThan/GreaterThan` 또는 변수 비교가 있는가
+- 불일치 시 **AMBIGUOUS_VERIFY** 의심으로 리포트에 표시
+
+VERIFY 자체가 새 fake-pass 통로가 되지 않도록 정합성 검증이 필수. 키워드 표준화 + audit 룰이 그 보호.
+
+---
+
 ## ⚠️ 핵심 원칙
 
 **docs/qa 활성 TC-ID == tests/qa spec TC-ID (test + test.skip 합계)**

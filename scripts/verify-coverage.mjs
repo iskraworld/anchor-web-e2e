@@ -57,6 +57,52 @@ const SPEC_TC_RE = /test(?:\.skip)?\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\
 // 한 test() 블록의 본문을 추출 — fake-pass 검출용
 const TEST_BODY_RE = /\btest\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)\][^'"]+)['"][^{]*\{([\s\S]*?)\n\s{2,4}\}\s*\)\s*;/g;
 
+// VERIFY 키워드 → 매칭 단언 패턴
+const VERIFY_KEYWORD_MAP = {
+  'count':         /toHaveCount/,
+  'count-change':  /toBeLessThan|toBeGreaterThan|toBeLessThanOrEqual|toBeGreaterThanOrEqual|\.toBe\s*\(\s*\w+/,
+  'text':          /toHaveText|toContainText/,
+  'visible':       /toBeVisible/,
+  'hidden':        /toBeHidden|not\.toBeVisible/,
+  'url':           /toHaveURL/,
+  'attr':          /toHaveAttribute/,
+  'value':         /toHaveValue/,
+  'enabled':       /toBeEnabled/,
+  'disabled':      /toBeDisabled/,
+};
+
+function detectVerifyMismatch(body, testId) {
+  const lines = body.split('\n');
+  const mismatches = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/\/\/\s*VERIFY\s+([a-z-]+)\s*:\s*(.+)/i);
+    if (!m) continue;
+    const keyword = m[1].toLowerCase();
+    const desc = m[2].trim();
+    if (!(keyword in VERIFY_KEYWORD_MAP)) {
+      mismatches.push({ id: testId, keyword, desc, reason: 'unknown-keyword' });
+      continue;
+    }
+    let assertion = '';
+    for (let j = i + 1; j < Math.min(i + 6, lines.length); j++) {
+      const line = lines[j];
+      if (/\/\/\s*VERIFY\s+/i.test(line)) break;
+      if (/expect\s*\(|toBeLessThan|toBeGreaterThan|\.toBe\s*\(/.test(line)) {
+        assertion = line.trim();
+        break;
+      }
+    }
+    if (!assertion) {
+      mismatches.push({ id: testId, keyword, desc, reason: 'no-assertion-after' });
+      continue;
+    }
+    if (!VERIFY_KEYWORD_MAP[keyword].test(assertion)) {
+      mismatches.push({ id: testId, keyword, desc, assertion: assertion.slice(0, 80), reason: 'keyword-mismatch' });
+    }
+  }
+  return mismatches;
+}
+
 function collectSpecTcIds(specDir) {
   const ids = new Set();
   const manualItems = [];        // [M]
@@ -64,6 +110,7 @@ function collectSpecTcIds(specDir) {
   const deprecatedItems = [];    // [D]
   const activeTests = [];        // test() — fake-pass 검출용
   const ambiguousItems = [];     // // AMBIGUOUS_DOC: 코멘트 — 모호 docs 검토 대상
+  const verifyMismatches = [];   // // VERIFY <keyword>: 정합성 깨진 항목
 
   function reasonAfter(lines, i, prefix) {
     for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
@@ -106,6 +153,9 @@ function collectSpecTcIds(specDir) {
           // AMBIGUOUS_DOC 마크 검출 — body 내부의 코멘트
           const ambig = body.match(/\/\/\s*AMBIGUOUS_DOC:\s*([^\n]+)/i);
           if (ambig) ambiguousItems.push({ id: mm[2], note: ambig[1].trim() });
+          // VERIFY 정합성 검사
+          const vm = detectVerifyMismatch(body, mm[2]);
+          for (const item of vm) verifyMismatches.push(item);
         }
         TEST_BODY_RE.lastIndex = 0;
       }
@@ -113,7 +163,7 @@ function collectSpecTcIds(specDir) {
   }
 
   walk(specDir);
-  return { ids, manualItems, blockedItems, deprecatedItems, activeTests, ambiguousItems };
+  return { ids, manualItems, blockedItems, deprecatedItems, activeTests, ambiguousItems, verifyMismatches };
 }
 
 // ── 화이트리스트 ─────────────────────────────────────────────────────
@@ -167,7 +217,7 @@ function detectFakePass(activeTest) {
 const auditMode = process.argv.includes('--audit');
 
 const { active: docIds, deleted: deletedIds } = collectDocsTcIds(resolve(root, 'docs/qa'));
-const { ids: specIds, manualItems, blockedItems, deprecatedItems, activeTests, ambiguousItems } = collectSpecTcIds(resolve(root, 'tests/qa'));
+const { ids: specIds, manualItems, blockedItems, deprecatedItems, activeTests, ambiguousItems, verifyMismatches } = collectSpecTcIds(resolve(root, 'tests/qa'));
 
 // docs 활성 TC 중 spec에 없는 것 → 누락
 const missing = [...docIds].filter(id => !specIds.has(id)).sort();
@@ -293,7 +343,37 @@ if (auditMode) {
     console.log('▸ docs 모호 의심 없음 ✅\n');
   }
 
-  // 7) 에이전트 위임 시 안전장치 알림 (D)
+  // 7) VERIFY 정합성 검사 — 키워드와 단언 매칭
+  if (verifyMismatches.length > 0) {
+    console.log(`▸ VERIFY 정합성 깨진 ${verifyMismatches.length}건 — AMBIGUOUS_VERIFY 의심`);
+    const byReason = { 'unknown-keyword': [], 'no-assertion-after': [], 'keyword-mismatch': [] };
+    for (const it of verifyMismatches) (byReason[it.reason] ??= []).push(it);
+    if (byReason['unknown-keyword'].length > 0) {
+      console.log(`  ⚠️  알 수 없는 키워드 ${byReason['unknown-keyword'].length}건 (표준 셋: count/count-change/text/visible/hidden/url/attr/value/enabled/disabled):`);
+      for (const it of byReason['unknown-keyword'].slice(0, 5)) {
+        console.log(`    ${it.id.padEnd(15)} VERIFY ${it.keyword}: "${it.desc.slice(0, 60)}"`);
+      }
+    }
+    if (byReason['no-assertion-after'].length > 0) {
+      console.log(`  ⚠️  VERIFY 직후 단언 없음 ${byReason['no-assertion-after'].length}건:`);
+      for (const it of byReason['no-assertion-after'].slice(0, 5)) {
+        console.log(`    ${it.id.padEnd(15)} VERIFY ${it.keyword}: "${it.desc.slice(0, 60)}"`);
+      }
+    }
+    if (byReason['keyword-mismatch'].length > 0) {
+      console.log(`  ⚠️  키워드↔단언 불일치 ${byReason['keyword-mismatch'].length}건:`);
+      for (const it of byReason['keyword-mismatch'].slice(0, 5)) {
+        console.log(`    ${it.id.padEnd(15)} VERIFY ${it.keyword}: "${it.desc.slice(0, 40)}"`);
+        console.log(`    ${' '.repeat(15)}   → 단언: ${it.assertion}`);
+      }
+    }
+    console.log('   → phase2-code-generation.md §VERIFY 코멘트 컨벤션 참고\n');
+    auditWarnings += verifyMismatches.length;
+  } else {
+    console.log('▸ VERIFY 정합성 ✅ (불일치 0건)\n');
+  }
+
+  // 8) 에이전트 위임 시 안전장치 알림 (D)
   console.log('▸ 에이전트 위임 결과는 위 모든 항목이 0건이어야 머지 허용 (phase2 §위임 프로토콜)');
   console.log('');
 }

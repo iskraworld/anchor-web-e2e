@@ -8,6 +8,49 @@
 워크로그 항목 추가 완료.
 
 
+## Session 2026-04-30 23:28 — TA fix + 스마트 샘플링 도구 + 8모듈 VERIFY 일괄 적용
+
+### 작업 요약
+- **TA 3건 fix** (Eugene 검증 N 판정 반영):
+  - TA-1-01: 입력란 빈 값 검증 추가 (필터 초기 상태)
+  - TA-1-23: cards.filter({hasText:/TOP10/}) 카드 결합 검증
+  - TA-2-19: y*10000+x reading-order 계산 (같은 행이면 x 비교)
+  - 검증 강도 거울 인사이트 발견: VERIFY description 부정확 ≠ description 문제, **코드가 docs를 부족하게 검증** 중인 것
+- **검증자 친화 샘플링 포맷 설계** (다른 사람이 검증):
+  - docs 기대 + 코드 + 위험 신호 + AI 해석 + Y/N/부분 옵션
+  - self-contained — 컨텍스트 추가 질문 없이 판단 가능
+- **스마트 샘플링 도구 신설** (`scripts/sample-verify.mjs`):
+  - Tier 1 (위험 우선순위, 자동): AMBIGUOUS/.first()/fallback/도메인 복잡 등 점수화
+  - Tier 3 (랜덤 보충, 안전망): 의미 위험 false negative 차단
+  - docs 기대 자동 매핑 + 검증자 친화 markdown 출력
+  - 검증: TA에서 Eugene N 판정한 TA-1-23/2-19 → 점수 8-9 상위로 자동 식별 (도구 작동 입증)
+  - 한계: TA-1-01 같은 의미 위험은 점수 3 → Tier 3 랜덤이 안전망
+- **8개 모듈 VERIFY 일괄 적용** (총 53건 누적):
+  - AUTH(5) / EI(5) / EO(3) / GO(2) / HOME-TA(3) / HOME-TP(3) / TF(3) / ER(1)
+  - 모든 키워드 검증: visible / hidden / value / url / count / count-change
+  - audit 룰 보강 — count 키워드에 `.toBe(N)` 매칭 추가
+- **풀테스트 799 PASS / 80 skipped / 0 FAIL** (회귀 0)
+- **스마트 샘플링 15건 추출** → `docs/verify-samples-2026-04-30.md` 저장 + push
+- **커밋**:
+  - `92efce2`: TA 6건 VERIFY + 3건 코드 fix + sample-verify.mjs
+  - `5eb4e4f`: 8개 모듈 VERIFY 53건 + audit count 룰 보강
+  - `3e72746`: VERIFY 샘플링 결과 저장 (검증자 전달용)
+
+### 결정 (decision.md에 추가)
+- **스마트 샘플링 도구 — Tier 1 + Tier 3 결합**: 균등 5건/모듈(50건)에서 위험+랜덤 15건으로 -65%, 정확도 80~90% 수렴 예상
+- **8모듈 적용 방식 — 점진(SP/TA) → 일괄(나머지 8)**: VERIFY는 코멘트라 동작 영향 0. 1-2 모듈에서 AI 정확도 검증 후 일괄. 사용자 의견 반영해 도구 먼저 구현 후 사용
+- **TA 3건 코드+VERIFY 동시 fix**: VERIFY description 부정확이 아니라 코드 검증 부족이 본질. 코드 강화로 함께 해결
+
+### 다음 액션
+- 검증자(Eugene 또는 다른 사람) 15건 샘플링 검토 → Y/N/부분 응답
+- 응답 결과 따라:
+  - 다수 Y → qa-report 갱신 + Vercel 배포
+  - N/부분 있음 → 코드+VERIFY 동시 fix → 재샘플링
+- 후속 사이클: generate-qa-report.mjs에 VERIFY 컬럼 표시
+- 신서비스(사주톡 등) 적용 시 새 prompt + 스마트 샘플링 도구 활용
+
+---
+
 ## Session 2026-04-30 13:51 — VERIFY 코멘트 컨벤션 도입 + audit 정합성 룰 + PoC
 
 ### 작업 요약

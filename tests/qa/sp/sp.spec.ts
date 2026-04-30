@@ -49,9 +49,9 @@ test.describe('SP — 구독관리', () => {
     test('[SP-0-01] U2(일반 개인 미구독) — 구독 관리 화면 접근', async ({ page }) => {
       await navigateToSubscription(page);
       await expect(page.locator('body')).toBeVisible();
-      // 구독 관리 화면 표시 + 빈 상태 안내 확인
       const emptyState = page.getByText(/구독 중인 플랜이 없습니다|미구독|구독을 시작/).first();
       if (await emptyState.isVisible({ timeout: 8000 })) {
+        // VERIFY visible: 미구독 사용자에게 빈 상태 안내 노출
         await expect(emptyState).toBeVisible();
       }
     });
@@ -63,9 +63,9 @@ test.describe('SP — 구독관리', () => {
     test('[SP-0-02] U2+U9(일반 개인 Pro) — 유료 구독 플랜 정보 표시', async ({ page }) => {
       await navigateToSubscription(page);
       await expect(page.locator('body')).toBeVisible();
-      // 유료 구독 플랜 정보 표시 확인
       const planInfo = page.getByText(/Pro|구독 중|현재 구독/).first();
       if (await planInfo.isVisible({ timeout: 8000 })) {
+        // VERIFY visible: Pro 사용자에게 유료 구독 플랜 정보 노출
         await expect(planInfo).toBeVisible();
       }
     });
@@ -75,6 +75,7 @@ test.describe('SP — 구독관리', () => {
       // docs: "소속 법인의 구독이 종료된 상태 안내가 표시된다"
       const endNotice = page.getByText(/구독.*종료|종료.*상태|법인.*구독.*종료|소속.*법인/).first();
       if (await isVisibleSoft(endNotice, 8000)) {
+        // VERIFY visible: 법인 구독 종료 안내 메시지 노출
         await expect(endNotice).toBeVisible();
       } else {
         // 가드: staging 계정 상태가 docs와 다를 수 있음
@@ -121,6 +122,7 @@ test.describe('SP — 구독관리', () => {
       // docs: "구독 정보가 조회되며, 멤버십 변경·해지가 불가하다는 안내가 표시된다"
       const noChangeMsg = page.getByText(/변경.*불가|해지.*불가|변경·해지|소속 팀|소속 법인/).first();
       if (await isVisibleSoft(noChangeMsg, 8000)) {
+        // VERIFY visible: 팀 구성원에게 변경·해지 불가 안내 노출
         await expect(noChangeMsg).toBeVisible();
       } else {
         await expect(page.locator('body')).toBeVisible();
@@ -143,6 +145,7 @@ test.describe('SP — 구독관리', () => {
       // docs: "Team 멤버십 정보가 표시된다"
       const teamPlan = page.getByText(/Team|팀 멤버십|팀 소유자/).first();
       if (await isVisibleSoft(teamPlan, 8000)) {
+        // VERIFY visible: 팀 소유자에게 Team 멤버십 정보 노출
         await expect(teamPlan).toBeVisible();
       } else {
         await expect(page.locator('body')).toBeVisible();
@@ -403,7 +406,7 @@ test.describe('SP — 구독관리', () => {
           if (await dismissBtn.isVisible({ timeout: 3000 })) {
             await dismissBtn.click();
             await page.waitForTimeout(500);
-            // 다이얼로그가 닫혀야 함
+            // VERIFY hidden: 취소 클릭 후 해지 다이얼로그 닫힘
             await expect(dialog).not.toBeVisible({ timeout: 5000 });
           }
         }
@@ -465,6 +468,7 @@ test.describe('SP — 구독관리', () => {
           if (await dismissBtn.isVisible({ timeout: 3000 })) {
             await dismissBtn.click();
             await page.waitForTimeout(500);
+            // VERIFY hidden: 취소 클릭 후 해지 철회 다이얼로그 닫힘
             await expect(dialog).not.toBeVisible({ timeout: 5000 });
           }
         }
@@ -477,6 +481,7 @@ test.describe('SP — 구독관리', () => {
       // 멤버십 변경 불가 안내 텍스트 확인
       const noChangeMsg = page.getByText(/변경 불가|소속 팀|멤버십 변경/).first();
       if (await noChangeMsg.isVisible({ timeout: 8000 })) {
+        // VERIFY visible: 팀 구성원에게 멤버십 변경 불가 안내 노출
         await expect(noChangeMsg).toBeVisible();
       }
     });
@@ -660,7 +665,7 @@ test.describe('SP — 구독관리', () => {
             if (await isVisibleSoft(cancelBtn)) {
               await cancelBtn.click({ timeout: 3000 });
               await page.waitForTimeout(500);
-              // 다이얼로그가 닫혀야 함 (docs 기대 결과)
+              // VERIFY hidden: 취소 클릭 후 구독 확인 다이얼로그 닫힘
               await expect(dialog).not.toBeVisible({ timeout: 5000 });
             } else {
               await expect(page.locator('body')).toBeVisible();
@@ -679,9 +684,9 @@ test.describe('SP — 구독관리', () => {
     test('[SP-2-13] U2(납세자) — 납세자용 기능 설명 표시', async ({ page }) => {
       await navigateToMembership(page);
       // docs: "납세자 유저용 기능 설명이 표시된다"
-      // 납세자 관점 기능 키워드 — 세무대리인 찾기, 세무 신고, 세금 절세 등
       const taxpayerFeature = page.getByText(/납세자|세무대리인|세금|절세|신고|환급|상담/).first();
       if (await isVisibleSoft(taxpayerFeature, 8000)) {
+        // VERIFY visible: 납세자 멤버십 화면에서 납세자용 기능 키워드 노출
         await expect(taxpayerFeature).toBeVisible();
       } else {
         await expect(page.locator('body')).toBeVisible();
@@ -691,9 +696,9 @@ test.describe('SP — 구독관리', () => {
     test('[SP-2-15] 멤버십 안내 화면 — 상단 캐치 프레이즈 확인', async ({ page }) => {
       await navigateToMembership(page);
       // docs: "멤버십 소개 문구가 표시된다"
-      // 멤버십 안내 화면의 캐치 프레이즈/소개 문구 — 플랜 카드 위 영역
       const catchPhrase = page.getByRole('heading').first();
       if (await isVisibleSoft(catchPhrase, 8000)) {
+        // VERIFY visible: 멤버십 안내 화면 상단 헤딩(캐치프레이즈) 노출
         await expect(catchPhrase).toBeVisible();
       } else {
         // 플랜 카드라도 visible인지 가드

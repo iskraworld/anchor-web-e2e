@@ -8,6 +8,37 @@
 워크로그 항목 추가 완료.
 
 
+## Session 2026-04-30 13:51 — VERIFY 코멘트 컨벤션 도입 + audit 정합성 룰 + PoC
+
+### 작업 요약
+- **VERIFY 컨벤션 설계 논의** (3-way: 사용자 + ChatGPT + Claude):
+  - ChatGPT 9-필드 Evidence Block 거부 (오버엔지니어링)
+  - Allure 도입·"AI Pass vs Human Pass 분리"·confidence 점수·reviewer override 모두 거부
+  - 채택: VERIFY 한 줄 코멘트 + Playwright trace 자동 보존 + 리포트 컬럼
+  - 추가: VERIFY 자체 audit 검증 (fake-pass 새 통로 차단)
+  - 추가: 표준 키워드 셋 정의 (자유 자연어 X, audit 정규식 가능하게)
+- **Day 1 구현 완료** (`3236086`):
+  - `phase2-code-generation.md` §VERIFY 컨벤션 추가 — 10개 표준 키워드 + 매칭 표 + 형식 + AMBIGUOUS_DOC 보완 관계
+  - `verify-coverage.mjs --audit` VERIFY 정합성 룰 추가:
+    * 키워드 ↔ 단언 패턴 매칭 검증
+    * 3가지 위반 카테고리: unknown-keyword / no-assertion-after / keyword-mismatch
+    * sanity check: VERIFY url + toHaveCount → 정상 검출 확인 후 원복
+  - MY 모듈 7개 테스트 VERIFY PoC (5개 키워드: visible/hidden/value/count + 다중 라인)
+  - 풀테스트: 1차 9 fail (HOME-TA staging flakiness) → 2차 0 fail 확인
+- **Day 2 진행 중** — SP 모듈 11건 VERIFY 적용, audit 정합성 ✅. Eugene 5건 샘플링 검토 대기
+
+### 결정 (decision.md에 추가)
+- **회귀 보강 — 모듈 단위 + 풀테스트 게이트 vs 카운트 배치 (20×10)**: 모듈 단위 채택. 모듈-회귀 1:1 매칭이 가능해 디버깅 비용 ↓
+- **results.json/data/detail gitignore 유지**: raw 데이터는 next-time learning에 무용. interpreted narrative(worklog/decision/automation-patterns/커밋)이 진짜 자산. data/는 209MB라 추적 시 repo 폭주
+- **VERIFY 적용 방식**: Day 2-A1 점진(SP/TA 샘플 검증) → Day 2-A2 일괄(검증 통과 시 8개 모듈). VERIFY는 코멘트라 동작 영향 0이지만 거짓 description 위험 있어 첫 1-2 모듈은 사람 검토
+
+### 다음 액션
+- Eugene SP 5건 샘플링 검토 → 결과 따라 진행
+- TA 모듈 VERIFY 적용 + count-change 키워드 검증
+- 2모듈 검증 OK 시 나머지 8모듈 일괄 적용 + 풀테스트 1회
+
+---
+
 ## Session 2026-04-29 22:15 — 모듈 단위 가드 보강 사이클 + 풀테스트 0 fail 달성
 
 ### 작업 요약

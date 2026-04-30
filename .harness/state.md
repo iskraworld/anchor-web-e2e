@@ -4,23 +4,25 @@
 
 ---
 
-## 마지막 실행: 2026-04-29 22:15
-## 마지막 업데이트: 2026-04-29 22:15
+## 마지막 실행: 2026-04-30 13:51
+## 마지막 업데이트: 2026-04-30 13:51
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **풀테스트 0 fail 달성** — 792 PASS / 0 FAIL / 합계 872. 다음 사이클 작업: AMBIGUOUS_DOC 156건 일괄 리뷰 + 신규 서비스 적용 준비
+- **VERIFY 코멘트 컨벤션 도입 — Day 2 진행 중**. SP 11건 적용 완료, Eugene 5건 샘플링 검토 대기. TA 적용 후 일괄 적용 결정.
 
 ### 이어서 할 것
-1. **AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰** — 30분 작업, 명확화 가능 결정 + anchor 팀 docs 명확화 요청
-2. **신규 서비스(사주톡 등) 적용 시 qa-doc-generation-prompt.md 사용** — 모듈 코드 + 역할 코드만 교체
-3. **HOME staging BLOCKED 11건 재테스트** (staging 회복 후)
+1. **Eugene SP 5건 샘플링 검토** — VERIFY description ↔ 코드 의도 일치 여부 (Y/N). 결과 따라 TA 진행 또는 패턴 보완
+2. **TA 모듈 VERIFY 적용** + count-change 키워드 검증 (행 수 변화)
+3. **2모듈 검증 통과 시 나머지 8모듈 일괄 적용** + 풀테스트 + qa-report 갱신
 
 ### 막힌 것
-- **HOME staging BLOCKED 11건**: 소속 드롭다운 검색 API 500 — staging 회복 시 재테스트 필요
+- **HOME staging BLOCKED 11건**: 소속 드롭다운 검색 API 500 — staging 회복 시 재테스트
+- **HOME-TA GNB flakiness**: 풀테스트에서 가끔 9건 fail 발생, 재실행 시 0 fail. 단독 모듈 실행은 정상. staging 의존성으로 추정
 
 ### 사람 판단 필요
-- AMBIGUOUS_DOC 156건 일괄 리뷰
+- SP 5건 샘플링 결과 (지금 답변 대기)
+- AMBIGUOUS_DOC 156건 일괄 리뷰 (별도 30분 작업)
 - D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
 - ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
 
@@ -53,6 +55,15 @@
 - [x] qa-report 갱신 + Vercel 배포 ✅ 2026-04-29
 - [x] automation-patterns.md §10 selectOption 타임아웃 패턴 (`4d8dcda`) ✅ 2026-04-29
 - [x] qa-doc-generation-prompt.md 신설 (`5d0275d`) — 신규 서비스 QA 문서 AI 생성 ✅ 2026-04-29
+- [x] phase2-code-generation.md §VERIFY 컨벤션 + 10 표준 키워드 (`3236086`) ✅ 2026-04-30
+- [x] verify-coverage.mjs --audit VERIFY 정합성 룰 + sanity check (`3236086`) ✅ 2026-04-30
+- [x] MY 모듈 7건 VERIFY PoC — 5 키워드 검증 (`3236086`) ✅ 2026-04-30
+- [x] SP 모듈 11건 VERIFY 적용 + audit 통과 (커밋 대기) ✅ 2026-04-30
+- [ ] SP 5건 샘플링 Eugene 검토
+- [ ] TA 모듈 VERIFY 적용 + count-change 키워드 검증
+- [ ] 나머지 8개 모듈 일괄 VERIFY 적용 + 풀테스트
+- [ ] generate-qa-report.mjs에 VERIFY 컬럼 표시 (후속)
+- [ ] 사주톡 등 새 서비스에 새 prompt 적용 (별도 사이클)
 - [ ] AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰
 - [ ] HOME staging BLOCKED 11건 재테스트 (staging 회복 후)
 - [ ] D-2/D-3 BLOCKED 해제 (UI 출시 후)

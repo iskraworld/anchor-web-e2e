@@ -65,7 +65,7 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
 
     test('[HOME-TA-0-01] U2+U5(세무사 미구독) — 세무사 찾기 탭만, 구독 유도', async ({ page }) => {
       await page.goto('/');
-      // 세무사 찾기 탭 노출 확인
+      // VERIFY visible: 미구독 세무사에게 세무사 찾기 탭 노출 (다른 탭은 구독 후 노출)
       await expect(page.getByTestId('home-tax-expert-tab')).toBeVisible();
       await expect(page.getByTestId('home-search-greeting')).toBeVisible();
     });
@@ -76,7 +76,7 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
       if (opened) {
         const menuItem = page.getByRole('menuitem', { name: /세무 이력 관리/ }).first();
         if (await isVisibleSoft(menuItem, 2000)) {
-          // 미구독에 노출되면 안 됨
+          // VERIFY hidden: 미구독 세무사에게 "세무 이력 관리" 메뉴 미노출
           await expect(menuItem).not.toBeVisible();
         }
       }
@@ -89,6 +89,7 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
 
     test('[HOME-TA-0-02] U2+U5+U9(세무사 Pro) — 모든 탭 이용 가능', async ({ page }) => {
       await page.goto('/');
+      // VERIFY visible: Pro 세무사에게 3개 탭 모두 노출 (세무사 찾기 / 현직 / 전직 공무원)
       await expect(page.getByTestId('home-tax-expert-tab')).toBeVisible();
       await expect(page.getByTestId('home-active-official-tab')).toBeVisible();
       await expect(page.getByTestId('home-retired-official-tab')).toBeVisible();

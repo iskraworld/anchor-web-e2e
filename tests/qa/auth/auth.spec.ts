@@ -59,6 +59,7 @@ test.describe('AUTH — 4-1. 로그인 전 홈', () => {
   test('[AUTH-1-05] 세무사 찾기 선택 — 비로그인 세무사 검색 화면 이동', async ({ page }) => {
     // GNB 클릭 → URL 이동이 불안정하므로 직접 goto로 검증
     await page.goto('/search/tax-experts');
+    // VERIFY url: 비로그인 세무사 검색 페이지로 이동
     await expect(page).toHaveURL(/\/search\/tax-experts/);
     // 세무사 검색 화면 핵심 요소 — 검색 입력 또는 비로그인 GNB(로그인/회원가입) 노출
     const searchInput = page.getByPlaceholder(/검색|세무사/).or(page.locator('input[type="search"]')).first();
@@ -70,6 +71,7 @@ test.describe('AUTH — 4-1. 로그인 전 홈', () => {
   test('[AUTH-1-06] GNB 멤버십 안내 선택 — 멤버십 안내 화면 이동', async ({ page }) => {
     // GNB 클릭 → URL 이동이 불안정하므로 직접 goto로 검증
     await page.goto('/membership');
+    // VERIFY url: 멤버십 안내 페이지로 이동
     await expect(page).toHaveURL(/\/membership/);
     if (await is404(page)) return;
     // 멤버십 안내 화면 핵심: 일반 납세자 / Basic / Pro / Team 등 플랜 텍스트 노출
@@ -81,6 +83,7 @@ test.describe('AUTH — 4-1. 로그인 전 홈', () => {
     await page.goto('/');
     // strict mode: '로그인' 텍스트가 GNB와 본문에 복수 존재 → .first() 사용
     await page.getByText('로그인').first().click();
+    // VERIFY url: GNB 로그인 클릭 후 /login 으로 이동
     await expect(page).toHaveURL(/\/login/);
     // 로그인 화면 핵심 요소 — 이메일/비밀번호 입력 필드 노출
     await expect(
@@ -95,6 +98,7 @@ test.describe('AUTH — 4-1. 로그인 전 홈', () => {
     await page.goto('/');
     // strict mode 방지용 .first()
     await page.getByText('회원가입').first().click();
+    // VERIFY url: GNB 회원가입 클릭 후 /signup 으로 이동
     await expect(page).toHaveURL(/\/signup/);
     // 회원가입 유형 선택 화면 핵심 — 3개 카드(일반 납세자, 세무사, 세무법인)
     await expect(page.getByText('일반 납세자').first()).toBeVisible();
@@ -174,6 +178,7 @@ test.describe('AUTH — 4-2. 멤버십 안내', () => {
     const subscribeBtn = page.getByText('무료로 구독하기').first();
     if (await isVisibleSoft(subscribeBtn, 5000)) {
       await subscribeBtn.click();
+      // VERIFY url: 무료 구독 클릭 후 /signup 회원가입 유형 화면으로 이동
       await expect(page).toHaveURL(/\/signup/);
       // 회원가입 유형 선택 화면 핵심 카드 노출
       await expect(page.getByText('일반 납세자').first()).toBeVisible();

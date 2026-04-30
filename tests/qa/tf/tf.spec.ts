@@ -144,8 +144,8 @@ test.describe('TF — 법인&팀연동관리', () => {
       if (await isVisibleSoft(groupMgmt, 5000)) {
         await expect(groupMgmt).toBeVisible();
       }
-      // 법인 정보 관리 미표시 — GNB에 노출되지 않아야 함
       const corpInfoMenu = page.getByRole('link', { name: /법인 정보/ });
+      // VERIFY hidden: 세무법인 관리자 세무사에게 "법인 정보 관리" 메뉴 미표시
       await expect(corpInfoMenu).not.toBeVisible({ timeout: 5000 });
     });
 
@@ -193,8 +193,8 @@ test.describe('TF — 법인&팀연동관리', () => {
         await expect(page.locator('body')).toBeVisible();
         return;
       }
-      // 그룹 관리 탭 미표시 (구성원은 그룹 관리 권한 없음)
       const groupTab = page.getByRole('tab', { name: /그룹 관리/ });
+      // VERIFY hidden: 세무법인 구성원 세무사에게 "그룹 관리" 탭 미표시 (구성원은 그룹 관리 권한 없음)
       await expect(groupTab).not.toBeVisible({ timeout: 5000 });
     });
 
@@ -322,10 +322,10 @@ test.describe('TF — 법인&팀연동관리', () => {
         await page.waitForLoadState('load', { timeout: 20000 }).catch(() => {});
       }
       await expect(page.locator('body')).toBeVisible();
-      // 검색 입력 필드 확인
       const searchInput = page.getByPlaceholder(/검색/).first();
       if (await searchInput.isVisible({ timeout: 5000 })) {
         await searchInput.fill('테스트');
+        // VERIFY value: 멤버 검색 입력란에 "테스트" 텍스트 반영
         await expect(searchInput).toHaveValue('테스트');
       }
     });

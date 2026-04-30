@@ -59,7 +59,7 @@ const TEST_BODY_RE = /\btest\s*\(\s*['"](\[([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]
 
 // VERIFY 키워드 → 매칭 단언 패턴
 const VERIFY_KEYWORD_MAP = {
-  'count':         /toHaveCount/,
+  'count':         /toHaveCount|\.toBe\s*\(\s*\d+\s*\)/,
   'count-change':  /toBeLessThan|toBeGreaterThan|toBeLessThanOrEqual|toBeGreaterThanOrEqual|\.toBe\s*\(\s*\w+/,
   'text':          /toHaveText|toContainText/,
   'visible':       /toBeVisible/,

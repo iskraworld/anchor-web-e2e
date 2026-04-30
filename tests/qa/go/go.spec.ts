@@ -219,9 +219,9 @@ test.describe('GO — 현직 공무원 탐색', () => {
       // 가드 결합: 검색 버튼 노출 시에만 강한 단언, 미노출 시 body fallback (staging 변동성 대응)
       if (await isVisibleSoft(submitBtn, 5000)) {
         await expect(submitBtn).toBeVisible();
-        // 검색 결과 빈 상태 — 결과 행 없음
         const resultRows = page.locator('tbody tr');
         const rowCount = await resultRows.count().catch(() => 0);
+        // VERIFY count: 초기 진입 시 결과 행 0건 (필터 미입력 빈 상태)
         expect(rowCount, '초기 진입 시 결과 행 0건 기대').toBe(0);
       } else {
         await expect(page.locator('body')).toBeVisible();
@@ -437,6 +437,7 @@ test.describe('GO — 현직 공무원 탐색', () => {
         const ok = await safeFill(nameInput, '홍길동');
         if (ok) {
           try {
+            // VERIFY value: 공무원명 입력란에 "홍길동" 텍스트 반영
             await expect(nameInput).toHaveValue('홍길동', { timeout: 3000 });
           } catch {}
         }

@@ -58,8 +58,9 @@ test.describe('EI — 전문이력관리', () => {
 
       test('[EI-0-01] U2+U5+U9(세무사 Pro) — 세무 이력 관리 진입', async ({ page }) => {
         await page.goto('/tax-history-management/basic-info');
+        // VERIFY url: 세무사 Pro가 세무 이력 관리 페이지 진입 가능
         await expect(page).toHaveURL(/\/tax-history-management/);
-        // 페이지 핵심 요소 노출
+        // VERIFY visible: 진입 후 기본 정보 탭 노출
         await expect(page.getByTestId('tax-history-basic-tab')).toBeVisible();
       });
 
@@ -100,7 +101,7 @@ test.describe('EI — 전문이력관리', () => {
 
       test('[EI-0-06] U2+U3+U6+U9(세무법인 소유자 비세무사) — 메뉴 미노출', async ({ page }) => {
         await page.goto('/');
-        // GNB에 "세무 이력 관리" 메뉴 미노출 (텍스트 매칭으로 광범위 검증)
+        // VERIFY count: 세무법인 소유자 비세무사에게 "세무 이력 관리" 메뉴 0개 (미노출)
         await expect(page.getByText('세무 이력 관리')).toHaveCount(0);
       });
 
@@ -138,7 +139,9 @@ test.describe('EI — 전문이력관리', () => {
 
     test('[EI-1-01] GNB > 세무 이력 관리 이동 — 기본 정보 탭 활성', async ({ page }) => {
       await page.goto('/tax-history-management/basic-info');
+      // VERIFY url: 기본 정보 탭으로 직접 진입
       await expect(page).toHaveURL(/\/tax-history-management\/basic-info/);
+      // VERIFY visible: 기본 정보 탭 활성 노출
       await expect(page.getByTestId('tax-history-basic-tab')).toBeVisible();
     });
 

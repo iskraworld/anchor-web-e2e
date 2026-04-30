@@ -19,6 +19,7 @@ test.describe('ER — 전문이력리포트', () => {
 
       test('[ER-0-01] U2+U5+U9(세무사 Pro) — 개인 리포트 조회/PDF/링크', async ({ page }) => {
         await page.goto('/tax-history-report/me');
+        // VERIFY url: 세무사 Pro가 세무 이력 리포트 페이지 진입 가능
         await expect(page).toHaveURL(/\/tax-history-report/);
         const serverError = page.getByText(/500|서버 오류/i).first();
         if (await serverError.isVisible({ timeout: 3000 }).catch(() => false)) {

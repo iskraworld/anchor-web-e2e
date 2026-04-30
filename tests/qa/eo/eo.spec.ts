@@ -462,6 +462,7 @@ test.describe('EO — 전직공무원찾기', () => {
       const nameInput = page.getByPlaceholder(/공무원명|이름/i).first();
       if (await nameInput.isVisible()) {
         await nameInput.fill('홍길동', { timeout: 5000 }).catch(() => {});
+        // VERIFY value: 공무원명 입력란에 "홍길동" 텍스트 반영
         await expect(nameInput).toHaveValue('홍길동');
       }
       await expect(page.locator('body')).toBeVisible();
@@ -479,12 +480,10 @@ test.describe('EO — 전직공무원찾기', () => {
       const searchBtn = page.getByRole('button', { name: /검색/i }).first();
       if (await isVisibleSoft(searchBtn, 5000)) {
         await safeClick(searchBtn);
-        // 결과 목록이 표시되어야 한다 — 데이터 행 ≥1 또는 결과 건수 표시
-        // 결과 행 또는 건수 텍스트
         const rowCount = await page.getByRole('row').count();
         const totalText = page.getByText(/\d+\s*(건|명|개)/i).first();
         const hasTotal = await isVisibleSoft(totalText, 5000);
-        // 헤더 외에 데이터 행 또는 건수 텍스트가 있어야 한다
+        // VERIFY count-change: 검색 후 헤더 외 데이터 행 ≥1 또는 결과 건수 텍스트 노출
         expect(rowCount > 1 || hasTotal).toBe(true);
       }
     });
@@ -499,6 +498,7 @@ test.describe('EO — 전직공무원찾기', () => {
       if (await resetBtn.isVisible()) {
         await resetBtn.click({ timeout: 5000 }).catch(() => {});
         if (await nameInput.isVisible()) {
+          // VERIFY value: 초기화 클릭 후 공무원명 입력란이 빈 값
           await expect(nameInput).toHaveValue('');
         }
       }

@@ -70,10 +70,11 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
 
     test('[HOME-TP-0-01] U2(미구독) — 홈 화면 진입', async ({ page }) => {
       await page.goto('/');
+      // VERIFY visible: 미구독 납세자 홈 진입 시 그리팅 노출
       await expect(page.getByTestId('home-search-greeting')).toBeVisible();
-      // 세무사 찾기 탭 노출
+      // VERIFY visible: 미구독에게도 세무사 찾기 탭 노출
       await expect(page.getByTestId('home-tax-expert-tab')).toBeVisible();
-      // 미구독 = 멤버십 안내 진입점
+      // VERIFY visible: 미구독에게 멤버십 안내 진입점 노출 (구독 유도)
       await expect(page.getByTestId('gnb-membership-btn')).toBeVisible();
     });
 
@@ -616,6 +617,7 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
         await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
         const onMyInfo = /\/my-info/.test(page.url());
         if (onMyInfo) {
+          // VERIFY url: GNB 내 정보 클릭 후 /my-info 으로 이동
           await expect(page).toHaveURL(/\/my-info/);
         } else {
           // SPA 네비게이션 실패 시 내 정보 라벨 노출로 폴백 검증
@@ -635,6 +637,7 @@ test.describe('HOME-TP — 홈/GNB/알림 (납세자)', () => {
         await safeClick(menuItem);
         // docs: "구독 관리 화면으로 이동"
         await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+        // VERIFY url: GNB 구독 관리 클릭 후 /membership 또는 /subscription 으로 이동
         await expect(page).toHaveURL(/\/membership|\/subscription/);
       } else {
         await expect(page.getByTestId('home-search-greeting')).toBeVisible();

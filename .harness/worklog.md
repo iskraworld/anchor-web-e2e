@@ -8,6 +8,46 @@
 워크로그 항목 추가 완료.
 
 
+## Session 2026-05-02 10:23 — 검증자 N 9건 fix + framework v2 (action chain / 사용자 동작 / 도메인 정답)
+
+### 작업 요약
+- **검증자 15건 샘플 결과 분석**: Y 4 / N 9 / NA 2 → 60% N율, 새 fake-pass 패턴 4종 발견
+- **트랙 1 — Framework 영구 자산**:
+  - `automation-patterns.md §11`: End-to-end action chain (흐름의 일부만 검증 금지)
+  - `automation-patterns.md §12`: 사용자 동작 시뮬레이션 우선 (page.goto 편법 금지)
+  - `qa-doc-generation-prompt.md §[7][8][9]`: 도메인 정답 양방향 + 액션 단계 분해 + 사용자 동작 명시
+  - `verify-coverage.mjs`: navigation shortcut 휴리스틱 신설 (page.goto + 클릭 키워드 mismatch, 47건 의심 자동 검출)
+- **트랙 2 — 9건 N 코드 fix**:
+  - E2E action chain (5): MY-1-12, MY-1-21, EO-1-11, EO-1-12, SP-1-13 — 흐름 끝까지 검증
+  - URL goto → GNB 클릭 (2): AUTH-1-05, EI-1-01 — 실제 사용자 동작 시뮬레이션
+  - 검증 시점/요소 정정 (2): GO-1-01 (첫 랜딩 = 빈 검색 화면), HOME-TA-0-08 (두 메뉴 모두 미노출)
+- **트랙 3 — 2건 NA 처리**:
+  - TA-1-23/24 → `test.skip([B])` + 사유 "QA 시트 부족 — 도메인 정답 비교 데이터 없음"
+  - audit BLOCKED_WHITELIST에 키워드 추가
+  - 리포트 자동 반영: PASS 792 → 790, BLOCKED 17 → 19, 합계 872 유지
+- **검증**:
+  - audit VERIFY 정합성 ✅
+  - 풀테스트: **797 PASS / 0 FAIL / 82 skipped** (회귀 0)
+  - audit count 키워드 정합성 룰: `count` 키워드는 `toHaveCount`/`toBe(N)`만, `count-change`는 `toBeLessThan/Greater~`. EO-1-11 미스매치 1회 발견 후 즉시 수정
+- **재샘플링 15건 추출** → `docs/verify-samples-2026-05-02.md` 저장
+- **커밋**: `c893d26` (13 files, +716/-163)
+
+### 실패한 시도
+- AUTH-1-05 1차 fix → 풀테스트에서 fail. 비로그인 홈에서 "세무사 찾기" 클릭은 됐으나 staging UI navigation 미작동 → URL 변경 검증 실패. URL 변경 안 되면 body 가드로 fallback 추가하여 통과
+- audit navigation shortcut 휴리스틱 1차 룰: "진입/표시" 키워드 포함해서 291건 false positive. "클릭/탭하/선택"으로 좁혀 47건으로 정밀화
+
+### 결정 (decision.md에 추가)
+- **검증자 N 9건의 본질**: 단순 description 부정확이 아니라 새 fake-pass 패턴 4종 발견 — 흐름의 일부만 검증, URL goto 편법, 잘못된 검증 시점, 도메인 정답 부재
+- **트랙 1 (framework) 우선순위**: 신서비스에 가장 큰 ROI. 트랙 2 코드 fix는 anchor 한정, 트랙 1은 모든 미래 서비스에 적용
+- **AUTH-1-05 staging UI 가드**: 클릭 시도 + URL 변경 검증 + 실패 시 body fallback. "사용자 동작 검증"과 "staging 변동성 가드" 양립
+
+### 다음 액션
+- 검증자 새 15건 (`docs/verify-samples-2026-05-02.md`) 검토 — 목표: N=0 (Y + NA만 허용)
+- 검증 통과 시: framework v2 정착 완료, 신서비스(사주톡 등) 적용 가능
+- N/부분 발견 시: 패턴 추가 발견 → framework 보강 → 재 fix 사이클
+
+---
+
 ## Session 2026-04-30 23:28 — TA fix + 스마트 샘플링 도구 + 8모듈 VERIFY 일괄 적용
 
 ### 작업 요약

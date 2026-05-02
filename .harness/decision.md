@@ -4,6 +4,35 @@
 
 ---
 
+## 2026-05-02: Framework v2 — 새 fake-pass 패턴 4종 명문화 (검증자 60% N율 발견)
+
+- **선택**: 검증자 15건 검토 결과 N 9건이 드러낸 4가지 새 패턴을 framework 영구 자산화 (단순 코드 fix만이 아니라 patterns / prompt / audit 룰 보강)
+- **대안 검토**:
+  - A) 9건 코드 fix만: anchor 한정 효과, 신서비스에 패턴 안 전수
+  - B) framework 보강만: 9건은 그대로 N 유지, 검증자 신뢰 무너짐
+  - C) 양쪽 동시 (선택): 코드 fix + framework 영구 자산화. 트랙 1이 신서비스에 가장 큰 ROI
+- **선택 이유**: 60% N율은 anchor 한정 문제가 아니라 "AI가 spec 작성 시 보편적으로 빠지는 함정". 신서비스에 framework가 미리 박혀있으면 처음부터 정확한 spec
+- **영향 범위**:
+  - automation-patterns.md §11 (action chain), §12 (사용자 동작 우선)
+  - qa-doc-generation-prompt.md §[7][8][9]
+  - verify-coverage.mjs (navigation shortcut 휴리스틱)
+- **되돌리는 방법**: framework 문서는 영구 — 되돌리지 않음. 코드 fix는 모듈 단위 git revert 가능
+
+---
+
+## 2026-05-02: NA 처리 — anchor팀 요청 X, test.skip([B]) + 사유 명시
+
+- **선택**: TA-1-23/24 (TOP10/관계사 배지) → `test.skip([B])` + 사유 "QA 시트 부족 — 도메인 정답 비교 데이터 없음"
+- **대안 검토**:
+  - A) anchor팀에 docs 보강 요청: 외부 dependency, 처리 일정 불확실
+  - B) 코드로 약하게 검증 유지: fake-pass 통로 (검증자 N 판정 받음)
+  - C) test.skip([B]) (선택): 자동 BLOCKED 분류, 리포트에 명시, anchor 의존 X
+- **선택 이유**: "현재 데이터로 처리 가능"한 옵션. 리포트에서 BLOCKED로 자동 카운트, 사유가 명확해서 미래에 docs 보강 시 재활성화 쉬움
+- **영향 범위**: tests/qa/ta/ta.spec.ts (TA-1-23/24), scripts/verify-coverage.mjs (BLOCKED_WHITELIST 키워드 추가)
+- **되돌리는 방법**: anchor팀이 docs 보강하면 `test.skip([B])` → `test()` 변경 + 양방향 비교 로직 작성
+
+---
+
 ## 2026-04-30: 스마트 샘플링 도구 — Tier 1 위험 우선순위 + Tier 3 랜덤 보충
 
 - **선택**: 위험 점수 알고리즘으로 Tier 1 (12건) + 랜덤 안전망 Tier 3 (3건) = 15건 추출

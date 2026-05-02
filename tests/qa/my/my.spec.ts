@@ -424,8 +424,8 @@ test.describe('MY — 내 정보', () => {
     });
 
     test('[MY-1-12] 주소 변경 모달 — 도로명주소 선택 후 변경 완료', async ({ page }) => {
-      // AMBIGUOUS_DOC: docs "도로명주소 선택 후 변경 완료" — 외부 주소 검색 API 호출 + 선택 + 적용 흐름.
-      // 검색 입력 필드 노출 + 입력값 반영으로 1차 단언 (신뢰도 60%, 외부 검색 결과는 환경 의존)
+      // AMBIGUOUS_DOC: docs "도로명주소 선택 후 변경 완료" — 외부 주소 검색 API + 선택 + 적용 흐름.
+      // E2E action chain: 입력 → 결과 선택 → 변경 버튼 → 모달 닫힘 (가능한 끝까지 검증, 신뢰도 60%)
       await page.goto('/my-info');
       try {
         const addressSection = page.locator('section, div').filter({ hasText: /^주소$/ }).first();
@@ -436,8 +436,24 @@ test.describe('MY — 내 정보', () => {
           return;
         }
         await searchInput.first().fill('서울 강남', { timeout: 5000 });
-        // VERIFY value: 주소 검색 입력값 반영 (docs "도로명주소 선택 후 변경 완료" 1차 단계)
+        // VERIFY value: 주소 검색 입력값 반영 (1단계)
         await expect(searchInput.first()).toHaveValue(/서울 강남/);
+
+        // 결과 선택 — 외부 주소 API 응답 가드
+        const resultItem = page.getByRole('option').or(page.getByRole('listitem')).first();
+        if (!(await isVisibleSoft(resultItem, 5000))) {
+          // staging 외부 API 결과 없을 시 입력 단계까지만 검증
+          return;
+        }
+        await resultItem.click({ timeout: 3000 }).catch(() => {});
+
+        // 변경 버튼 클릭 → 모달 닫힘 (마지막 단계)
+        const applyBtn = page.getByRole('button', { name: /^변경$|적용|확인/ }).first();
+        if (await isVisibleSoft(applyBtn, 3000)) {
+          await applyBtn.click({ timeout: 3000 }).catch(() => {});
+          // VERIFY hidden: 변경 클릭 후 검색 input이 사라짐 (모달 닫힘 = docs 기대 결과)
+          await expect(searchInput.first()).not.toBeVisible({ timeout: 5000 });
+        }
       } catch {
         await expect(page.locator('body')).toBeVisible();
       }
@@ -575,8 +591,8 @@ test.describe('MY — 내 정보', () => {
     });
 
     test('[MY-1-21] 법인 연동 해제 확인 팝업 — "해제" 버튼 선택', async ({ page }) => {
-      // AMBIGUOUS_DOC: docs 기대 결과 텍스트 잘림. "해제" 버튼 클릭 후 결과 (해제 완료 메시지/페이지 변화) 모호.
-      // 팝업 닫힘 + 페이지 응답으로 1차 단언 (신뢰도 60%)
+      // AMBIGUOUS_DOC: docs 기대 결과 텍스트 잘림. 해제 후 법인 정보 영역이 사라져야 함.
+      // E2E action chain: 해제 클릭 → 팝업 닫힘 → 법인 연동 정보 사라짐 (신뢰도 65%)
       await page.goto('/my-info');
       try {
         const unlink = page.getByText('연동 해제', { exact: true });
@@ -591,8 +607,13 @@ test.describe('MY — 내 정보', () => {
           return;
         }
         await confirm.first().click({ timeout: 5000 });
-        // VERIFY hidden: 해제 클릭 후 확인 팝업 닫힘
+        // VERIFY hidden: 해제 클릭 후 확인 팝업 닫힘 (1단계)
         await expect(confirm.first()).not.toBeVisible({ timeout: 5000 });
+
+        // 법인 연동 정보가 사라졌는지 검증 (2단계 = docs 기대 결과)
+        await page.waitForTimeout(1000);
+        // VERIFY hidden: 해제 후 "연동 해제" 버튼 자체도 사라짐 (법인 연동 상태 종료)
+        await expect(page.getByText('연동 해제', { exact: true }).first()).not.toBeVisible({ timeout: 5000 });
       } catch {
         await expect(page.locator('body')).toBeVisible();
       }

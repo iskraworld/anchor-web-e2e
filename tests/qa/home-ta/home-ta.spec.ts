@@ -71,14 +71,14 @@ test.describe('HOME-TA — 홈/GNB/알림 (세무사)', () => {
     });
 
     test('[HOME-TA-0-08] U2+U5(미구독) — GNB 세무 이력 관리/리포트 미표시', async ({ page }) => {
+      // docs는 두 메뉴 모두 미표시 — 둘 중 하나라도 노출되면 권한 정책 버그
       await page.goto('/');
       const opened = await openGnb(page);
       if (opened) {
-        const menuItem = page.getByRole('menuitem', { name: /세무 이력 관리/ }).first();
-        if (await isVisibleSoft(menuItem, 2000)) {
-          // VERIFY hidden: 미구독 세무사에게 "세무 이력 관리" 메뉴 미노출
-          await expect(menuItem).not.toBeVisible();
-        }
+        // VERIFY count: GNB에 "세무 이력 관리" 메뉴 0개 (미구독에 미노출)
+        await expect(page.getByRole('menuitem', { name: /세무 이력 관리/ })).toHaveCount(0);
+        // VERIFY count: GNB에 "세무 이력 리포트" 메뉴 0개 (미구독에 미노출)
+        await expect(page.getByRole('menuitem', { name: /세무 이력 리포트/ })).toHaveCount(0);
       }
       await expect(page.getByTestId('home-search-greeting')).toBeVisible();
     });

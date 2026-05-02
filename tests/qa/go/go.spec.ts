@@ -213,19 +213,27 @@ test.describe('GO — 현직 공무원 탐색', () => {
     test.use({ storageState: 'tests/.auth/paid-user.json' });
 
     test('[GO-1-01] GNB > 현직 공무원 탐색 이동 — 필터 초기 상태, 검색 결과 빈 상태', async ({ page }) => {
+      // 첫 랜딩 화면 = 검색 화면으로 전환 + 검색 조건 미입력 + 결과 0건 검증
       await page.goto('/search/active-officials');
-      // 필터 초기 상태 — 검색 영역 노출 + 결과 행 0건 검증
-      const { submitBtn } = searchSelectors(page);
-      // 가드 결합: 검색 버튼 노출 시에만 강한 단언, 미노출 시 body fallback (staging 변동성 대응)
-      if (await isVisibleSoft(submitBtn, 5000)) {
-        await expect(submitBtn).toBeVisible();
-        const resultRows = page.locator('tbody tr');
-        const rowCount = await resultRows.count().catch(() => 0);
-        // VERIFY count: 초기 진입 시 결과 행 0건 (필터 미입력 빈 상태)
-        expect(rowCount, '초기 진입 시 결과 행 0건 기대').toBe(0);
-      } else {
+      // VERIFY url: 현직 공무원 탐색 페이지로 진입
+      await expect(page).toHaveURL(/\/search\/active-officials/);
+
+      const { submitBtn, nameInput } = searchSelectors(page);
+      // 가드 결합: 검색 폼 노출 시에만 강한 단언, 미노출 시 body fallback
+      if (!(await isVisibleSoft(submitBtn, 5000))) {
         await expect(page.locator('body')).toBeVisible();
+        return;
       }
+      // VERIFY visible: 검색 화면 진입 — 검색 버튼 노출
+      await expect(submitBtn).toBeVisible();
+      // VERIFY value: 검색 조건 미입력 — 공무원명 입력란 빈 값
+      if (await isVisibleSoft(nameInput, 3000)) {
+        await expect(nameInput).toHaveValue('');
+      }
+      // VERIFY count: 초기 진입 시 결과 행 0건 (검색 결과 미실행 상태)
+      const resultRows = page.locator('tbody tr');
+      const rowCount = await resultRows.count().catch(() => 0);
+      expect(rowCount, '초기 진입 시 결과 행 0건 기대').toBe(0);
     });
 
     test('[GO-1-02] 소속(청/서) 선택란 탭 — 메뉴 펼쳐짐', async ({ page }) => {

@@ -111,6 +111,7 @@ function collectSpecTcIds(specDir) {
   const activeTests = [];        // test() — fake-pass 검출용
   const ambiguousItems = [];     // // AMBIGUOUS_DOC: 코멘트 — 모호 docs 검토 대상
   const verifyMismatches = [];   // // VERIFY <keyword>: 정합성 깨진 항목
+  const navShortcuts = [];       // page.goto + 사용자 동작 키워드 mismatch (의심)
 
   function reasonAfter(lines, i, prefix) {
     for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
@@ -156,6 +157,9 @@ function collectSpecTcIds(specDir) {
           // VERIFY 정합성 검사
           const vm = detectVerifyMismatch(body, mm[2]);
           for (const item of vm) verifyMismatches.push(item);
+          // navigation shortcut 검출 — docs는 사용자 동작 요구하나 page.goto만 사용
+          const ns = detectNavShortcut(mm[1], body, mm[2]);
+          if (ns) navShortcuts.push(ns);
         }
         TEST_BODY_RE.lastIndex = 0;
       }
@@ -163,7 +167,22 @@ function collectSpecTcIds(specDir) {
   }
 
   walk(specDir);
-  return { ids, manualItems, blockedItems, deprecatedItems, activeTests, ambiguousItems, verifyMismatches };
+  return { ids, manualItems, blockedItems, deprecatedItems, activeTests, ambiguousItems, verifyMismatches, navShortcuts };
+}
+
+// navigation shortcut 검출 — 명시적 동작 동사("X 클릭/선택/탭")가 테스트 제목에 있는데
+// 코드는 page.goto만 호출하고 .click()이 없으면 의심.
+// "진입", "표시" 같은 일반 키워드는 제외 — page.goto가 정당한 경우(시작 페이지)
+// 휴리스틱이라 false positive 가능 — 의심 카테고리로만 표시.
+function detectNavShortcut(title, body, testId) {
+  // 명백한 사용자 동작 동사 (page.goto로 우회 시 검증 의도와 mismatch)
+  const userAction = /\b(클릭|탭한다|탭 |선택|선택한다)\b|버튼\s+탭|메뉴\s+탭|GNB\s+(메뉴|선택|클릭)/i.test(title);
+  const hasGoto    = /\bpage\.goto\s*\(/.test(body);
+  const hasClick   = /\.click\s*\(|dispatchEvent\s*\(/.test(body);
+  if (userAction && hasGoto && !hasClick) {
+    return { id: testId, title: title.slice(0, 60), reason: 'user-action-but-no-click' };
+  }
+  return null;
 }
 
 // ── 화이트리스트 ─────────────────────────────────────────────────────
@@ -180,6 +199,7 @@ const MANUAL_WHITELIST = [
 const BLOCKED_WHITELIST = [
   /UI.*미출시|UI.*미구현|기능.*미배포|관련.*미구현|출시.*대기|릴리즈.*대기/i,
   /의존.*기능.*미배포|선행.*UI.*필요/i,
+  /QA.*시트.*부족|도메인.*정답.*없음|비교.*데이터.*없음/i,
 ];
 
 const DEPRECATED_WHITELIST = [
@@ -217,7 +237,7 @@ function detectFakePass(activeTest) {
 const auditMode = process.argv.includes('--audit');
 
 const { active: docIds, deleted: deletedIds } = collectDocsTcIds(resolve(root, 'docs/qa'));
-const { ids: specIds, manualItems, blockedItems, deprecatedItems, activeTests, ambiguousItems, verifyMismatches } = collectSpecTcIds(resolve(root, 'tests/qa'));
+const { ids: specIds, manualItems, blockedItems, deprecatedItems, activeTests, ambiguousItems, verifyMismatches, navShortcuts } = collectSpecTcIds(resolve(root, 'tests/qa'));
 
 // docs 활성 TC 중 spec에 없는 것 → 누락
 const missing = [...docIds].filter(id => !specIds.has(id)).sort();
@@ -373,7 +393,20 @@ if (auditMode) {
     console.log('▸ VERIFY 정합성 ✅ (불일치 0건)\n');
   }
 
-  // 8) 에이전트 위임 시 안전장치 알림 (D)
+  // 8) navigation shortcut 의심 — page.goto + 사용자 동작 키워드 mismatch (휴리스틱)
+  if (navShortcuts.length > 0) {
+    console.log(`▸ navigation shortcut 의심 ${navShortcuts.length}건 — 사용자 동작 우회 가능성`);
+    for (const it of navShortcuts.slice(0, 8)) {
+      console.log(`  ⚠️  ${it.id.padEnd(15)} "${it.title}"`);
+    }
+    if (navShortcuts.length > 8) console.log(`  ... +${navShortcuts.length - 8}건`);
+    console.log('   → automation-patterns.md §12 사용자 동작 시뮬레이션 우선 참고');
+    console.log('   → 휴리스틱이므로 false positive 가능. 사람 검토 후 수정.\n');
+  } else {
+    console.log('▸ navigation shortcut ✅ (의심 0건)\n');
+  }
+
+  // 9) 에이전트 위임 시 안전장치 알림 (D)
   console.log('▸ 에이전트 위임 결과는 위 모든 항목이 0건이어야 머지 허용 (phase2 §위임 프로토콜)');
   console.log('');
 }

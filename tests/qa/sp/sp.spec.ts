@@ -456,23 +456,27 @@ test.describe('SP — 구독관리', () => {
     });
 
     test('[SP-1-13] 해지 철회 확인 다이얼로그 — "취소" 선택', async ({ page }) => {
+      // E2E action chain: 해지 철회 → 다이얼로그 → 취소 → 다이얼로그 닫힘 + 해지 상태 유지
+      // (취소했으므로 "해지 철회" 버튼이 그대로 노출되어야 = 구독 해지 상태 유지)
       await navigateToSubscription(page);
       await expect(page.locator('body')).toBeVisible();
       const undoCancelBtn = page.getByRole('button', { name: /해지 철회|구독 해지 철회/ }).first();
-      if (await undoCancelBtn.isVisible({ timeout: 5000 })) {
-        await undoCancelBtn.click();
-        await page.waitForTimeout(1000);
-        const dialog = page.getByRole('dialog').first();
-        if (await dialog.isVisible({ timeout: 5000 })) {
-          const dismissBtn = dialog.getByRole('button', { name: /취소/ }).first();
-          if (await dismissBtn.isVisible({ timeout: 3000 })) {
-            await dismissBtn.click();
-            await page.waitForTimeout(500);
-            // VERIFY hidden: 취소 클릭 후 해지 철회 다이얼로그 닫힘
-            await expect(dialog).not.toBeVisible({ timeout: 5000 });
-          }
-        }
+      if (!(await undoCancelBtn.isVisible({ timeout: 5000 }))) {
+        // 해지 철회 버튼 미노출 — 해지 예약 상태가 아닌 staging 케이스 가드
+        return;
       }
+      await undoCancelBtn.click();
+      await page.waitForTimeout(1000);
+      const dialog = page.getByRole('dialog').first();
+      if (!(await dialog.isVisible({ timeout: 5000 }))) return;
+      const dismissBtn = dialog.getByRole('button', { name: /취소/ }).first();
+      if (!(await dismissBtn.isVisible({ timeout: 3000 }))) return;
+      await dismissBtn.click();
+      await page.waitForTimeout(500);
+      // VERIFY hidden: 취소 클릭 후 해지 철회 다이얼로그 닫힘 (1단계)
+      await expect(dialog).not.toBeVisible({ timeout: 5000 });
+      // VERIFY visible: 해지 상태 유지 — "해지 철회" 버튼이 여전히 노출 (취소했으므로 철회 안 됨)
+      await expect(page.getByRole('button', { name: /해지 철회|구독 해지 철회/ }).first()).toBeVisible({ timeout: 5000 });
     });
 
     test('[SP-1-16] 팀 구성원 구독 이용자 — 변경 불가 안내', async ({ page }) => {

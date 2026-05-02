@@ -519,75 +519,17 @@ test.describe('TA — 세무대리인찾기', () => {
       }
     });
 
-    test('[TA-1-23] 세무법인 검색 결과 — TOP10 배지 표시', async ({ page }) => {
-      // AMBIGUOUS_DOC: docs "TOP10 배지가 표시된다" — 가드 결합: 페이지 진입 → 탭 → 검색 → 카드/배지 단언 + 가드. 신뢰도 65%.
-      await page.goto('/search/tax-experts');
-      const { compactFirmBtn, submitBtn } = searchSelectors(page);
-
-      // 페이지 진입 가드
-      if (!(await isVisibleSoft(compactFirmBtn, 5000))) {
-        await expect(page.locator('body')).toBeVisible();
-        return;
-      }
-      await safeClick(compactFirmBtn);
-      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
-
-      if (await isVisibleSoft(submitBtn)) {
-        await safeClick(submitBtn);
-        await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
-      }
-
-      // 카드/배지 결합 단언 — TOP10 배지가 카드의 자식인지 검증 (단순 텍스트 존재만으론 부족)
-      const cards = page.locator('[data-testid*="firm-card"], [data-testid*="card"], article');
-      const cardCount = await cards.count().catch(() => 0);
-      if (cardCount === 0) {
-        // 데이터 없는 케이스 — 빈 상태 안내
-        await expect(page.locator('body')).toBeVisible();
-        return;
-      }
-      // 카드 중 TOP10 배지를 포함한 것이 1개 이상 있어야 (TOP10 회사 카드의 뱃지 검증)
-      const cardsWithTop10 = cards.filter({ hasText: /TOP\s*10/i });
-      const top10Count = await cardsWithTop10.count().catch(() => 0);
-      if (top10Count > 0) {
-        // VERIFY count-change: TOP10 배지를 가진 카드 1개 이상 (배지가 회사 카드의 자식임을 검증)
-        expect(top10Count).toBeGreaterThan(0);
-      } else {
-        // staging 데이터에 TOP10 회사가 없는 케이스 — 첫 카드 노출 가드
-        await expect(cards.first()).toBeVisible();
-      }
+    test.skip('[TA-1-23][B] 세무법인 검색 결과 — TOP10 배지 표시', async () => {
+      // BLOCKED: QA 시트 부족 — 도메인 정답 비교 데이터 없음
+      // "있어야 할 회사 카드(TOP10 보유)에 배지 노출 + 없어야 할 회사에 미노출" 검증을 위한
+      // 양방향 데이터(예: 가온세무법인=TOP10, 가감세무법인=non-TOP10)가 docs/qa에 부재.
+      // 단순 텍스트 존재 검증은 fake-pass 통로 → 자동화 보류, anchor팀 docs 보강 시 활성화.
     });
 
-    test('[TA-1-24] 세무법인 검색 결과 — 관계사 배지 표시', async ({ page }) => {
-      // AMBIGUOUS_DOC: docs "관계사 배지 표시" — 가드 결합: 페이지 진입 → 탭 → 검색 → 카드/배지 단언 + 가드. 신뢰도 65%.
-      await page.goto('/search/tax-experts');
-      const { compactFirmBtn, submitBtn } = searchSelectors(page);
-
-      // 페이지 진입 가드
-      if (!(await isVisibleSoft(compactFirmBtn, 5000))) {
-        await expect(page.locator('body')).toBeVisible();
-        return;
-      }
-      await safeClick(compactFirmBtn);
-      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
-
-      if (await isVisibleSoft(submitBtn)) {
-        await safeClick(submitBtn);
-        await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
-      }
-
-      // 카드/배지 단언 + 가드 (staging 데이터 의존)
-      const card = page.locator('[data-testid*="firm-card"], [data-testid*="card"], article').first();
-      const badge = page.getByText(/관계사/).first();
-      if (await isVisibleSoft(badge, 5000)) {
-        // VERIFY visible: 세무법인 검색 결과에 관계사 배지 노출
-        await expect(badge).toBeVisible();
-      } else if (await isVisibleSoft(card, 3000)) {
-        // 결과 카드는 있지만 관계사 배지 미노출 (해당 데이터 없음)
-        await expect(card).toBeVisible();
-      } else {
-        // 데이터 없는 케이스 — 빈 상태 안내
-        await expect(page.locator('body')).toBeVisible();
-      }
+    test.skip('[TA-1-24][B] 세무법인 검색 결과 — 관계사 배지 표시', async () => {
+      // BLOCKED: QA 시트 부족 — 도메인 정답 비교 데이터 없음
+      // "관계사 배지 보유/미보유 회사" 양방향 데이터가 docs/qa에 부재 (TA-1-23과 동일 패턴).
+      // anchor팀 docs 보강 시 활성화.
     });
 
     test('[TA-1-26] 목록 화면 — 인사말 영역 확인', async ({ page }) => {

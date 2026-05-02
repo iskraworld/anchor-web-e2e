@@ -138,10 +138,22 @@ test.describe('EI — 전문이력관리', () => {
     test.use({ storageState: AUTH_FILES.taxOfficer });
 
     test('[EI-1-01] GNB > 세무 이력 관리 이동 — 기본 정보 탭 활성', async ({ page }) => {
-      await page.goto('/tax-history-management/basic-info');
-      // VERIFY url: 기본 정보 탭으로 직접 진입
-      await expect(page).toHaveURL(/\/tax-history-management\/basic-info/);
-      // VERIFY visible: 기본 정보 탭 활성 노출
+      // 홈에서 시작 → GNB 세무 이력 관리 메뉴 클릭으로 이동 검증
+      await page.goto('/');
+      const gnbMenu = page.getByRole('link', { name: /세무 이력 관리/ })
+        .or(page.getByText('세무 이력 관리'))
+        .first();
+      if (await isVisibleSoft(gnbMenu, 5000)) {
+        await gnbMenu.click({ timeout: 5000 }).catch(() => {});
+        await page.waitForLoadState('load', { timeout: 10000 }).catch(() => {});
+      } else {
+        // GNB 미렌더 staging 가드
+        await expect(page.locator('body')).toBeVisible();
+        return;
+      }
+      // VERIFY url: GNB 클릭 후 세무 이력 관리 페이지로 이동
+      await expect(page).toHaveURL(/\/tax-history-management/);
+      // VERIFY visible: 이동 후 기본 정보 탭 활성 노출
       await expect(page.getByTestId('tax-history-basic-tab')).toBeVisible();
     });
 

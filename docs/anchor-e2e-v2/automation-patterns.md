@@ -314,6 +314,93 @@ try {
 
 ---
 
+## 11. End-to-end action chain — 흐름의 일부만 검증 금지
+
+**문제:** docs는 "X 액션 → Y 결과"의 한 흐름을 요구하지만, AI는 흔히 "X 액션 단계만" 또는 "Y 결과 일부만" 검증한다. 이게 **새로운 fake-pass 통로** — `body.toBeVisible()` 단독은 audit가 잡지만, 흐름의 일부만 검증한 PASS는 audit가 못 잡는다.
+
+**잘못된 예시 (입력만 검증, 저장·반영 미검증):**
+```typescript
+test('[MY-1-12] 주소 변경 모달 — 도로명주소 선택 후 변경 완료', async () => {
+  // ❌ 검색 입력만 하고 끝
+  await searchInput.fill('서울 강남');
+  await expect(searchInput).toHaveValue(/서울 강남/);
+  // 변경 버튼 클릭, 모달 닫힘, 주소 반영은 미검증
+});
+```
+
+**올바른 예시 (액션 전체 흐름 검증):**
+```typescript
+test('[MY-1-12] 주소 변경 모달 — 도로명주소 선택 후 변경 완료', async () => {
+  await searchInput.fill('서울 강남');
+  // VERIFY value: 검색 입력 반영 (1단계)
+  await expect(searchInput).toHaveValue(/서울 강남/);
+
+  // 결과 선택 + 변경 버튼 클릭
+  const result = page.getByRole('option').first();
+  await result.click();
+  await page.getByRole('button', { name: /변경|적용/ }).click();
+
+  // VERIFY hidden: 모달 닫힘 (2단계)
+  await expect(modalSearch).not.toBeVisible({ timeout: 5000 });
+  // VERIFY text: 변경된 주소가 페이지에 반영 (3단계 = docs 기대 결과)
+  await expect(addressDisplay).toContainText('서울 강남');
+});
+```
+
+**체크리스트 — VERIFY 작성 시:**
+- [ ] docs 기대 결과의 **마지막 단계까지** 검증하는가?
+- [ ] "X 클릭 → Y 발생"인 docs를 "X 클릭만" 또는 "Y 일부만"으로 줄이지 않았는가?
+- [ ] 다이얼로그/모달 닫힘이 docs 의도라면 닫힘 + 후속 상태 둘 다 검증했는가?
+
+**패턴 적용 사례:**
+- 이메일 변경: 입력 → 인증 메일 전송 → 인증번호 필드 노출 (입력만 검증 금지)
+- 주소 변경: 입력 → 결과 선택 → 변경 버튼 → 모달 닫힘 → 페이지 반영
+- 구독 해지: 해지 클릭 → 다이얼로그 → 확인 클릭 → 구독 상태 변경 (다이얼로그 닫힘만 검증 금지)
+- 멤버 검색 + 초기화: 입력 → 초기화 → 빈 값 (입력만 검증 금지)
+
+---
+
+## 12. 사용자 동작 시뮬레이션 우선 — `page.goto()` 편법 금지
+
+**문제:** docs가 "GNB > X 클릭"인데 AI는 흔히 `page.goto('/x-page')`로 SPA 네비게이션을 우회한다. URL이 맞으면 PASS는 되지만 **실제 사용자 동작 (GNB 클릭) 검증이 빠짐**. 이건 SPA 라우팅·이벤트 핸들러 버그를 못 잡는 새 fake-pass 통로.
+
+**잘못된 예시 (URL goto 편법):**
+```typescript
+test('[AUTH-1-05] 세무사 찾기 선택 — 비로그인 세무사 검색 화면 이동', async () => {
+  // ❌ 실제 클릭 흐름 우회
+  await page.goto('/search/tax-experts');
+  await expect(page).toHaveURL(/\/search\/tax-experts/);
+});
+```
+
+**올바른 예시 (실제 GNB 클릭):**
+```typescript
+test('[AUTH-1-05] 세무사 찾기 선택 — 비로그인 세무사 검색 화면 이동', async () => {
+  await page.goto('/');                          // 진입점만 goto
+  await page.getByText('세무사 찾기').first().click();  // 실제 사용자 동작
+  // VERIFY url: 클릭 후 검색 페이지로 이동
+  await expect(page).toHaveURL(/\/search\/tax-experts/);
+});
+```
+
+**`page.goto()`가 정당한 경우:**
+- 진입점 (홈 `/`, 로그인 페이지 등) — 시나리오 시작
+- 사전 조건 설정 (테스트 본 의도 외 페이지)
+- staging URL 직접 전이 검증 (deep link 케이스 명시)
+
+**`page.goto()`가 함정인 경우:**
+- docs가 "GNB > X 클릭" 또는 "메뉴 X 선택"이라고 명시
+- 사용자 인터랙션을 시뮬레이션해야 하는 경우
+- 라우팅 트리거 검증이 docs 의도
+
+**체크리스트 — VERIFY 작성 시:**
+- [ ] docs가 "X 클릭"이라고 명시했는데 코드는 `page.goto`만 하지 않았는가?
+- [ ] 진입점 외에 navigation을 검증해야 한다면 실제 클릭으로 했는가?
+
+> audit 룰 후보: `page.goto` + docs에 "클릭/선택/탭" 키워드 mismatch 시 의심 표시.
+
+---
+
 ## 자동화 불가가 진짜 맞는 케이스 (`[M]` 정당)
 
 아래는 **시도해도 정말 안 되는** 영역. 이런 경우만 `[M]`:

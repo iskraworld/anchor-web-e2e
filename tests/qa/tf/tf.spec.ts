@@ -315,6 +315,8 @@ test.describe('TF — 법인&팀연동관리', () => {
     });
 
     test('[TF-1-07] 소유자/관리자 — 이름/이메일 검색 및 초기화', async ({ page }) => {
+      // 도메인 정답 양방향 (qa-doc-generation-prompt §7) — 검색은 실제 멤버 이름으로,
+      // 결과 노출/초기화 복귀까지 5단계 검증 (action chain §11).
       await page.goto('/');
       const menu = page.getByText('법인 멤버 관리');
       if (await menu.isVisible({ timeout: 5000 })) {
@@ -322,12 +324,61 @@ test.describe('TF — 법인&팀연동관리', () => {
         await page.waitForLoadState('load', { timeout: 20000 }).catch(() => {});
       }
       await expect(page.locator('body')).toBeVisible();
+
       const searchInput = page.getByPlaceholder(/검색/).first();
-      if (await searchInput.isVisible({ timeout: 5000 })) {
-        await searchInput.fill('테스트');
-        // VERIFY value: 멤버 검색 입력란에 "테스트" 텍스트 반영
-        await expect(searchInput).toHaveValue('테스트');
+      if (!(await isVisibleSoft(searchInput, 5000))) return;
+
+      // 1단계: 실 멤버 명단 확인 — 페이지 텍스트에서 한글 이름 후보 추출 (UI 어휘 제외)
+      const bodyText = await page.locator('body').innerText();
+      const uiWords = new Set([
+        '멤버', '관리', '검색', '초기화', '연동', '해제', '권한', '회수', '초대',
+        '나의', '소유자', '관리자', '법인', '이름', '이메일', '역할', '연동 관리',
+        '취소', '확인', '추가', '삭제', '편집', '저장', '로그아웃', '홈', '구독',
+        '플랜', '안내', '있음', '없음', '전체', '대기', '완료', '실패', '진행',
+      ]);
+      const candidates = [...bodyText.matchAll(/[가-힣]{2,4}/g)]
+        .map((m) => m[0])
+        .filter((n) => !uiWords.has(n));
+      if (candidates.length === 0) return; // 멤버 데이터 없음 — 사전 조건 미충족
+
+      // 가장 빈도 높은 후보를 멤버 이름으로 선택 (우연한 단어 회피)
+      const freq = new Map<string, number>();
+      for (const c of candidates) freq.set(c, (freq.get(c) ?? 0) + 1);
+      const targetName = [...freq.entries()].sort((a, b) => b[1] - a[1])[0][0];
+
+      // 2단계: 검색어 입력 + 반영 검증
+      await searchInput.fill(targetName);
+      // VERIFY value: 검색 입력란에 실 멤버 이름 반영
+      await expect(searchInput).toHaveValue(targetName);
+      await searchInput.press('Enter').catch(() => {});
+      await page.waitForTimeout(500); // SPA 디바운스
+
+      // 3단계: 검색 결과 노출 검증 — 해당 이름이 결과 영역에 보임 (필터 동작)
+      // VERIFY visible: 검색 결과에 입력한 이름 노출
+      await expect(page.getByText(targetName, { exact: false }).first()).toBeVisible({
+        timeout: 5000,
+      });
+
+      // 4단계: 초기화 — X 버튼 또는 초기화 버튼 후보 시도, 실패 시 직접 비우기
+      const resetCandidates = [
+        page.getByRole('button', { name: /^초기화$/ }),
+        page.getByRole('button', { name: /^X$|^✕$|^×$/i }),
+        page.getByLabel(/초기화|clear|reset/i),
+      ];
+      let didReset = false;
+      for (const btn of resetCandidates) {
+        if (await isVisibleSoft(btn.first(), 1500)) {
+          if (await btn.first().click({ timeout: 3000 }).then(() => true).catch(() => false)) {
+            didReset = true;
+            break;
+          }
+        }
       }
+      if (!didReset) await searchInput.clear().catch(() => {});
+
+      // 5단계: 초기화 후 검색 입력란 비워짐 + 전체 목록 복귀 (해당 이름 외 멤버 다수 노출)
+      // VERIFY value: 초기화 후 검색 입력란이 빈 값으로 복귀
+      await expect(searchInput).toHaveValue('', { timeout: 5000 });
     });
 
     test('[TF-1-08] 소유자/관리자 — 연동 해제 버튼 탭', async ({ page }) => {

@@ -5,6 +5,31 @@
 
 ---
 
+## Session 2026-05-06 07:32 — Cycle 4 결과 처리 + TF-1-07 패치 + 검증 사이클 종료
+
+### 작업 요약
+- **Cycle 4 검증자 응답 분석**: 14Y / 1N / 0NA = N율 6.7% (Cycle 2: 60% → Cycle 3: 20% → Cycle 4: 6.7%)
+  - 한계효용 곡선 정확히 수렴 (예측 일치)
+  - N 1건 = TF-1-07: 임의 키워드 "테스트" 검색 → 검증 의미 없음 (도메인 정답 양방향 §7 적용 누락)
+  - 새 패턴 발견 아니라 기존 패턴 적용 누락 → "N 1-2 같은 패턴 → 빠른 패치 후 종료" 트랙 적용
+- **사용자 옵션 결정**: A (패치 + 종료) 선택
+- **TF-1-07 fix** (`tests/qa/tf/tf.spec.ts:317-331` → 5단계 흐름):
+  1. 페이지 한글 텍스트에서 멤버 이름 후보 추출 (UI 어휘 set 제외)
+  2. 빈도 기반 후보 선택 (우연한 단어 회피)
+  3. 검색어 입력 + 반영 검증
+  4. 검색 결과 노출 검증 (해당 이름 visible)
+  5. 초기화 버튼 시도 (X / 초기화 / aria-label 후보) → 폴백 clear → 입력란 빈 값 검증
+- **검증**: 단독 PASS / 풀테스트 **797 PASS / 0 FAIL** (베이스라인 유지, 회귀 0) / audit ✅ (VERIFY 정합성 0 불일치, 누락 0)
+- **검증 사이클 종료 선언**: framework v3.1 정착, 신서비스 적용 단계 진입
+- 커밋: `c601288 fix(TF-1-07)` push 완료
+
+### 다음 액션
+- 신서비스(사주톡 등) 적용 시작 — framework v3.1 + qa-doc-generation-prompt + sample-verify.mjs + audit 활용
+- AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰 (병행 가능, 30분)
+- (필요 시) generate-qa-report.mjs에 VERIFY 컬럼 표시
+
+---
+
 ## Session 2026-05-05 17:31 — Cycle 4 재개 + sample-verify --exclude-from 옵션
 
 ### 작업 요약

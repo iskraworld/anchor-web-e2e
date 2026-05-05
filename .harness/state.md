@@ -4,25 +4,24 @@
 
 ---
 
-## 마지막 실행: 2026-05-05 17:31
-## 마지막 업데이트: 2026-05-05 17:31
+## 마지막 실행: 2026-05-06 07:32
+## 마지막 업데이트: 2026-05-06 07:32
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **Cycle 4 검증 대기 중** — 오전 "사이클 종료" 결정을 뒤집고 한 번 더 진행. N=0 데이터로 framework 정착 검증.
+- **검증 사이클 완료** — Cycle 4 N율 6.7% (TF-1-07 패치 완료) → framework v3.1 정착 선언. 신서비스 적용 단계.
 
 ### 이어서 할 것
-1. **검증자 응답 대기** (Cycle 4 — 새 15건, 0% 중복)
-2. **분기 처리**: N=0 → 종료 + 신서비스 / N 1-2 → 패치 + 종료 / N 3+ → v4 보강
-3. **AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰** (병행 가능)
+1. **신서비스(사주톡 등) 적용** — framework v3.1 + qa-doc-generation-prompt + sample-verify.mjs + audit 활용
+2. **AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰** (30분, 병행 가능)
+3. (필요 시) generate-qa-report.mjs에 VERIFY 컬럼 표시
 
 ### 막힌 것
 - **HOME staging BLOCKED 11건**: 소속 드롭다운 검색 API 500 — staging 회복 시 재테스트
 - **HOME-TA GNB flakiness**: 풀테스트에서 가끔 fail, 단독 실행은 정상
 
 ### 사람 판단 필요
-- Cycle 4 검증자 동의/거절 (거절 시 자동으로 종료 트랙 복귀)
-- Cycle 4 결과에 따른 framework v4 보강 여부
+- 신서비스 적용 시작 시점 (사주톡 또는 다른 서비스)
 - AMBIGUOUS_DOC 156건 일괄 리뷰 (Eugene 30분 작업)
 - D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
 - ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
@@ -62,8 +61,11 @@
 - [x] 풀테스트 797 PASS / 0 FAIL 유지 (3 사이클 일관) ✅ 2026-05-05
 - [x] sample-verify.mjs `--exclude-from` / `--exclude-ids` 옵션 ✅ 2026-05-05
 - [x] Cycle 4 샘플 생성 (Cycle 2/3 14 ID 제외, 0% 중복) ✅ 2026-05-05
-- [ ] 검증자 4차 응답 대기 — N=0 목표
-- [ ] 신서비스(사주톡 등) 적용 — framework 활용 (Cycle 4 결과 후)
+- [x] **검증자 4차 (15건): 14Y / 1N / 0NA = N율 6.7%** ✅ 2026-05-06
+- [x] **TF-1-07 fix — 임의 키워드 → 실 멤버 이름 5단계 검증** ✅ 2026-05-06
+- [x] **풀테스트 797 PASS / 0 FAIL 유지 (4 사이클 일관)** ✅ 2026-05-06
+- [x] **검증 사이클 종료 — framework v3.1 정착 선언** ✅ 2026-05-06
+- [ ] 신서비스(사주톡 등) 적용 — framework v3.1 활용
 - [ ] AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰
 - [ ] generate-qa-report.mjs에 VERIFY 컬럼 표시 (후속 사이클)
 - [ ] HOME staging BLOCKED 11건 재테스트 (staging 회복 후)

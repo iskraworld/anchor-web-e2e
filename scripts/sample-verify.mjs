@@ -6,6 +6,8 @@
  * 사용:
  *   node scripts/sample-verify.mjs --modules=EI,EO,GO --top=12 --random=3
  *   node scripts/sample-verify.mjs                          (모든 모듈, top=12 random=3 기본)
+ *   node scripts/sample-verify.mjs --exclude-from=docs/verify-samples-2026-05-05.md
+ *   node scripts/sample-verify.mjs --exclude-from=a.md,b.md --exclude-ids=MY-1-12,EI-0-06
  *
  * 출력: 검증자 친화 markdown — docs 기대 + 코드 + 위험 신호 + AI 해석 + Y/N/부분
  *
@@ -39,6 +41,30 @@ const args = Object.fromEntries(
 const moduleFilter = args.modules ? new Set(args.modules.split(',').map(m => m.toUpperCase())) : null;
 const TOP_N    = parseInt(args.top    ?? '12', 10);
 const RANDOM_N = parseInt(args.random ?? '3',  10);
+const excludeFromFiles = args['exclude-from'] ? args['exclude-from'].split(',') : [];
+const excludeIdsArg    = args['exclude-ids']  ? new Set(args['exclude-ids'].split(',')) : new Set();
+
+// ── 기존 샘플 파일에서 ID 추출 (제외 대상) ─────────────────────────────
+function loadExcludedIds(files) {
+  const excluded = new Set();
+  const sampleHeaderRe = /^##\s*\[샘플\s+\d+\/\d+\]\s+([A-Z][A-Z0-9]*(?:-[A-Z]+)*-[\d][\d-]*)/gm;
+  for (const file of files) {
+    const path = resolve(root, file);
+    if (!existsSync(path)) {
+      console.error(`경고: exclude-from 파일 없음: ${file}`);
+      continue;
+    }
+    const content = readFileSync(path, 'utf-8');
+    let m;
+    sampleHeaderRe.lastIndex = 0;
+    while ((m = sampleHeaderRe.exec(content)) !== null) {
+      excluded.add(m[1]);
+    }
+  }
+  return excluded;
+}
+
+const excludeIds = new Set([...excludeIdsArg, ...loadExcludedIds(excludeFromFiles)]);
 
 // ── docs 기대 결과 로드 ─────────────────────────────────────────────
 function loadDocsExpected(docsDir) {
@@ -222,11 +248,18 @@ function formatSample(item, idx, total, tier, docsExpected) {
 
 // ── 실행 ──────────────────────────────────────────────────────────────
 const docsExpected = loadDocsExpected(resolve(root, 'docs/qa'));
-const items = collectVerifyItems(resolve(root, 'tests/qa'));
+let items = collectVerifyItems(resolve(root, 'tests/qa'));
 
 if (items.length === 0) {
   console.log('VERIFY 항목이 없습니다.');
   process.exit(0);
+}
+
+if (excludeIds.size > 0) {
+  const before = items.length;
+  items = items.filter(i => !excludeIds.has(i.id));
+  console.error(`# 제외: ${excludeIds.size}개 ID (${before - items.length}개 항목 제거 → ${items.length}개 남음)`);
+  console.error(`# 제외 ID: ${[...excludeIds].join(', ')}`);
 }
 
 const { tier1, tier3 } = selectSamples(items, TOP_N, RANDOM_N);

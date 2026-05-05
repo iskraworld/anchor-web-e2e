@@ -5,7 +5,32 @@
 
 ---
 
-워크로그 항목 추가 완료.
+## Session 2026-05-05 17:31 — Cycle 4 재개 + sample-verify --exclude-from 옵션
+
+### 작업 요약
+- **이전 세션 "검증 사이클 종료" 결정 재검토**: framework 80% (N율 20%) 잔존 상태를 "정착"으로 보긴 어렵다는 판단으로 한 사이클 더 진행하기로 변경
+  - 다른 Claude 추천(B 멈춤)에 부분 동의 / 핵심 논리(한계효용 추측, "anchor는 학습 환경" 사후 합리화) 비판
+  - 4차 데이터(N=0 또는 long tail) 자체가 다음 결정의 근거 → 7분 검증으로 살 수 있는 정보 가치 큼
+- **scripts/sample-verify.mjs 확장**: `--exclude-from=<file>` + `--exclude-ids=<list>` 옵션 추가
+  - 기존 샘플 파일에서 `## [샘플 X/Y] <ID>` 패턴으로 ID 추출 → 제외 풀 생성
+  - 동일 항목 재검증 부담 제거 (위험 점수 알고리즘이 selector/패턴 기반이라 보강해도 점수 잘 안 떨어지는 문제)
+- **Cycle 4 샘플 생성**: `docs/verify-samples-2026-05-05-c4.md`
+  - Cycle 2 + Cycle 3 샘플 파일 → 14개 ID 제외 (63 → 37 항목)
+  - 위험 우선 12 + 랜덤 3 = 15건, **Cycle 2/3과 0% 중복**
+  - Framework v2 fix 항목(AUTH-1-05, EI-1-01, GO-1-01) 자연 포함 → fix 회귀 검증 겸함
+  - 모듈 분포: AUTH(2), EO(2), GO(4), SP(1), TA(2), TF(1), EI(1), MY(2)
+- 커밋 `751662c` push 완료, 검증자 전달 URL 준비
+
+### 실패한 시도
+- 1차 sample-verify 실행 시 Cycle 3 Tier 1과 100% 동일 출력 발견 → exclude 옵션 신설로 우회
+
+### 다음 액션
+- 검증자 응답 대기 (동의 거절도 OK 형식으로 전달)
+- N=0 → framework 정착 종료, 신서비스 적용 진행
+- N 1-2 같은 패턴 → 빠른 패치 후 종료
+- N 3+ 새 패턴 → framework v4 보강 + 재사이클 (ROI 의문 단계)
+
+---
 
 
 ## Session 2026-05-05 17:02 — Framework v3 (N 3건 fix + §13 닫힌 메뉴 활성화) + 검증 사이클 종료 결정

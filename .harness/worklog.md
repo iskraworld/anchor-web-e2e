@@ -8,6 +8,36 @@
 워크로그 항목 추가 완료.
 
 
+## Session 2026-05-05 17:02 — Framework v3 (N 3건 fix + §13 닫힌 메뉴 활성화) + 검증 사이클 종료 결정
+
+### 작업 요약
+- **검증자 2차 응답** (Y 12 / N 3 / NA 0) 분석: N율 60% → 20% (framework v2 효과 입증)
+- **N 3건 fix**:
+  - MY-1-12 (5단계 흐름 완성): 검색어 입력 → 돋보기/Enter → 결과 선택 → 모달 반영 → 변경 → 닫힘 → 원본 반영
+  - EI-0-06 외 5건 (EI-0-06/07/08/09/10): GNB 닫힌 상태에서 메뉴 검색 → fake-pass 통로 발견. `openGnb()` helper 추가 후 `getByRole('menuitem')` 검색
+- **automation-patterns §13 신설**: "닫힌 메뉴/드롭다운 활성화 후 검증" — GNB/드롭다운/사이드바/모달 트리거/Tooltip 패턴
+- **검증**: audit ✅ + 풀테스트 797 PASS / 0 FAIL / 82 skipped (회귀 0)
+- **재샘플링 15건** → `docs/verify-samples-2026-05-05.md`
+- **사용자 결정 — 검증 사이클 종료**: 검증자 부담 인지로 추가 사이클 보류. 사유:
+  - 한계효용 급감 (60% → 20% → 다음은 ~10% 예상)
+  - 사람 시간이 가장 비싼 자원 (3 사이클 누적 ~45분 검증자 시간)
+  - 현재 framework 자산이 신서비스 적용에 충분
+  - "충분 수준" 인식이 framework 설계의 진짜 완성
+
+### 결정 (decision.md에 추가)
+- **검증 사이클 종료** (옵션 B 채택): 추가 검증자 부담 없이 신서비스 적용으로 진행
+
+### 다음 액션
+- 신서비스(사주톡 등) 적용 — qa-doc-generation-prompt + sample-verify.mjs 활용
+- 또는 anchor 후속: AMBIGUOUS_DOC 156건 일괄 리뷰 (Eugene 30분 작업)
+- trailkit 하네스 정리 (CWD 혼선 정리 — 세션 위치 잘못된 점 인식)
+
+### 깨달음
+- 본 세션은 trailkit CWD에서 진행됐으나 실제 작업은 ahchor-web-e2e 레포. CWD가 곧 세션의 정체성 — 다음 ahchor 작업은 처음부터 `cd ahchor-web-e2e` 후 시작 필수
+- trailkit 하네스에 ahchor 작업 기록 일부 남음 (자동화/수동) — 별도 정리 필요
+
+---
+
 ## Session 2026-05-02 10:23 — 검증자 N 9건 fix + framework v2 (action chain / 사용자 동작 / 도메인 정답)
 
 ### 작업 요약

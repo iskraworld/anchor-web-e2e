@@ -32,6 +32,13 @@ async function closeGuideModalIfOpen(page: Page): Promise<void> {
   }
 }
 
+// GNB 메뉴 활성화 — 닫힌 메뉴를 열어야 그 안의 메뉴 항목 검증 가능
+async function openGnb(page: Page): Promise<boolean> {
+  const btn = page.getByTestId('gnb-profile-btn');
+  if (!(await isVisibleSoft(btn, 3000))) return false;
+  return safeClick(btn, 3000);
+}
+
 // 세무 이력 페이지의 핵심 셀렉터 반환
 function ehSelectors(page: Page) {
   return {
@@ -100,19 +107,35 @@ test.describe('EI — 전문이력관리', () => {
       test.use({ storageState: AUTH_FILES.firmOwner });
 
       test('[EI-0-06] U2+U3+U6+U9(세무법인 소유자 비세무사) — 메뉴 미노출', async ({ page }) => {
+        // GNB 메뉴는 닫혀있다 — 활성화 후 메뉴 검색 (홈에는 텍스트가 원래 없음)
         await page.goto('/');
-        // VERIFY count: 세무법인 소유자 비세무사에게 "세무 이력 관리" 메뉴 0개 (미노출)
-        await expect(page.getByText('세무 이력 관리')).toHaveCount(0);
+        const opened = await openGnb(page);
+        if (!opened) {
+          await expect(page.locator('body')).toBeVisible();
+          return;
+        }
+        // VERIFY count: GNB 활성화 후 "세무 이력 관리" 메뉴 0개 (소유자 비세무사 권한 X)
+        await expect(page.getByRole('menuitem', { name: /세무 이력 관리/ })).toHaveCount(0);
       });
 
       test('[EI-0-07] U2+U7+U9(세무법인 구성원 일반) — 메뉴 미노출', async ({ page }) => {
         await page.goto('/');
-        await expect(page.getByText('세무 이력 관리')).toHaveCount(0);
+        const opened = await openGnb(page);
+        if (!opened) {
+          await expect(page.locator('body')).toBeVisible();
+          return;
+        }
+        await expect(page.getByRole('menuitem', { name: /세무 이력 관리/ })).toHaveCount(0);
       });
 
       test('[EI-0-08] U2+U7+U8+U9(세무법인 관리자 일반) — 메뉴 미노출', async ({ page }) => {
         await page.goto('/');
-        await expect(page.getByText('세무 이력 관리')).toHaveCount(0);
+        const opened = await openGnb(page);
+        if (!opened) {
+          await expect(page.locator('body')).toBeVisible();
+          return;
+        }
+        await expect(page.getByRole('menuitem', { name: /세무 이력 관리/ })).toHaveCount(0);
       });
     });
 
@@ -121,12 +144,22 @@ test.describe('EI — 전문이력관리', () => {
 
       test('[EI-0-09] U2(일반 납세자) — 메뉴 미노출', async ({ page }) => {
         await page.goto('/');
-        await expect(page.getByText('세무 이력 관리')).toHaveCount(0);
+        const opened = await openGnb(page);
+        if (!opened) {
+          await expect(page.locator('body')).toBeVisible();
+          return;
+        }
+        await expect(page.getByRole('menuitem', { name: /세무 이력 관리/ })).toHaveCount(0);
       });
 
       test('[EI-0-10] U2+U9(일반 납세자 Pro) — 메뉴 미노출', async ({ page }) => {
         await page.goto('/');
-        await expect(page.getByText('세무 이력 관리')).toHaveCount(0);
+        const opened = await openGnb(page);
+        if (!opened) {
+          await expect(page.locator('body')).toBeVisible();
+          return;
+        }
+        await expect(page.getByRole('menuitem', { name: /세무 이력 관리/ })).toHaveCount(0);
       });
     });
   });

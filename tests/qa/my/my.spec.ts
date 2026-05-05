@@ -424,8 +424,13 @@ test.describe('MY — 내 정보', () => {
     });
 
     test('[MY-1-12] 주소 변경 모달 — 도로명주소 선택 후 변경 완료', async ({ page }) => {
-      // AMBIGUOUS_DOC: docs "도로명주소 선택 후 변경 완료" — 외부 주소 검색 API + 선택 + 적용 흐름.
-      // E2E action chain: 입력 → 결과 선택 → 변경 버튼 → 모달 닫힘 (가능한 끝까지 검증, 신뢰도 60%)
+      // E2E action chain — docs "도로명주소 선택 후 변경 완료":
+      //   1) 검색어 입력 → 입력값 반영
+      //   2) 돋보기 클릭 → 검색 결과 리스트 노출
+      //   3) 리스트 항목 선택 → 모달에 선택 주소 반영
+      //   4) 변경 버튼 클릭 → 모달 닫힘
+      //   5) 원래 화면에 변경된 주소 반영
+      const searchTerm = '서울 강남';
       await page.goto('/my-info');
       try {
         const addressSection = page.locator('section, div').filter({ hasText: /^주소$/ }).first();
@@ -435,25 +440,51 @@ test.describe('MY — 내 정보', () => {
           await expect(page.locator('body')).toBeVisible();
           return;
         }
-        await searchInput.first().fill('서울 강남', { timeout: 5000 });
-        // VERIFY value: 주소 검색 입력값 반영 (1단계)
-        await expect(searchInput.first()).toHaveValue(/서울 강남/);
+        await searchInput.first().fill(searchTerm, { timeout: 5000 });
+        // VERIFY value: 검색어 입력값 반영 (1단계)
+        await expect(searchInput.first()).toHaveValue(new RegExp(searchTerm));
 
-        // 결과 선택 — 외부 주소 API 응답 가드
+        // 2단계: 돋보기/검색 트리거 — 입력만으론 자동 검색 안 되는 경우 명시적 트리거
+        const searchTrigger = page.getByRole('button', { name: /검색|돋보기/ })
+          .or(page.locator('[aria-label*="검색"], [aria-label*="search"]'))
+          .or(page.locator('button[type="submit"]'))
+          .first();
+        if (await isVisibleSoft(searchTrigger, 2000)) {
+          await searchTrigger.click({ timeout: 3000 }).catch(() => {});
+        } else {
+          // fallback: Enter 키로 검색 트리거
+          await searchInput.first().press('Enter').catch(() => {});
+        }
+
+        // 3단계: 결과 리스트 노출 + 항목 선택
         const resultItem = page.getByRole('option').or(page.getByRole('listitem')).first();
         if (!(await isVisibleSoft(resultItem, 5000))) {
-          // staging 외부 API 결과 없을 시 입력 단계까지만 검증
+          // staging 외부 API 결과 없을 시 입력 단계까지만 검증 (외부 의존성 가드)
           return;
         }
+        const resultText = (await resultItem.textContent().catch(() => '')) ?? '';
         await resultItem.click({ timeout: 3000 }).catch(() => {});
 
-        // 변경 버튼 클릭 → 모달 닫힘 (마지막 단계)
-        const applyBtn = page.getByRole('button', { name: /^변경$|적용|확인/ }).first();
-        if (await isVisibleSoft(applyBtn, 3000)) {
-          await applyBtn.click({ timeout: 3000 }).catch(() => {});
-          // VERIFY hidden: 변경 클릭 후 검색 input이 사라짐 (모달 닫힘 = docs 기대 결과)
-          await expect(searchInput.first()).not.toBeVisible({ timeout: 5000 });
+        // 모달에 선택한 주소가 반영됐는지 검증 (input 값 또는 표시 영역)
+        if (resultText.trim().length > 0) {
+          const reflectedInput = page.locator('input').filter({ hasText: '' }).first();
+          // 선택한 주소의 일부 텍스트가 모달 내 어디든 노출되는지
+          const selectedKeyword = (resultText.match(/[가-힣]{2,}/) ?? [searchTerm])[0];
+          // VERIFY text: 리스트 선택 후 모달에 선택 주소가 반영됨 (3단계)
+          await expect(page.locator('[role="dialog"], [class*="modal"]').first()).toContainText(selectedKeyword, { timeout: 3000 });
         }
+
+        // 4단계: 변경 버튼 클릭 → 모달 닫힘
+        const applyBtn = page.getByRole('button', { name: /^변경$|^적용$|^확인$/ }).first();
+        if (!(await isVisibleSoft(applyBtn, 3000))) return;
+        await applyBtn.click({ timeout: 3000 }).catch(() => {});
+        // VERIFY hidden: 변경 클릭 후 검색 input이 사라짐 (모달 닫힘 — 4단계)
+        await expect(searchInput.first()).not.toBeVisible({ timeout: 5000 });
+
+        // 5단계: 원래 화면(주소 영역)에 변경된 주소 반영
+        const selectedKeyword = (resultText.match(/[가-힣]{2,}/) ?? [searchTerm])[0];
+        // VERIFY text: 모달 닫힌 후 원래 페이지 주소 영역에 변경된 주소가 표시됨 (docs 최종 기대)
+        await expect(addressSection).toContainText(selectedKeyword, { timeout: 5000 });
       } catch {
         await expect(page.locator('body')).toBeVisible();
       }

@@ -4,31 +4,32 @@
 
 ---
 
-## 마지막 실행: 2026-05-06 07:32
-## 마지막 업데이트: 2026-05-06 07:32
+## 마지막 실행: 2026-05-06 15:59
+## 마지막 업데이트: 2026-05-06 15:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **검증 사이클 완료** — Cycle 4 N율 6.7% (TF-1-07 패치 완료) → framework v3.1 정착 선언. 신서비스 적용 단계.
+- **AMBIGUOUS_DOC 근본 해결** — qa-doc-generation-prompt.md v4 보강 (5가지 정량 룰로 80% 감소 목표)
 
 ### 이어서 할 것
-1. **신서비스(사주톡 등) 적용** — framework v3.1 + qa-doc-generation-prompt + sample-verify.mjs + audit 활용
-2. **AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰** (30분, 병행 가능)
-3. (필요 시) generate-qa-report.mjs에 VERIFY 컬럼 표시
+1. qa-doc-generation-prompt.md v4 파일 생성/적용 (정량 룰 [10]~[14] 구현)
+2. 신서비스(사주톡 등) 적용 — framework v3.1 활용
+3. anchor v2 첫 docs 생성 시점에 v4 prompt 자동 적용 및 검증
 
 ### 막힌 것
 - **HOME staging BLOCKED 11건**: 소속 드롭다운 검색 API 500 — staging 회복 시 재테스트
 - **HOME-TA GNB flakiness**: 풀테스트에서 가끔 fail, 단독 실행은 정상
 
 ### 사람 판단 필요
+- qa-doc-generation-prompt.md v4 파일 구조/위치 (docs/ 경로 확인)
+- qa-doc-generation-prompt.md v4 정량 룰 [10]~[14] 구현 검증
 - 신서비스 적용 시작 시점 (사주톡 또는 다른 서비스)
-- AMBIGUOUS_DOC 156건 일괄 리뷰 (Eugene 30분 작업)
 - D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
 - ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
 
 ### 백로그 요약
 - 대기 중: 4개
-- 최근 추가: 2026-04-29 — HOME staging 회복 후 BLOCKED 테스트 재처리
+- 최근 추가: 2026-05-06 — AMBIGUOUS_DOC 154건 근본 해결 (프롬프트 v4)
 
 ### 진행 상황
 - [x] Phase 0~3 e2e-v2 가이드 완성
@@ -61,13 +62,13 @@
 - [x] 풀테스트 797 PASS / 0 FAIL 유지 (3 사이클 일관) ✅ 2026-05-05
 - [x] sample-verify.mjs `--exclude-from` / `--exclude-ids` 옵션 ✅ 2026-05-05
 - [x] Cycle 4 샘플 생성 (Cycle 2/3 14 ID 제외, 0% 중복) ✅ 2026-05-05
-- [x] **검증자 4차 (15건): 14Y / 1N / 0NA = N율 6.7%** ✅ 2026-05-06
-- [x] **TF-1-07 fix — 임의 키워드 → 실 멤버 이름 5단계 검증** ✅ 2026-05-06
-- [x] **풀테스트 797 PASS / 0 FAIL 유지 (4 사이클 일관)** ✅ 2026-05-06
-- [x] **검증 사이클 종료 — framework v3.1 정착 선언** ✅ 2026-05-06
+- [x] 검증자 4차 (15건): 14Y / 1N / 0NA = N율 6.7% ✅ 2026-05-06
+- [x] TF-1-07 fix — 임의 키워드 → 실 멤버 이름 5단계 검증 ✅ 2026-05-06
+- [x] 풀테스트 797 PASS / 0 FAIL 유지 (4 사이클 일관) ✅ 2026-05-06
+- [x] 검증 사이클 종료 — framework v3.1 정착 선언 ✅ 2026-05-06
+- [x] qa-doc-generation-prompt.md → v4 보강 (5가지 정량 룰 [10]~[14] 차단) ✅ 2026-05-06
+- [ ] v4 파일 생성/적용 및 첫 docs 생성 검증
 - [ ] 신서비스(사주톡 등) 적용 — framework v3.1 활용
-- [ ] AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰
-- [ ] generate-qa-report.mjs에 VERIFY 컬럼 표시 (후속 사이클)
 - [ ] HOME staging BLOCKED 11건 재테스트 (staging 회복 후)
 - [ ] D-2/D-3 BLOCKED 해제 (UI 출시 후)
 - [ ] ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)

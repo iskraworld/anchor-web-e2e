@@ -28,6 +28,9 @@ node_modules/
 .auth/
 docs/exploration-cache/
 
+# AWS 비용/인프라 분석 — public repo에 노출 금지
+docs/anchor-aws/
+
 # Diagnostic / temp test files
 tests/_diag/
 

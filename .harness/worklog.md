@@ -5,6 +5,44 @@
 
 ---
 
+## Session 2026-05-07 18:11 — AWS 심층 분석 + CloudWatch Agent 설치 + e2e-framework repo 분리
+
+### 작업 요약
+- **AWS 비용 분석 v2/v3 (심층)**:
+  - EIP 13개 매핑, VPC 구조, ALB 트래픽, EC2 burst 패턴(CPU max), Neo4j EBS IO, RDS 활용도 종합 분석
+  - akrr-tax-alb-neo4j01 30일 0 req → 즉시 정리 가능 발견
+  - ElastiCache 메모리 1% 사용 → cache.t4g.micro 가능 발견
+  - 보고서 v1 ($646) → v2 (보수적 $646, was01/Neo4j 보류) → v3 (CPU credits + IOPS 측정 후 보류 해제, $771)
+  - 최종 절감: 현재 $1,535/월 → $964/월 (-$571, 37%) + Neo4j +$60 + Savings Plan +$200 (장기)
+- **CloudWatch Agent 8개 인스턴스 일괄 설치 (Hybrid 방식)**:
+  - 사용자: IAM Role 4개에 정책 추가 + dev Role 신규 + 인라인 정책 부여 (15분)
+  - Claude: SSM Run Command로 8개 일괄 설치 + Parameter Store config + agent 시작 (10분)
+  - 결과: 32 메트릭 publish 시작 (8 인스턴스 × 4 메트릭)
+  - 첫 데이터: was01 메모리 36%, Neo4j 11% (다운사이징 결정 정확도 ↑)
+  - 사용자 권한 회수 검증 완료 (read-only 복귀)
+- **의사결정 보고서 v1~v5 반복 정정**:
+  - v1: 보수 분석 → v2: burst 우려 추가 → v3: CPU credits 측정 후 보류 해제
+  - v4: 4주 → 주말 일괄 (베타 단계)
+  - v5: capacity 진짜 한계 17-20k 정정 (max_connections 기반, 5-10k는 보수적이었음)
+- **e2e-framework 별도 repo 분리** (`~/Downloads/coding/e2e-framework/`):
+  - 22 파일, 6,158 라인, 첫 commit `c22abe3`
+  - 5종 자산 카피 (docs 9 / scripts 6 / helpers 1 / templates 2 + VERSION/CHANGELOG/README/.gitignore)
+  - templates 제외 모든 파일 상단에 "consumer 수정 금지" 헤더 자동 추가
+  - sibling level 위치 (anchor-web-e2e와 분리)
+- **slash 커맨드 2개 설계** (init + doctor 패턴, harness-init/harness-doctor 명명 일치):
+  - `/e2e-framework-init`: idempotent (첫 카피 + 업데이트 모두 처리)
+  - `/e2e-framework-doctor`: read-only 진단 (버전 비교 + 수정 흔적 검출)
+  - 작성은 다음 사이클 (이번 세션엔 설계만)
+
+### 다음 액션
+- (사용자) **이번 주말 AWS 일괄 작업** (체크리스트 따라 ~3시간)
+- (사용자) e2e-framework GitHub repo 생성 + push (iskraworld/e2e-framework)
+- (다음 세션) `/e2e-framework-init` + `/e2e-framework-doctor` 슬래시 커맨드 작성
+- (1주 후) CloudWatch Agent 메모리 데이터 분석 → Neo4j 다운사이징 결정
+- (2주 후) Savings Plan 1년 약정 결정 (별도 보고)
+
+---
+
 ## Session 2026-05-07 15:59 — AWS 비용 최적화 분석 및 리포트 작성
 
 ### 작업 요약

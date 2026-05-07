@@ -4,6 +4,103 @@
 
 ---
 
+## 2026-05-07: e2e-framework 별도 repo 분리 (sibling level)
+
+- **선택**: anchor-web-e2e 외부에 별도 git repo `~/Downloads/coding/e2e-framework/` 생성. sibling level. 카피 시 .git 제외
+- **대안 검토**:
+  - A) anchor-web-e2e 안에 `e2e-framework/` 하위 폴더: 단일 repo 단순. 단 anchor 종속처럼 보임
+  - B) NPM private package: 버전 관리 정교. 단 over-engineering (1~3개 consumer 예상)
+  - C) Git submodule: 양방향 sync 가능. 단 학습 곡선
+  - D) 별도 sibling repo + 카피 (선택): 단순 + 독립성 + 단일 source of truth
+- **선택 이유**:
+  1. anchor v2 + 신서비스 = consumer 1~3개 예상 → over-engineering 피함
+  2. `harness-iskra ↔ .claude` 운영 패턴 일치 (사용자 친숙)
+  3. anchor에 종속되지 않은 framework로 식별성 명확
+  4. 카피 후 .git 제외 → consumer 자체 git history 깨끗
+- **영향 범위**: `~/Downloads/coding/e2e-framework/` (별도 repo), 향후 신서비스 적용 흐름
+- **되돌리는 방법**: framework repo 삭제 후 anchor 안 폴더로 이동. 단 consumer 적용된 상태면 작업 큼
+
+---
+
+## 2026-05-07: e2e-framework 슬래시 커맨드 — init + doctor 2개 (idempotent)
+
+- **선택**: `/e2e-framework-init` (첫 카피 + 업데이트 모두 처리, idempotent) + `/e2e-framework-doctor` (진단만)
+- **대안 검토**:
+  - A) 3개 (init + update + doctor): 의도 분리 명확. 단 학습 부담 ↑
+  - B) 2개 (init + doctor) (선택): 단순. harness-init/harness-doctor 패턴 일치
+  - C) 1개 (init): 너무 단순화, 진단 기능 누락
+- **선택 이유**:
+  1. harness-init이 이미 idempotent 패턴 — 같은 디자인이 자연스러움
+  2. doctor는 진단만 (수정 X) — harness-doctor와 동일 원칙
+  3. 사용자 인지 비용 최소
+- **영향 범위**: `~/.claude/commands/e2e-framework-init.md`, `~/.claude/commands/e2e-framework-doctor.md` (다음 세션 작성)
+- **되돌리는 방법**: 커맨드 삭제. consumer는 수동 카피로 회귀
+
+---
+
+## 2026-05-07: AWS 진행 일정 — 4주 분산 → 주말 일괄
+
+- **선택**: 토요일 ~3시간 일괄 처리 + 일요일 모니터링. Neo4j는 +1주, Savings Plan은 +2주
+- **대안 검토**:
+  - A) 4주 분산 (v3 권장): 운영 안정성 위주, 한 번에 한 변경. 단 베타 단계엔 과한 점진성
+  - B) 주말 일괄 (선택): ~3시간 작업, Multi-AZ HA로 무중단. Neo4j는 메모리 데이터 1주 후 별도
+  - C) 즉시 일괄 (평일): 다운타임 위험 ↑
+- **선택 이유**:
+  1. anchor는 베타 단계 → 라이브 무중단 운영 부담 X
+  2. 주말 무중단 시간 + Multi-AZ HA 활용 → 사용자 영향 0
+  3. 4주 분산은 라이브 서비스 패턴 (베타엔 비효율)
+  4. Neo4j는 메모리 데이터 1주 필요 (그래프 DB 안전성) — 분리 정당
+- **영향 범위**: AWS 운영 인프라 8 인스턴스 + RDS + ElastiCache + ALB
+- **되돌리는 방법**: 모든 변경 5분 내 인스턴스 사이즈 롤백 가능 (스냅샷 백업 필수)
+
+---
+
+## 2026-05-07: CloudWatch Agent 설치 — Hybrid 권한 분담
+
+- **선택**: 사용자가 IAM (위험 영역) 처리 + Claude가 SSM Run Command (제한된 정책으로 안전)
+- **대안 검토**:
+  - A) 사용자 직접 (전부): 1~2시간, 권한 위임 0. 단 시간 소모
+  - B) Claude 풀 권한 위임: 5분, IAM/임의 OS 명령 가능 → 위험
+  - C) Hybrid (선택): IAM은 사용자, SSM은 제한된 document만 (ConfigureAWSPackage + ManageAgent), 30분
+- **선택 이유**:
+  1. 위험 분담 — IAM Role 변경 + PassRole은 권한 escalation 가능 → 사용자가 컨트롤
+  2. SSM SendCommand는 AWS 관리 document 2개로만 제한 → 임의 OS 명령 불가
+  3. 작업 후 인라인 정책 회수로 read-only 복귀
+- **영향 범위**: 8 인스턴스 모두 CloudWatch Agent 설치 + 4 메트릭 publish (mem/swap/disk)
+- **되돌리는 방법**: SSM Run Command로 agent stop + 정책 회수
+
+---
+
+## 2026-05-07: AWS 의사결정 보고서 단순화 (v1 → v5)
+
+- **선택**: 결정 항목 4건 → 1건 ("주말 일괄 진행 OK?"). 절감액 정정 ($771 → $571 즉시 + Neo4j/SP는 별도).
+- **대안 검토**:
+  - A) v1~v3 multi-decision 유지: 의사결정 부담, 일부 실효성 없음 (HA 유지/주말 정지/GitLab은 굳이 묻지 않아도 답이 정해진 항목)
+  - B) 단순화 (선택): 한 가지 결정에 집중. Savings Plan은 4주 후 별도 안건
+- **선택 이유**:
+  1. 사용자 피드백 — HA 유지/주말 정지/GitLab은 의미 없는 질문
+  2. Savings Plan은 안정화 후 결정이라 지금 묻지 말기
+  3. 의사결정자 시간 절약 + 책임 명확화
+- **영향 범위**: `docs/anchor-aws/executive-proposal-2026-05-07-*.md` v1~v5 진화
+- **되돌리는 방법**: 추가 의사결정 항목은 별도 안건으로 후속 보고
+
+---
+
+## 2026-05-07: AWS Capacity 정정 — 5-10k → 17-20k (max_connections 기반)
+
+- **선택**: RDS 진짜 break point = max_connections 한계 = 일 17,000-20,000명. v4의 5-10k는 보수적이었음
+- **대안 검토**:
+  - A) v4의 5-10k 유지: 안전 마진 큼. 단 의사결정자에게 "절감 직후 다시 막힘?" 오해 유발
+  - B) 측정 기반 17-20k 정정 (선택): max_connections 6.4 avg → 85 한계 = 약 13배 = 17,000명
+- **선택 이유**:
+  1. 측정 데이터로 정량 산정: CPU(36k) / connections(17-20k) / IOPS(866k) 중 connections가 진짜 한계
+  2. 보수적 추정이 의사결정에 부정적 영향 (절감 후 곧 막힐 우려)
+  3. 응답시간 점진 증가 = 10k부터 / 진짜 break = 17-20k 두 단계 명확화
+- **영향 범위**: `executive-proposal-2026-05-07-18-03.md` (v5)
+- **되돌리는 방법**: 부하 테스트 결과로 다시 검증 (현재는 측정 기반 추정)
+
+---
+
 ## 2026-05-07: v4 prompt white-box 검증 — 3 Tier 점진 (사용자 답변 대기)
 
 - **선택**: anchor 자체 데이터로 v4 prompt 변수 격리 검증, 단 11모듈 일괄이 아닌 3 Tier 점진 (TF 1모듈부터)

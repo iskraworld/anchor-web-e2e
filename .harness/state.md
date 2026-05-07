@@ -4,29 +4,32 @@
 
 ---
 
-## 마지막 실행: 2026-05-07 15:59
-## 마지막 업데이트: 2026-05-07 15:59
+## 마지막 실행: 2026-05-07 18:11
+## 마지막 업데이트: 2026-05-07 18:11
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **AWS 비용 최적화 분석** — anchor 계정 현황 분석 완료 ($1,535 → $850~950/월 목표)
+- **AWS 비용 최적화 주말 일괄 작업 대기** + **e2e-framework repo 분리 완료, 슬래시 커맨드 작성 대기**
 
 ### 이어서 할 것
-1. dev-tax-pub01 인스턴스 다운사이징 (c6i.2xlarge → t3.medium) 수동 실행
-2. 리전 변경 공지 (싱가포르 → 서울 ap-northeast-2)
-3. 최적화 구현 후 비용 추적
+1. (사용자) 이번 주말 AWS 일괄 작업 — 토요일 ~3시간 (executive-proposal-2026-05-07-18-03.md 따라)
+2. (사용자) e2e-framework GitHub repo 생성 + push (iskraworld/e2e-framework)
+3. (다음 세션) `/e2e-framework-init` + `/e2e-framework-doctor` 슬래시 커맨드 작성
 
 ### 막힌 것
-- 없음 (리포트는 완성, 구현은 사용자 수동 실행 필요)
+- 없음
 
 ### 사람 판단 필요
-- dev-tax-pub01 인스턴스 다운사이징 실행 여부 및 일정
-- 리전 변경(싱가포르 → 서울) 실행 여부 및 일정
+- AWS 주말 일괄 작업 진행 여부 (executive-proposal v5 확인 후)
+- e2e-framework GitHub repo 생성 (iskraworld org 권한)
+- (1주 후) Neo4j 다운사이징 — CloudWatch Agent 메모리 데이터 분석 후 결정
+- (2주 후) Savings Plan 1년 약정 결정
+- D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
+- ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
 
 ### 백로그 요약
-- v4 검증 실험: 사전 확인 대기 중 (기획명세서/정책서/Figma 접근성)
-- 최적화 구현: 2개 항목 (인스턴스 다운사이징, 리전 변경)
-- 기존 BLOCKED: HOME staging 11건, D-2/D-3, ER PDF 테스트
+- 대기 중: 4개
+- 최근 추가: 2026-05-06 — AMBIGUOUS_DOC 154건 근본 해결 (프롬프트 v4)
 
 ### 진행 상황
 - [x] Phase 0~3 e2e-v2 가이드 완성
@@ -66,12 +69,20 @@
 - [x] qa-doc-generation-prompt.md → v4 보강 (5가지 정량 룰 [10]~[14] 차단) ✅ 2026-05-06
 - [x] qa-doc-generation-prompt.md 상단 버전 표시 + 이력 표 추가 ✅ 2026-05-07
 - [x] v4 white-box 검증 실험 설계 — 3 Tier 점진 + TF 모듈 추천 ✅ 2026-05-07
-- [x] AWS 비용 최적화 분석 리포트 작성 ✅ 2026-05-07
-- [ ] dev-tax-pub01 인스턴스 다운사이징 (c6i.2xlarge → t3.medium)
-- [ ] 리전 변경 공지 (싱가포르 → 서울 ap-northeast-2)
+- [x] AWS 비용 최적화 분석 v1 (CPU 평균 기반) ✅ 2026-05-07
+- [x] AWS 분석 v2 (burst CPU max + EBS IO + Capacity) ✅ 2026-05-07
+- [x] AWS 분석 v3 (CPU credits + IOPS + ALB latency 측정) ✅ 2026-05-07
+- [x] CloudWatch Agent 8개 인스턴스 설치 (Hybrid 권한 분담) ✅ 2026-05-07
+- [x] 의사결정 보고서 v1~v5 (capacity 정정 + 일정 간소화) ✅ 2026-05-07
+- [x] **e2e-framework 별도 repo 생성 (~/Downloads/coding/e2e-framework/)** ✅ 2026-05-07
+- [ ] (주말) AWS 일괄 작업 — 토요일 ~3시간
+- [ ] e2e-framework GitHub repo 생성 + push (iskraworld/e2e-framework)
+- [ ] `/e2e-framework-init` + `/e2e-framework-doctor` 슬래시 커맨드 작성
+- [ ] (1주 후) CloudWatch 메모리 데이터 분석 → Neo4j 다운사이징
+- [ ] (2주 후) Savings Plan 1년 약정 결정
 - [ ] (사전 확인) 기획명세서/정책서/Figma 전달 가능 형태 + v1 docs 원본 여부
 - [ ] Tier 1: TF 모듈 QA docs v4 재생성 + AMBIGUOUS_DOC 비교 (목표 13 → ≤4)
-- [ ] Tier 2: TF 모듈 spec 재생성 + e2e 비교 (PASS / fake-pass / audit)
+- [ ] Tier 2: TF 모듈 spec 재생성 + e2e 비교
 - [ ] Tier 3: 11모듈 전체 v4 적용 + anchor v2 진입 readiness
 - [ ] 신서비스(anchor v2 등) 적용 시작 — framework v3.1 + prompt v4 활용
 - [ ] HOME staging BLOCKED 11건 재테스트 (staging 회복 후)

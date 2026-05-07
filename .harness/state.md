@@ -4,26 +4,25 @@
 
 ---
 
-## 마지막 실행: 2026-05-06 15:59
-## 마지막 업데이트: 2026-05-06 15:59
+## 마지막 실행: 2026-05-07 08:23
+## 마지막 업데이트: 2026-05-07 08:23
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **AMBIGUOUS_DOC 근본 해결** — qa-doc-generation-prompt.md v4 보강 (5가지 정량 룰로 80% 감소 목표)
+- **prompt v4 식별성 강화 완료** — qa-doc-generation-prompt.md 상단 버전 표시 + 이력 표 추가. 신서비스 적용 단계 대기.
 
 ### 이어서 할 것
-1. qa-doc-generation-prompt.md v4 파일 생성/적용 (정량 룰 [10]~[14] 구현)
-2. 신서비스(사주톡 등) 적용 — framework v3.1 활용
-3. anchor v2 첫 docs 생성 시점에 v4 prompt 자동 적용 및 검증
+1. anchor v2 첫 docs 생성 시 v4 prompt 적용 → AMBIGUOUS_DOC 비율 측정 (목표 154 → ~30, 80% 감소)
+2. 신서비스 적용 시작 (anchor v2 또는 다른 서비스)
+3. (선택) automation-patterns.md / phase 문서들도 동일 형식으로 버전 헤더 추가
 
 ### 막힌 것
 - **HOME staging BLOCKED 11건**: 소속 드롭다운 검색 API 500 — staging 회복 시 재테스트
 - **HOME-TA GNB flakiness**: 풀테스트에서 가끔 fail, 단독 실행은 정상
 
 ### 사람 판단 필요
-- qa-doc-generation-prompt.md v4 파일 구조/위치 (docs/ 경로 확인)
-- qa-doc-generation-prompt.md v4 정량 룰 [10]~[14] 구현 검증
-- 신서비스 적용 시작 시점 (사주톡 또는 다른 서비스)
+- 신서비스 적용 시작 시점 (anchor v2 또는 다른 서비스)
+- (선택) framework 다른 문서들도 버전 헤더 적용할지 여부
 - D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
 - ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
 
@@ -67,8 +66,9 @@
 - [x] 풀테스트 797 PASS / 0 FAIL 유지 (4 사이클 일관) ✅ 2026-05-06
 - [x] 검증 사이클 종료 — framework v3.1 정착 선언 ✅ 2026-05-06
 - [x] qa-doc-generation-prompt.md → v4 보강 (5가지 정량 룰 [10]~[14] 차단) ✅ 2026-05-06
-- [ ] v4 파일 생성/적용 및 첫 docs 생성 검증
-- [ ] 신서비스(사주톡 등) 적용 — framework v3.1 활용
+- [x] qa-doc-generation-prompt.md 상단 버전 표시 + 이력 표 추가 ✅ 2026-05-07
+- [ ] anchor v2 첫 docs 생성 시 v4 prompt 적용 + AMBIGUOUS_DOC 비율 측정
+- [ ] 신서비스(anchor v2 등) 적용 시작 — framework v3.1 + prompt v4 활용
 - [ ] HOME staging BLOCKED 11건 재테스트 (staging 회복 후)
 - [ ] D-2/D-3 BLOCKED 해제 (UI 출시 후)
 - [ ] ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)

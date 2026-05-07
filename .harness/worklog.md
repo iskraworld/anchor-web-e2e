@@ -5,6 +5,24 @@
 
 ---
 
+## Session 2026-05-07 08:23 — qa-doc-generation-prompt v4 버전 표시 + 식별성 보강
+
+### 작업 요약
+- 사용자 질의 "v4 프롬프트는 어디 있는거야?" 응대 — 같은 파일을 v4로 업데이트한 것임을 명확히 함 (별도 파일 X)
+- 파일 상단에 버전 표시 추가:
+  - 헤더 아래 "버전: v4" + 최종 업데이트 날짜 명시
+  - 버전 이력 표 (v1~v4 + 각 버전 검증 사이클 근거 매핑)
+  - 다음 검증 시점 기록 (anchor v2 첫 docs 생성)
+- `git log docs/anchor-e2e-v2/qa-doc-generation-prompt.md`로 진화 이력 정렬 확인
+- 커밋 `eb0f756` push 완료
+
+### 다음 액션
+- anchor v2 첫 docs 생성 시점에 v4 prompt 적용 → AMBIGUOUS_DOC 비율 측정 (목표 154 → ~30, 80% 감소)
+- 신서비스 적용 시작 (anchor v2 또는 다른 서비스)
+- (선택) automation-patterns.md / phase 문서들도 동일 형식으로 버전 헤더 추가
+
+---
+
 ## Session 2026-05-06 15:59 — 154건 AMBIGUOUS_DOC 근본 해결을 위한 QA 프롬프트 v4 보강
 
 ### 작업 요약

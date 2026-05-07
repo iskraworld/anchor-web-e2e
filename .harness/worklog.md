@@ -5,6 +5,43 @@
 
 ---
 
+## Session 2026-05-07 18:40 — AWS 보고서 v5 (capacity 정정) + 토요일 작업 가이드 작성
+
+### 작업 요약
+- **사용자 질의 응답 — 웹서버에서 동시접속의 의미**:
+  - HTTP는 short-lived라 동시접속자 capacity 지표로 약함
+  - 일 사용자 + peak req/s + DB connections가 진짜 capacity 결정 변수
+  - WebSocket / 게임 / 실시간 채팅은 동시접속이 진짜 capacity (anchor는 일반 web app)
+- **Capacity 정정 (v4 → v5) — 5-10k 한계는 보수적이었음**:
+  - 측정 데이터 재분석: RDS CPU 3.58% / connections 6.4 / IOPS peak 1.8/s
+  - 단순 비례 한계 추정:
+    - CPU: ~36,000명/일 (먼 한계)
+    - **max_connections (85): ~17,000~20,000명/일** ⭐ 진짜 한계
+    - IOPS: ~866,000명/일 (매우 먼 한계)
+  - 응답시간 점진 증가 시작 = ~10,000명 / 진짜 break point = ~17,000~20,000명
+- **executive-proposal v5 작성** (`docs/anchor-aws/executive-proposal-2026-05-07-18-03.md`):
+  - 사용자가 정리한 v4 base에 capacity 정정 반영
+  - §2 capacity 표에 max_connections 산정 근거 추가
+  - §3 scaling 표에 ~20,000명 행 추가 (DB break point)
+  - "1,300명 (현재)" 행 제거 (베타라 의미 없음)
+  - 버전 헤더 제거 (사용자 요청)
+- **토요일 작업 가이드 작성** (`docs/anchor-aws/work-guide-2026-05-09.md`):
+  - 작업 전 준비 + 토요일 ~3시간 (오전/점심/오후/저녁) + 일요일 모니터링
+  - +1주 후 Neo4j 다운사이징 (CloudWatch 메모리 데이터 분석 후)
+  - +2주 후 Savings Plan 의사결정 (Cost Explorer 추천 분석)
+  - 각 작업마다: 인스턴스 ID + 콘솔 클릭 경로 + CLI + 검증 방법 + 롤백 시간
+  - 핵심 안전 장치: Multi-AZ HA로 한 번에 한 인스턴스만 / EBS 스냅샷 먼저 / 5분 롤백
+- 마크다운 렌더링 사고 1회 (~ tilde가 strikethrough로 해석) → 향후 `~` 대신 `–` 사용
+
+### 다음 액션
+- (사용자) 토요일 (2026-05-09) AWS 일괄 작업 — work-guide-2026-05-09.md 따라 ~3시간
+- (사용자) e2e-framework GitHub repo 생성 + push (iskraworld/e2e-framework)
+- (다음 세션) `/e2e-framework-init` + `/e2e-framework-doctor` 슬래시 커맨드 작성
+- (1주 후 / 2026-05-14 경) "메모리 데이터 분석해줘" → Neo4j 다운사이징 결정
+- (2주 후 / 2026-05-21 경) "Savings Plan 결정 시점이다" → 별도 보고서 생성
+
+---
+
 ## Session 2026-05-07 18:11 — AWS 심층 분석 + CloudWatch Agent 설치 + e2e-framework repo 분리
 
 ### 작업 요약

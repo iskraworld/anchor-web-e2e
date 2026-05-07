@@ -4,15 +4,15 @@
 
 ---
 
-## 마지막 실행: 2026-05-07 18:11
-## 마지막 업데이트: 2026-05-07 18:11
+## 마지막 실행: 2026-05-07 18:40
+## 마지막 업데이트: 2026-05-07 18:40
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **AWS 비용 최적화 주말 일괄 작업 대기** + **e2e-framework repo 분리 완료, 슬래시 커맨드 작성 대기**
+- **AWS 토요일 일괄 작업 대기** (work-guide-2026-05-09.md 준비 완료) + e2e-framework repo 분리 완료, 슬래시 커맨드 작성 대기
 
 ### 이어서 할 것
-1. (사용자) 이번 주말 AWS 일괄 작업 — 토요일 ~3시간 (executive-proposal-2026-05-07-18-03.md 따라)
+1. (사용자) 2026-05-09 토요일 AWS 일괄 작업 — work-guide-2026-05-09.md 따라 ~3시간
 2. (사용자) e2e-framework GitHub repo 생성 + push (iskraworld/e2e-framework)
 3. (다음 세션) `/e2e-framework-init` + `/e2e-framework-doctor` 슬래시 커맨드 작성
 
@@ -20,10 +20,10 @@
 - 없음
 
 ### 사람 판단 필요
-- AWS 주말 일괄 작업 진행 여부 (executive-proposal v5 확인 후)
+- 2026-05-09 (토) AWS 일괄 작업 진행 (work-guide-2026-05-09.md 따라)
 - e2e-framework GitHub repo 생성 (iskraworld org 권한)
-- (1주 후) Neo4j 다운사이징 — CloudWatch Agent 메모리 데이터 분석 후 결정
-- (2주 후) Savings Plan 1년 약정 결정
+- (1주 후 / 2026-05-14 경) Neo4j 다운사이징 — CloudWatch 메모리 데이터 분석 후 결정
+- (2주 후 / 2026-05-21 경) Savings Plan 1년 약정 결정
 - D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
 - ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
 
@@ -69,17 +69,16 @@
 - [x] qa-doc-generation-prompt.md → v4 보강 (5가지 정량 룰 [10]~[14] 차단) ✅ 2026-05-06
 - [x] qa-doc-generation-prompt.md 상단 버전 표시 + 이력 표 추가 ✅ 2026-05-07
 - [x] v4 white-box 검증 실험 설계 — 3 Tier 점진 + TF 모듈 추천 ✅ 2026-05-07
-- [x] AWS 비용 최적화 분석 v1 (CPU 평균 기반) ✅ 2026-05-07
-- [x] AWS 분석 v2 (burst CPU max + EBS IO + Capacity) ✅ 2026-05-07
-- [x] AWS 분석 v3 (CPU credits + IOPS + ALB latency 측정) ✅ 2026-05-07
+- [x] AWS 비용 최적화 분석 v1~v3 (CPU 평균 → burst → CPU credits + IOPS) ✅ 2026-05-07
 - [x] CloudWatch Agent 8개 인스턴스 설치 (Hybrid 권한 분담) ✅ 2026-05-07
-- [x] 의사결정 보고서 v1~v5 (capacity 정정 + 일정 간소화) ✅ 2026-05-07
-- [x] **e2e-framework 별도 repo 생성 (~/Downloads/coding/e2e-framework/)** ✅ 2026-05-07
-- [ ] (주말) AWS 일괄 작업 — 토요일 ~3시간
+- [x] 의사결정 보고서 v1~v5 (capacity 17–20k 정정 + 일정 간소화) ✅ 2026-05-07
+- [x] e2e-framework 별도 repo 생성 (~/Downloads/coding/e2e-framework/) ✅ 2026-05-07
+- [x] 토요일 작업 가이드 + 1주/2주 후속 가이드 작성 ✅ 2026-05-07
+- [ ] (2026-05-09 토) AWS 일괄 작업 — work-guide 따라 ~3시간
 - [ ] e2e-framework GitHub repo 생성 + push (iskraworld/e2e-framework)
 - [ ] `/e2e-framework-init` + `/e2e-framework-doctor` 슬래시 커맨드 작성
-- [ ] (1주 후) CloudWatch 메모리 데이터 분석 → Neo4j 다운사이징
-- [ ] (2주 후) Savings Plan 1년 약정 결정
+- [ ] (2026-05-14 경) CloudWatch 메모리 데이터 분석 → Neo4j 다운사이징
+- [ ] (2026-05-21 경) Savings Plan 1년 약정 결정
 - [ ] (사전 확인) 기획명세서/정책서/Figma 전달 가능 형태 + v1 docs 원본 여부
 - [ ] Tier 1: TF 모듈 QA docs v4 재생성 + AMBIGUOUS_DOC 비교 (목표 13 → ≤4)
 - [ ] Tier 2: TF 모듈 spec 재생성 + e2e 비교

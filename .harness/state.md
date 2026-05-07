@@ -4,33 +4,29 @@
 
 ---
 
-## 마지막 실행: 2026-05-07 08:44
-## 마지막 업데이트: 2026-05-07 08:44
+## 마지막 실행: 2026-05-07 15:59
+## 마지막 업데이트: 2026-05-07 15:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **v4 prompt white-box 검증 실험 설계** — anchor 자체 데이터로 변수 격리 검증. Tier 1 (TF 모듈 QA 재생성)부터 시작. 사전 확인 2개 답변 대기 중.
+- **AWS 비용 최적화 분석** — anchor 계정 현황 분석 완료 ($1,535 → $850~950/월 목표)
 
 ### 이어서 할 것
-1. 사용자 답변 대기: (a) 기획명세서/정책서/Figma 전달 가능 여부 + 형태 (b) 현재 v1 docs가 원본 입력 기반인지
-2. 답변 확정 시 — TF 모듈 Tier 1 시작 (QA docs 재생성 + AMBIGUOUS_DOC 비교만)
-3. Tier 1 통과 시 — Tier 2 (spec 재생성 + e2e 비교)
+1. dev-tax-pub01 인스턴스 다운사이징 (c6i.2xlarge → t3.medium) 수동 실행
+2. 리전 변경 공지 (싱가포르 → 서울 ap-northeast-2)
+3. 최적화 구현 후 비용 추적
 
 ### 막힌 것
-- **자료 접근성 미확인**: anchor 기획명세서/정책서/Figma를 Claude가 받을 수 있는 형태인지 미확인 — 사용자 답변 필요
-- **HOME staging BLOCKED 11건**: 소속 드롭다운 검색 API 500 — staging 회복 시 재테스트
-- **HOME-TA GNB flakiness**: 풀테스트에서 가끔 fail, 단독 실행은 정상
+- 없음 (리포트는 완성, 구현은 사용자 수동 실행 필요)
 
 ### 사람 판단 필요
-- (1) 기획명세서/정책서/Figma 전달 가능 여부 + 어떤 형태로 (Notion / PDF / Figma export)
-- (2) 현재 anchor v1 docs/qa/*.md는 anchor 팀 원본 입력 기반인지 vs v1 prompt 출력인지
-- Tier 1 검증 결과에 따라 anchor v2 진입 readiness 결정
-- D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
-- ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
+- dev-tax-pub01 인스턴스 다운사이징 실행 여부 및 일정
+- 리전 변경(싱가포르 → 서울) 실행 여부 및 일정
 
 ### 백로그 요약
-- 대기 중: 4개
-- 최근 추가: 2026-05-06 — AMBIGUOUS_DOC 154건 근본 해결 (프롬프트 v4)
+- v4 검증 실험: 사전 확인 대기 중 (기획명세서/정책서/Figma 접근성)
+- 최적화 구현: 2개 항목 (인스턴스 다운사이징, 리전 변경)
+- 기존 BLOCKED: HOME staging 11건, D-2/D-3, ER PDF 테스트
 
 ### 진행 상황
 - [x] Phase 0~3 e2e-v2 가이드 완성
@@ -70,6 +66,9 @@
 - [x] qa-doc-generation-prompt.md → v4 보강 (5가지 정량 룰 [10]~[14] 차단) ✅ 2026-05-06
 - [x] qa-doc-generation-prompt.md 상단 버전 표시 + 이력 표 추가 ✅ 2026-05-07
 - [x] v4 white-box 검증 실험 설계 — 3 Tier 점진 + TF 모듈 추천 ✅ 2026-05-07
+- [x] AWS 비용 최적화 분석 리포트 작성 ✅ 2026-05-07
+- [ ] dev-tax-pub01 인스턴스 다운사이징 (c6i.2xlarge → t3.medium)
+- [ ] 리전 변경 공지 (싱가포르 → 서울 ap-northeast-2)
 - [ ] (사전 확인) 기획명세서/정책서/Figma 전달 가능 형태 + v1 docs 원본 여부
 - [ ] Tier 1: TF 모듈 QA docs v4 재생성 + AMBIGUOUS_DOC 비교 (목표 13 → ≤4)
 - [ ] Tier 2: TF 모듈 spec 재생성 + e2e 비교 (PASS / fake-pass / audit)

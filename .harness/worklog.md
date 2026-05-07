@@ -5,6 +5,23 @@
 
 ---
 
+## Session 2026-05-07 15:59 — AWS 비용 최적화 분석 및 리포트 작성
+
+### 작업 요약
+- AWS IAM 사용자 생성 및 Access Key 발급, CLI profile 설정
+- Cost Explorer API로 월별/서비스별/리전별 비용 데이터 수집
+- EC2/RDS/ElastiCache/ELB/EBS 리소스 인벤토리 조회
+- CloudWatch로 30일 평균 CPU 활용도 분석
+- RI/Savings Plan 상태 확인
+- 비용 최적화 리포트 작성 (`docs/anchor-aws/cost-optimization-2026-05-07.md`, 194줄)
+- 최적화 방안 도출: $1,535/월 → $850~950/월 (연간 ₩9M~10.5M 절감)
+- public repo 보안 강화: `.gitignore`로 AWS infra 정보 노출 방지 후 push
+
+### 다음 액션
+- dev-tax-pub01 인스턴스 다운사이징 (c6i.2xlarge → t3.medium) 실행
+- 리전 변경 공지: 싱가포르 → 서울(ap-northeast-2)
+
+
 ## Session 2026-05-07 08:44 — v4 prompt white-box 검증 실험 설계 (anchor 자체 데이터 활용)
 
 ### 작업 요약

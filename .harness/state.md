@@ -4,24 +4,24 @@
 
 ---
 
-## 마지막 실행: 2026-05-07 18:40
-## 마지막 업데이트: 2026-05-07 18:40
+## 마지막 실행: 2026-05-07 19:02
+## 마지막 업데이트: 2026-05-07 19:02
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **AWS 토요일 일괄 작업 대기** (work-guide-2026-05-09.md 준비 완료) + e2e-framework repo 분리 완료, 슬래시 커맨드 작성 대기
+- **QA 팀 결과물 대기** (TF 모듈 v4 prompt 재작성) + **AWS 토요일 일괄 작업 대기** (2026-05-09)
 
 ### 이어서 할 것
-1. (사용자) 2026-05-09 토요일 AWS 일괄 작업 — work-guide-2026-05-09.md 따라 ~3시간
-2. (사용자) e2e-framework GitHub repo 생성 + push (iskraworld/e2e-framework)
-3. (다음 세션) `/e2e-framework-init` + `/e2e-framework-doctor` 슬래시 커맨드 작성
+1. (사용자) QA 팀에 TF 모듈 v4 prompt + 재작성 요청 메시지 보내기
+2. (사용자) 2026-05-09 (토) AWS 일괄 작업 — work-guide-2026-05-09.md ~3시간
+3. (Claude 대기) QA 팀 결과물 받으면 → Tier 1 비교 분석 즉시 시작
 
 ### 막힌 것
 - 없음
 
 ### 사람 판단 필요
-- 2026-05-09 (토) AWS 일괄 작업 진행 (work-guide-2026-05-09.md 따라)
-- e2e-framework GitHub repo 생성 (iskraworld org 권한)
+- QA 팀 메시지 발송 시점
+- 2026-05-09 (토) AWS 일괄 작업 진행
 - (1주 후 / 2026-05-14 경) Neo4j 다운사이징 — CloudWatch 메모리 데이터 분석 후 결정
 - (2주 후 / 2026-05-21 경) Savings Plan 1년 약정 결정
 - D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
@@ -74,14 +74,13 @@
 - [x] 의사결정 보고서 v1~v5 (capacity 17–20k 정정 + 일정 간소화) ✅ 2026-05-07
 - [x] e2e-framework 별도 repo 생성 (~/Downloads/coding/e2e-framework/) ✅ 2026-05-07
 - [x] 토요일 작업 가이드 + 1주/2주 후속 가이드 작성 ✅ 2026-05-07
+- [x] Tier 1 시퀀스 정리 — anchor source 유지 + third-party validation 트랙 분리 ✅ 2026-05-07
+- [ ] (사용자) QA 팀 메시지 발송 → 새 TF QA checklist 회수
+- [ ] (Claude) Tier 1 비교 분석 — 새 TF QA의 AMBIGUOUS_DOC / 모호 동사 / 빈 셀 측정
 - [ ] (2026-05-09 토) AWS 일괄 작업 — work-guide 따라 ~3시간
-- [ ] e2e-framework GitHub repo 생성 + push (iskraworld/e2e-framework)
-- [ ] `/e2e-framework-init` + `/e2e-framework-doctor` 슬래시 커맨드 작성
 - [ ] (2026-05-14 경) CloudWatch 메모리 데이터 분석 → Neo4j 다운사이징
 - [ ] (2026-05-21 경) Savings Plan 1년 약정 결정
-- [ ] (사전 확인) 기획명세서/정책서/Figma 전달 가능 형태 + v1 docs 원본 여부
-- [ ] Tier 1: TF 모듈 QA docs v4 재생성 + AMBIGUOUS_DOC 비교 (목표 13 → ≤4)
-- [ ] Tier 2: TF 모듈 spec 재생성 + e2e 비교
+- [ ] Tier 2: TF 모듈 spec 재생성 + e2e 비교 (Tier 1 통과 시)
 - [ ] Tier 3: 11모듈 전체 v4 적용 + anchor v2 진입 readiness
 - [ ] 신서비스(anchor v2 등) 적용 시작 — framework v3.1 + prompt v4 활용
 - [ ] HOME staging BLOCKED 11건 재테스트 (staging 회복 후)

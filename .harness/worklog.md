@@ -5,6 +5,37 @@
 
 ---
 
+## Session 2026-05-07 19:02 — Tier 1 (v4 prompt third-party validation) 시퀀스 정리
+
+### 작업 요약
+- 사용자가 v4 prompt 검증 실험 흐름 명확화:
+  - 사용자: anchor v1 docs는 anchor 팀 원본 자료(기획명세서/정책서/Figma) 기반
+  - 사용자: 다음에도 같은 프로세스로 QA 팀이 v4 prompt를 받아 새 QA checklist 작성 예정
+  - → **third-party validation** 형태로 framework 가치 검증 (self-testing X)
+- QA 팀 요청 메시지 초안 작성 (TF 모듈, 같은 자료 기반 v4 재작성 요청)
+- Tier 1 사전 framework 검증 시퀀스 논의:
+  - 사용자 제안: anchor에서 `/e2e-framework-init` 검증 후 Tier 1
+  - Claude 의견: anchor를 framework consumer로 전환할 필요 X (anchor v1은 source 유지)
+  - → 두 트랙 분리 결정: framework 검증은 별도 sandbox / Tier 1은 anchor 자체 scripts로
+- 사용자 결정:
+  - `/e2e-framework-init` 슬래시 커맨드는 framework repo에서 작성 완료 (글로벌, 어디서든 호출)
+  - anchor에 init 안 함 (영구히 source 유지)
+  - sandbox 검증도 e2e-framework repo에서 직접 수행 (Eugene 작업, Claude 무관)
+- 정리된 anchor 트랙 진행 순서:
+  1. QA 팀 → v4 prompt로 TF QA checklist 재작성 (며칠 소요)
+  2. Eugene → Claude에게 결과물 전달
+  3. Claude → Tier 1 비교 분석 (AMBIGUOUS_DOC / 모호 동사 / 빈 셀)
+  4. 통과 시 Tier 2 또는 신서비스 적용
+
+### 다음 액션
+- (사용자) QA 팀에 TF 모듈 v4 prompt + 재작성 요청 메시지 보내기
+- (사용자) QA 팀 결과물 회수
+- (Claude 대기) Tier 1 비교 분석 — 결과물 전달 시 즉시 시작
+- (사용자) 2026-05-09 (토) AWS 일괄 작업 (work-guide-2026-05-09.md)
+- (1주 후) Neo4j 다운사이징 / (2주 후) Savings Plan 결정
+
+---
+
 ## Session 2026-05-07 18:40 — AWS 보고서 v5 (capacity 정정) + 토요일 작업 가이드 작성
 
 ### 작업 요약

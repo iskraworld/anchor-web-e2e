@@ -5,6 +5,23 @@
 
 ---
 
+## Session 2026-05-08 15:59 — 워크로그 기록 & 결정사항 반영
+
+### 작업 요약
+- v4 스펙 작성 + GitLab issue #1 등록 + Smoke test baseline 확립
+- worklog.md, state.md, decision.md 업데이트
+- D-2/D-3 placeholder 제거 및 정식 오픈 복구 체크리스트 작성
+
+### 결정 사항
+- 정식 오픈 후속: GitLab Issue로 관리 (decision.md에 기록)
+- D-2·D-3 미정 항목 제거 → 명확한 다음 액션으로 교체
+
+### 다음 액션
+- 기획자/FE 답변 대기 → v4 §11 추가 시나리오 보강
+- 5/11 월 09:00 — 월요일 작업 시작
+- 작업 종료 후 ANCHOR_GITLAB_TOKEN revoke (또는 2026-06-07 자동 만료)
+
+
 ## Session 2026-05-08 10:49 — v4 작성 + GitLab issue #1 + Smoke test 검증 + D-2/D-3 정리
 
 ### 작업 요약

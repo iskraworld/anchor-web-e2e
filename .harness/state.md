@@ -4,17 +4,17 @@
 
 ---
 
-## 마지막 실행: 2026-05-08 10:49
-## 마지막 업데이트: 2026-05-08 10:49
+## 마지막 실행: 2026-05-08 15:59
+## 마지막 업데이트: 2026-05-08 15:59
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **5/11 작업 준비 완료** — v4 (Terraform + Level 2) + GitLab issue #1 + Smoke test baseline 확립
+- **5/11 월요일 AWS 일괄 작업 대기** — 기획자/FE 시나리오 답변 대기 중
 
 ### 이어서 할 것
 1. (사용자) 기획자/FE 팀 smoke test 추가 시나리오 답변 → v4 §11 시나리오 보강
-2. (사용자) 5/11 (월) 09:00 — "월요일 작업 시작해" 한 마디 → Eugene 4회 결정 (RDS/ALB/gw01 confirm + merge)
-3. (사용자) 작업 종료 후 ANCHOR_GITLAB_TOKEN 만료 또는 revoke (2026-06-07 자동 만료)
+2. (2026-05-11 월 09:00) AWS 일괄 작업 — work-guide-2026-05-11-v4 따라 진행 (Eugene 4회 결정)
+3. (작업 후) ANCHOR_GITLAB_TOKEN 만료 또는 revoke (2026-06-07 자동 만료)
 
 ### 막힌 것
 - 없음
@@ -95,6 +95,7 @@
 - [x] Smoke test 사전 검증 (28 passed / 0 failed / 17.1초) ✅ 2026-05-08
 - [x] D-2/D-3 skip placeholder 제거 — baseline 단순화 ✅ 2026-05-08
 - [x] v4 §11 Smoke test baseline + auto abort 룰 명시 ✅ 2026-05-08
+- [x] worklog.md, state.md, decision.md 업데이트 ✅ 2026-05-08
 - [ ] (사용자) 기획자/FE 답변 받으면 v4 §11 추가 시나리오 보강
 - [ ] (사용자) 개발팀에 dev-team-notice-2026-05-09.md 전달 (날짜 5/11로 갱신)
 - [ ] (사용자) QA 팀 메시지 발송 → 새 TF QA checklist 회수

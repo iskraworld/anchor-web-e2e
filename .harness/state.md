@@ -4,28 +4,29 @@
 
 ---
 
-## 마지막 실행: 2026-05-08 09:58
-## 마지막 업데이트: 2026-05-08 09:58
+## 마지막 실행: 2026-05-08 10:49
+## 마지막 업데이트: 2026-05-08 10:49
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **AWS 작업 방식 Terraform IaC 전환 + Level 2 자동화 결정** → Claude 재시작 후 v4 작성 (5/11 09:00 실행)
+- **5/11 작업 준비 완료** — v4 (Terraform + Level 2) + GitLab issue #1 + Smoke test baseline 확립
 
 ### 이어서 할 것
-1. (사용자) Claude 세션 재시작 → 새 write PAT(`ANCHOR_GITLAB_TOKEN`) 적용 확인
-2. (Claude) v3 → v4 갱신 (Level 2 반영, 사람 작업 = confirm 게이트 3개 + 최종 merge 4회)
-3. (사용자) 5/11 (월) 09:00 — Eugene 4번 결정만 (RDS/ALB/gw01 confirm + merge)
+1. (사용자) 기획자/FE 팀 smoke test 추가 시나리오 답변 → v4 §11 시나리오 보강
+2. (사용자) 5/11 (월) 09:00 — "월요일 작업 시작해" 한 마디 → Eugene 4회 결정 (RDS/ALB/gw01 confirm + merge)
+3. (사용자) 작업 종료 후 ANCHOR_GITLAB_TOKEN 만료 또는 revoke (2026-06-07 자동 만료)
 
 ### 막힌 것
-- 없음 (Claude 재시작 대기 중)
+- 없음
 
 ### 사람 판단 필요
-- Claude 재시작 후 write PAT 검증 (예: 테스트 push)
+- 기획자/FE 답변 받으면 추가 smoke test 시나리오 결정
 - 5/11 09:00 작업 시작 시점
 - 5/11 작업 중 confirm 게이트 3회 + 최종 merge 결정
 - (1주 후, 5/18 경) Neo4j 다운사이징 결정
 - (2주 후, 5/25 경) Savings Plan 약정 결정
-- D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
+- (정식 오픈 시) GitLab Issue #1 8개 항목 복구 결정
+- D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후 spec 신규 작성)
 - ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
 
 ### 백로그 요약
@@ -78,18 +79,23 @@
 - [x] 작업 가이드 v2 (사람/Claude 분담 + 권한 부여 패턴) ✅ 2026-05-07
 - [x] 개발팀 공지 dev-team-notice (변경 내역 + 측정 근거 + FAQ) ✅ 2026-05-07
 - [x] Tier 1 시퀀스 정리 — anchor source 유지 + third-party validation 트랙 분리 ✅ 2026-05-07
-- [x] AWS 작업일 토요일 → 월요일 변경 + 봇 자율 단일 연속 블록 (점심 break 제거) ✅ 2026-05-07
-- [x] 월요일 작업 가이드 v1 → v2 점검 보강 (15개 우려사항 반영) ✅ 2026-05-07
-- [x] 일요일 모니터링 → 화요일 자율 cron (`schedule` 스킬, 매 30분 + Telegram) ✅ 2026-05-07
+- [x] AWS 작업일 토요일 → 월요일 변경 + 봇 자율 단일 연속 블록 ✅ 2026-05-07
+- [x] 월요일 작업 가이드 v1 → v2 점검 보강 ✅ 2026-05-07
+- [x] 일요일 모니터링 → 화요일 자율 cron ✅ 2026-05-07
 - [x] RDS / was01·02 자동 abort 룰 도입 ✅ 2026-05-07
 - [x] AWS CLI 직접 조회로 8 인스턴스 / AMI / SG / Subnet / TG ARN 매핑 ✅ 2026-05-07
-- [x] Terraform IaC 발견 (박정환 실장 메시지) → v2(CLI) deprecated ✅ 2026-05-08
-- [x] GitLab terraform repo 클론 + 분석 (~/Downloads/coding/anchor-terraform) ✅ 2026-05-08
-- [x] 박정환 5/6 commit `b32b590` 패턴 답습 → tfvars 단일 파일 수정 ✅ 2026-05-08
-- [x] v3 작성 (Terraform 기반) — Eugene plan/apply 7회 + confirm 3회 ✅ 2026-05-08
-- [x] Level 2 자동화 결정 (write PAT 추가 시 Claude commit/push/apply) ✅ 2026-05-08
-- [x] ~/.zshenv 토큰 정리 + 새 write PAT 등록 (Claude 재시작 대기) ✅ 2026-05-08
-- [ ] (Claude) v3 → v4 갱신 (Level 2 반영, 사람 = 4회 결정만)
+- [x] Terraform IaC 발견 → v2(CLI) deprecated ✅ 2026-05-08
+- [x] GitLab terraform repo 클론 + 분석 ✅ 2026-05-08
+- [x] 박정환 5/6 commit `b32b590` 패턴 답습 ✅ 2026-05-08
+- [x] v3 작성 (Terraform 기반) ✅ 2026-05-08
+- [x] Level 2 자동화 결정 (write PAT 추가) ✅ 2026-05-08
+- [x] ~/.zshenv 토큰 정리 + write PAT 등록 + 검증 ✅ 2026-05-08
+- [x] v4 작성 (Terraform + Level 2 자동화, Eugene 4회 결정) ✅ 2026-05-08
+- [x] 정식 오픈 시 복구 체크리스트 — 8개 항목 식별 + GitLab Issue #1 생성 ✅ 2026-05-08
+- [x] Smoke test 사전 검증 (28 passed / 0 failed / 17.1초) ✅ 2026-05-08
+- [x] D-2/D-3 skip placeholder 제거 — baseline 단순화 ✅ 2026-05-08
+- [x] v4 §11 Smoke test baseline + auto abort 룰 명시 ✅ 2026-05-08
+- [ ] (사용자) 기획자/FE 답변 받으면 v4 §11 추가 시나리오 보강
 - [ ] (사용자) 개발팀에 dev-team-notice-2026-05-09.md 전달 (날짜 5/11로 갱신)
 - [ ] (사용자) QA 팀 메시지 발송 → 새 TF QA checklist 회수
 - [ ] (Claude) Tier 1 비교 분석 — 새 TF QA의 AMBIGUOUS_DOC / 모호 동사 / 빈 셀 측정
@@ -97,10 +103,11 @@
 - [ ] (2026-05-12 화) 화요일 자율 cron 모니터링 트리거
 - [ ] (2026-05-18 경) CloudWatch 메모리 데이터 분석 → Neo4j 다운사이징
 - [ ] (2026-05-25 경) Savings Plan 1년 약정 결정
+- [ ] (정식 오픈 시) GitLab Issue #1 — 8개 복구 항목 적용
 - [ ] ASG/Launch Template Terraform 신규 모듈 (Phase 1.5, 별도 PR)
 - [ ] Tier 2: TF 모듈 spec 재생성 + e2e 비교 (Tier 1 통과 시)
 - [ ] Tier 3: 11모듈 전체 v4 적용 + anchor v2 진입 readiness
 - [ ] 신서비스(anchor v2 등) 적용 시작 — framework v3.1 + prompt v4 활용
 - [ ] HOME staging BLOCKED 11건 재테스트 (staging 회복 후)
-- [ ] D-2/D-3 BLOCKED 해제 (UI 출시 후)
+- [ ] D-2/D-3 BLOCKED 해제 (UI 출시 후 spec 신규 작성)
 - [ ] ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)

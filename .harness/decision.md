@@ -5,6 +5,37 @@
 
 ---
 
+## 2026-05-08: 정식 오픈 시 복구 체크리스트 = GitLab Issue (Source of truth)
+
+- **선택**: GitLab terraform repo issue #1로 8개 항목 통합 추적 + tfvars 코멘트 보조 인덱스 + v4 문서 표
+- **대안 검토**:
+  - A) tfvars 코멘트만: 박정환 5/6 패턴. 단 grep 필요, 통합 뷰 없음
+  - B) 별도 .md 파일 (예: project_prod_rightsizing_pending.md): 박정환 commit이 언급한 파일 — 실제로는 안 만듦
+  - C) Notion 페이지: 통합 뷰 좋음. 단 코드 repo와 분리 → 누구도 안 봄
+  - D) **GitLab Issue**: 코드 repo 내장, 박정환+Eugene 모두 보임, label/assignee/checkbox 추적 가능
+- **선택 이유**: 코드와 같은 repo + 체크박스 native UI + 정식 오픈 시 reopen 자연스러움 + 외부 의존성 X. 보조 인덱스(tfvars 코멘트) 유지하면 누가 어디서 봐도 누락 안 됨
+- **영향 범위**:
+  - GitLab Issue [#1](https://gitlab.center.theanchor.best/tax/terraform/-/issues/1)
+  - `docs/anchor-aws/gitlab-issue-prod-restore-checklist.md` (issue paste 가이드)
+  - `docs/anchor-aws/work-guide-2026-05-11-v4.md` (체크리스트 표 + issue 링크)
+  - `environments/prod/terraform.tfvars` (5/11 변경 코멘트에 "정식 오픈 시 복구" 포함)
+- **되돌리는 방법**: Issue close 또는 삭제, 5/11 변경 git revert
+
+---
+
+## 2026-05-08: D-2/D-3 skip placeholder 제거 (smoke test baseline 단순화)
+
+- **선택**: `test.skip('D-2', ...)` `test.skip('D-3', ...)` 빈 placeholder 2개 spec에서 제거 → 파일 상단에 보류 사유 주석만 유지
+- **대안 검토**:
+  - A) 현재 유지 (`test.skip` placeholder): 추적 신호 강함. 단 baseline에 "skipped == 2" 추가 → 미세하게 복잡
+  - B) **완전 삭제**: 28 passed / 0 skipped / 0 failed 깔끔. state.md 백로그가 추적 담당
+  - C) 별도 디렉토리 (tests/blocked/): 이동 비용. 활성화 시 복귀 필요
+- **선택 이유**: state.md 백로그에 "D-2/D-3 BLOCKED 해제 (UI 출시 후)" 이미 기록 → 추적 손실 0. baseline이 단순할수록 auto abort 룰도 명확. UI 출시 시 spec 새로 작성하면 됨
+- **영향 범위**: `tests/critical/team-scenarios/D-firm-capability.spec.ts`, v4 §11 baseline (`skipped == 0`)
+- **되돌리는 방법**: UI 출시 시 D-2/D-3 spec 작성 + commit
+
+---
+
 ## 2026-05-08: 작업 방식 CLI → Terraform IaC 전환 (v3) + Level 2 자동화 (write PAT)
 
 - **선택**: v2(CLI) deprecated → v3(Terraform 기반) + Level 2 자동화 (Claude가 commit/push/apply, 사람은 confirm 게이트 3개 + 최종 merge 결정만)

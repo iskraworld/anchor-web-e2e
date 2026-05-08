@@ -4,19 +4,6 @@
 
 ## 대기 중
 
-## 2026-04-29: AMBIGUOUS_DOC 156건 Eugene 일괄 리뷰
-
-- **백로그 이유**: 9개 모듈 일괄 보강 시 모호 docs는 자동 AMBIGUOUS_DOC 마크. 일괄 리뷰는 Eugene 30분 결정 작업.
-- **할 것**:
-  1. 리포트 §04 모호 섹션에서 156건 한 번에 검토
-  2. 명확화 가능 → 강한 단언 보강 또는 그대로 유지
-  3. 모호 그대로 유지 → anchor 팀 docs 명확화 요청 일괄 메시지
-  4. 정성 키워드는 [B] BLOCKED 전환 검토
-- **필요한 것**: 30분 집중 시간 + anchor 팀 contact
-- **이전 검토**: AMBIGUOUS_DOC 마크 + audit 자동 검출 + 리포트 일괄 표시 흐름 정착
-- **관련 파일**: playwright-report/qa-report.html §04 docs 모호 의심
-- **참고**: docs/anchor-e2e-v2/phase2-code-generation.md §모호한 docs 처리
-
 ## 2026-04-28: ER PDF·링크 버튼 테스트 재활성화
 
 - **백로그 이유**: ER-1-05/1-06/2-05/2-06 — PDF 저장·링크 추출 버튼이 현재 UI에 미구현. 버튼 미노출로 테스트가 timeout됨 → `test.skip()`으로 임시 전환
@@ -25,137 +12,60 @@
 - **이전 검토**: 타임아웃 15초 대기 후도 버튼 미발견. `/tax-history-report/me` 페이지에 PDF/링크 관련 버튼 없음 확인
 - **관련 파일**: `tests/qa/er/er.spec.ts` lines 70-86 (ER-1-05/1-06), 129-145 (ER-2-05/2-06)
 
-## CI 연동 (스케줄 기반)
-- 현재: 수동 실행만 (`workflow_dispatch`)
-- 목표: 매일 오전 9시 P0 자동 실행 + 실패 시 Telegram 알림
-- 워크플로 초안: `docs/ci-templates/daily-monitor.yml`, `weekly-full.yml`
-- 활성화: `.github/workflows/`에 복사 후 GitHub Actions 환경 변수 등록
-- 참고: `docs/anchor-e2e-prompts/phase6-monitoring.md`
+## 2026-04-28: D-2/D-3 BLOCKED 해제
 
-## D-2/D-3 BLOCKED 해제
-- TM-D-2: 1그룹/2그룹 역량 분류 수치 확인
-- TM-D-3: 그룹별 역량 상세 비교
-- 이유: Anchor 팀 법인 리포트 1그룹/2그룹 분류 UI 미출시
-- 조건: 해당 UI 릴리즈 후 `tests/critical/team-scenarios/D-firm-capability.spec.ts` BLOCKED 테스트 활성화
+- **백로그 이유**: Anchor 팀의 1그룹/2그룹 분류 UI 미출시로 spec 작성 불가. 5/8에 `test.skip` placeholder 제거 → smoke test baseline 단순화 (28 passed / 0 skipped). UI 출시 시 spec 신규 작성 필요
+- **할 것**: UI 출시 확인 → `tests/critical/team-scenarios/D-firm-capability.spec.ts`에 D-2 (1그룹/2그룹 분류 수치 확인) + D-3 (그룹별 역량 상세 비교) spec 신규 작성 → CI 포함
+- **필요한 것**: Anchor 팀 UI 출시 알림, 셀렉터·URL 정보
+- **이전 검토**: 5/8 placeholder 제거 결정 (decision.md 기록), state.md backlog로 추적
 
-## 2026-04-28: CI 스케줄 자동 실행 설정
+## 2026-04-28: CI 스케줄 자동 실행 정책 결정
 
-- **백로그 이유**: 매 push마다 CI가 돌아 불필요한 실행이 발생해 일단 수동 실행으로 전환. 적절한 스케줄 정책 결정이 필요해 보류
-- **할 것**: GitHub Actions workflow에 `schedule` 트리거 추가 (예: 매일 특정 시각 or PR merge 시에만 실행 등 정책 확정 후 적용)
+- **백로그 이유**: 매 push CI 실행이 과도해 일단 수동(`workflow_dispatch`)으로 전환. 적절한 빈도 정책 합의 필요
+- **할 것**: GitHub Actions workflow에 `schedule` 트리거 추가 (예: 매일 오전 9시 P0 자동 + 실패 시 Telegram 알림 / PR merge 시에만 실행 등 정책 확정 후 적용)
 - **필요한 것**: 팀 내 CI 실행 빈도 정책 합의, cron 표현식 결정
-- **이전 검토**: 수동 실행(`workflow_dispatch`)으로는 이미 동작 확인됨. `on: push` 트리거는 제거 완료
+- **이전 검토**: `workflow_dispatch` 동작 확인됨. `on: push` 제거 완료. 워크플로 초안 `docs/ci-templates/daily-monitor.yml`, `weekly-full.yml` 작성됨
+- **참고**: `docs/anchor-e2e-prompts/phase6-monitoring.md`
 
----
+## 2026-04-29: HOME 모듈 staging BLOCKED 11건 재테스트
 
-## 2026-04-28: D-2/D-3 테스트 언블락
-
-- **백로그 이유**: Anchor 팀의 UI 출시가 선행되어야 테스트 작성 및 실행 가능. 현재 대상 UI 미출시 상태
-- **할 것**: Anchor 팀 UI 출시 확인 후 D-2/D-3 시나리오 테스트 구현 및 CI에 포함
-- **필요한 것**: Anchor 팀 UI 배포 완료 알림, 해당 UI의 URL·셀렉터 정보
-- **이전 검토**: 백로그 이동 결정만 완료. 테스트 설계·구현은 아직 미착수. D-2/D-3가 어떤 시나리오인지는 phase6-monitoring.md에 기록되어 있음
-
-NONE
-
-> 세션 요약에서 "나중에", "백로그", "일단 스킵", "다음에", "우선순위 낮음" 등의 표현으로 **의도적으로 미뤄진** 항목은 없습니다.
->
-> "다음으로 넘긴 것 — Phase 3 테스트 실행 결과 대기 중"은 현재 진행 중인 작업의 **자연스러운 중단점**이며, 백로그 결정이 아닙니다.
-
-세션 요약에서 "나중에", "백로그", "일단 스킵", "다음에", "우선순위 낮음" 등으로 명시적으로 미뤄진 항목이 확인되지 않습니다.
-
-NONE
-
-NONE
-
-> 세션 요약에 "나중에", "백로그", "일단 스킵", "다음에", "우선순위 낮음" 등으로 명시적으로 미뤄진 항목이 없습니다.
->
-> 세션은 옵션 A/C/D 중 사용자 승인을 **대기 중**인 상태로 종료되었으며, 이는 백로그가 아닌 **의사결정 보류** 상태입니다.
-
-NONE
-
-> 세션 요약에서 "나중에", "백로그", "일단 스킵", "다음에", "우선순위 낮음" 등의 표현으로 **의도적으로 미룬** 항목은 없습니다.
->
-> "다음으로 넘긴 것"으로 표기된 항목들(SP/AUTH 수정, GO/EO/ER 재테스트)은 **순차적 작업 계획** 또는 **외부 블로커(staging 500)로 인한 대기** 상태이며, 백로그 성격의 의사결정은 아닙니다.
-
-## 2026-04-29: HOME staging 회복 후 BLOCKED 테스트 재처리
-
-- **백로그 이유**: HOME staging 환경이 아직 회복되지 않아 진행 불가
-- **할 것**: BLOCKED 11건 재테스트, D-2/D-3 BLOCKED 해제, ER PDF/링크 버튼 테스트 재활성화
+- **백로그 이유**: HOME staging 환경이 회복되지 않아 진행 불가 (D-2/D-3, ER 외 별개 11건)
+- **할 것**: staging 환경 정상화 확인 후 HOME 모듈 BLOCKED 11건 재실행 → PASS 확인 또는 추가 fix
 - **필요한 것**: HOME staging 환경 정상화
-- **이전 검토**: 워크로그·state.md에 현황 기록 완료, BLOCKED 상태로 분류된 11건 식별됨
+- **이전 검토**: 워크로그·state.md에 11건 식별 완료. BLOCKED 분류 적용됨
 
-## 2026-04-29: e2e-v2 보조 자동화 5건 보류
+## 2026-05-08: v4 §11 추가 Smoke test 시나리오 보강
 
-- **백로그 이유**: 코드 자동 검증 원칙 채택 → 문서/가이드 성격 항목은 당장 ROI 낮음, "필요 시 추가"로 합의
-- **할 것**: docs lint(A), 데이터 의존성 문서(C), 분기 사이클 자동 issue(F), 리포트 가이드(H), 실행 시간 모니터링(J)
-- **필요한 것**: fake-pass 0건 안정화 확인 후, 55 fail 해소가 선행
-- **이전 검토**: 외부 의견 비교 토론에서 10개 → 6개로 축소, 이 5건은 "오버엔지니어링" 판정
+- **백로그 이유**: 기획자/FE 팀에 추가 시나리오 (결제·알림·기타 회귀) 문의 → 답변 대기 중
+- **할 것**: 답변 받으면 `docs/anchor-aws/work-guide-2026-05-11-v4.md` §11에 추가 시나리오 명시 + Playwright spec 작성 (필요 시)
+- **필요한 것**: 기획자/FE 팀 답변 (어떤 edge case 다룰지, 회귀 감지 특화 시나리오 있는지)
+- **이전 검토**: 5/8 사전 검증 — 28 passed / 0 skipped / 0 failed / 17.1초. ALB Response avg < 300ms 기준 확인됨. 현재 28개 critical로 다운사이즈 영향 큰 RDS/캐시/was/Neo4j 모두 커버
 
----
+## 2026-05-08: ANCHOR_GITLAB_TOKEN 만료/revoke
 
-## 2026-04-29: YAML config/apply-decisions 도구
+- **백로그 이유**: write PAT 노출 최소화 — 5/11 작업 + Tier 1 fresh consumer 검증 종료 후 즉시 revoke 또는 자동 만료(2026-06-07) 활용
+- **할 것**: 정식 오픈 관련 모든 작업 완료 후 GitLab → User Settings → Access Tokens → revoke 클릭. 또는 만료일까지 방치
+- **필요한 것**: 5/11 AWS 작업 + Tier 1 검증 종료
+- **이전 검토**: 토큰 발급 시 read+write 스코프, 만료 2026-06-07 (한 달)
 
-- **백로그 이유**: YAGNI — 현재 AMBIGUOUS_DOC 분류가 2분류로 단순화되어 별도 도구 불필요
-- **할 것**: 모호 docs 일괄 리뷰 패턴이 반복되면 config 기반 일괄 적용 도구 제작
-- **필요한 것**: AMBIGUOUS_DOC 156건 리뷰 완료 후 패턴 파악
-- **이전 검토**: 옵션 B(즉시 결정) 폐기, AI 자동 분류 → 리포트 일괄 리뷰 방식 확정
+## 2026-05-08: Tier 1 검증 — fresh consumer simulation
 
----
-
-## 2026-04-29: AMBIGUOUS_DOC 156건 일괄 리뷰
-
-- **백로그 이유**: 세션 내 시간 부족, 풀 테스트 회귀 분석이 우선
-- **할 것**: 156건 AMBIGUOUS_DOC 스펙을 Eugene이 리뷰하여 BLOCKED vs 단언 보강 판정
-- **필요한 것**: `generate-qa-report.mjs` 리포트 출력, 회귀 분석 완료
-- **이전 검토**: 274→0 fake-pass 제거 완료, 2분류(BLOCKED/AMBIGUOUS_DOC) 체계 확정
-
-## 2026-05-06: anchor v2 docs 생성 시 v4 prompt 자동 적용 및 검증
-
-- **백로그 이유**: anchor v2 첫 docs 생성 시점 대기 중 (현재는 프롬프트 개선 완료 단계)
-- **할 것**: 
-  - qa-doc-generation-prompt.md v4 정식 적용 확인
-  - 154건 AMBIGUOUS_DOC 패턴 재검증 (정량 5개 룰 동작 확인)
-  - 정성 8개 + 정량 5개(regex) 자가 검증 체크리스트 운영
-- **필요한 것**: 
-  - 선행: qa-doc-generation-prompt.md v4 파일 작성/병합 완료
-  - anchor v2 첫 docs 생성 일정 확인
-- **이전 검토**: 
-  - 154건 패턴 분석 완료 (모호 동사 87건, 빈 셀 12건, 데이터 부족 16건 등)
-  - v4 정량 룰 5가지 [10]~[14] 도출 및 설계 완료
-  - 예상 효과: AMBIGUOUS_DOC ~80% 감소 (154→30건)
-
-## 2026-05-07: dev-tax-pub01 인스턴스 다운사이징
-
-- **백로그 이유**: AWS 콘솔에서 수동 실행 필요, 자동화할 수 없는 작업
-- **할 것**: c6i.2xlarge → t3.medium으로 인스턴스 타입 변경 및 재부팅 (월 $248 절감)
-- **필요한 것**: AWS IAM 권한, 서비스 영향도 재확인
-- **이전 검토**: CloudWatch 30일 평균 CPU <10% 확인, 다운사이징 안전성 검증 완료
-
-## 2026-05-07: AWS 리전 변경 (싱가포르 → 서울)
-
-- **백로그 이유**: 리전 변경은 인프라 재구성 필요, 별도 계획 및 운영팀 공지 필요
-- **할 것**: 현재 ap-southeast-1 리소스를 ap-northeast-2(서울)로 마이그레이션, 비용 영향도 재계산
-- **필요한 것**: 리전 변경 ROI 분석, 데이터 레지던시 정책 확인, 다운타임 계획
-- **이전 검토**: 리포트에서 리전별 가격 비교 완료 (서울이 비용 효율적)
-
-## 2026-05-08: v4 스펙 §11 추가 시나리오 보강
-
-- **백로그 이유**: 기획자/FE 팀의 답변 대기 중 — 확인 전까지 진행 불가
-- **할 것**: v4 스펙 문서의 §11 섹션에 추가 시나리오 작성 및 검증
-- **필요한 것**: 기획자/FE 팀 피드백 (어떤 edge case를 다룰지 확인)
-- **이전 검토**: v4 스펙 기본 틀 완성, GitLab Issue #1 등록 완료
-
----
-
-## 2026-05-08: ANCHOR_GITLAB_TOKEN 만료 처리
-
-- **백로그 이유**: 자동 만료 일정(2026-06-07) 있으므로 명시적으로 일정 잡음
-- **할 것**: 정식 오픈 관련 작업 종료 후 ANCHOR_GITLAB_TOKEN revoke (또는 2026-06-07 자동 만료 허용)
-- **필요한 것**: 정식 오픈 후속 작업 완료 (예상: 5월 내)
-- **이전 검토**: 토큰 발급 시점 및 만료 정책 결정 완료
+- **백로그 이유**: 별도 워크스페이스 + anchor 백엔드/프론트 fresh clone + e2e-framework-init 셋업이 필요한 큰 작업. 5/11 AWS 작업과 분리하여 별도 진행
+- **할 것**:
+  1. 별도 워크스페이스 생성 (예: `~/Downloads/coding/anchor-v2-test/`)
+  2. anchor 백엔드/프론트 GitLab repo fresh clone
+  3. 새 Claude 세션에서 `e2e-framework-init` 스킬로 framework 카피
+  4. A-2, C-1 docs 신규 생성 (v4 prompt 적용)
+  5. QA checklist 신규 생성
+  6. e2e 실행 → AMBIGUOUS_DOC / 모호 동사 / 빈 셀 / PASS 율 측정
+  7. anchor-web-e2e baseline (797 PASS) vs 비교 → 70%+ 감소 검증
+- **필요한 것**: anchor 백엔드/프론트 GitLab URL, 로컬 실행 환경 또는 staging 접근, 새 Claude 세션
+- **이전 검토**: 5/8 결정 — 기존 anchor-web-e2e 재실행은 framework consumer 워크플로 검증 불가 → fresh consumer simulation으로 변경 (decision.md 기록)
+- **관련 파일**: `~/Downloads/coding/e2e-framework/`, `qa-doc-generation-prompt.md` v4
+- **참고**: anchor-web-e2e는 source/baseline (797 PASS / 0 FAIL) 그대로 보존, 오염 X
 
 <!-- 새 항목은 여기 위에 추가 -->
 
 ---
 
 ## 완료 / 취소
-

@@ -5,6 +5,42 @@
 
 ---
 
+## 2026-05-08: 작업 방식 CLI → Terraform IaC 전환 (v3) + Level 2 자동화 (write PAT)
+
+- **선택**: v2(CLI) deprecated → v3(Terraform 기반) + Level 2 자동화 (Claude가 commit/push/apply, 사람은 confirm 게이트 3개 + 최종 merge 결정만)
+- **대안 검토**:
+  - A) v2(CLI) 유지: 직접 변경. 단 다음 `terraform apply` 때 drift 원복 — **명백히 잘못된 접근**
+  - B) v3 + Level 1 (read-only PAT): Eugene이 commit/push/apply 모두 실행 (~7회 타이핑 + 3회 confirm). 안전하지만 인지 부하 큼
+  - C) v3 + Level 2 (write PAT): Claude가 git 작업 + apply, Eugene 4회 결정만. 인지 부하 ↓ 권한 약간 ↑
+- **선택 이유**:
+  - 블래스트 반경 동일 — apply 주체가 Eugene이든 Claude든 AWS 영향 동일
+  - AWS 권한은 안 늘어남 (Claude는 이미 anchor profile 사용 중)
+  - 새 자격증명은 GitLab write PAT 1개 — git 작업만 가능, AWS 직접 영향 X
+  - PAT 만료일 짧게 잡으면 자동 회수
+  - 이전 패턴(CLI v2)에서 "롤백 가능 → AI 자동" 일관성 유지
+  - Smoke test도 Playwright로 자동 (이 프로젝트의 본업)
+- **영향 범위**:
+  - `docs/anchor-aws/work-guide-2026-05-11.md`, `work-guide-2026-05-11-v2.md` → deprecated 경고 추가
+  - `work-guide-2026-05-11-v3.md` 신규 작성 (Terraform 기반)
+  - v4 = v3 + Level 2 자동화 (다음 세션 작성 예정)
+  - `~/Downloads/coding/anchor-terraform` 로컬 클론
+  - ~/.zshenv `ANCHOR_GITLAB_TOKEN` (write 포함 PAT)
+- **되돌리는 방법**: PAT revoke 5초 → Claude 다시 read-only로 격하. v3는 deprecated 경고만 추가하면 v2 사용 가능 (단 drift 위험)
+
+---
+
+## 2026-05-08: ASG/Launch Template Phase 1에서 deferred (Phase 1.5로 분리)
+
+- **선택**: ASG는 5/11 Phase 1에서 제외 → 별도 PR로 후속 작업
+- **대안 검토**:
+  - A) Phase 1에 포함 (terraform 새 모듈 추가): TF 코드 큰 변경, 신규 모듈 작성 + main.tf 와이어링 + 변수 정의 → 위험 ↑ 시간 ↑
+  - B) Phase 1.5로 분리 (별도 PR): 다운사이징과 무관한 신규 기능. 베타 단계 사용자 폭증 가능성 낮음
+- **선택 이유**: ASG는 사용자 폭증 대비용으로 다운사이징(비용 절감)과 목적이 다름. Phase 1 risk 최소화 + 시간 분리
+- **영향 범위**: v3 §8 ASG 섹션 → deferred 표기. 후속 작업으로 신규 모듈(modules/asg) + main.tf 추가 필요
+- **되돌리는 방법**: 5/11 작업 후 별도 PR로 ASG 모듈 추가하면 됨
+
+---
+
 ## 2026-05-07: AWS 일괄 작업일 토요일 → 월요일 변경 + 봇 자율 단일 연속 블록
 
 - **선택**: 2026-05-11 (월) 09:00 KST 시작, 봇 자율 블록 ~60~90분 단일 연속 실행 (점심 break 제거)

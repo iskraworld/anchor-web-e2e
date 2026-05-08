@@ -4,24 +4,25 @@
 
 ---
 
-## 마지막 실행: 2026-05-07 21:48
-## 마지막 업데이트: 2026-05-07 21:48
+## 마지막 실행: 2026-05-08 09:58
+## 마지막 업데이트: 2026-05-08 09:58
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **AWS 월요일 작업 가이드 v2 점검 완료** (15개 우려사항 반영) + **5/11 09:00 실행 대기**
+- **AWS 작업 방식 Terraform IaC 전환 + Level 2 자동화 결정** → Claude 재시작 후 v4 작성 (5/11 09:00 실행)
 
 ### 이어서 할 것
-1. (사용자) 5/11 (월) 09:00 IAM 권한 부여 + gw01 right-sizing → Claude에 알림 → 봇 자율 작업 ~60~90분 → smoke test → 권한 회수
-2. (사용자) 개발팀 공지 (`dev-team-notice-2026-05-09.md`) — 날짜 5/11로 갱신 + 전달
-3. (사용자) QA 팀에 v4 prompt + TF 재작성 요청
+1. (사용자) Claude 세션 재시작 → 새 write PAT(`ANCHOR_GITLAB_TOKEN`) 적용 확인
+2. (Claude) v3 → v4 갱신 (Level 2 반영, 사람 작업 = confirm 게이트 3개 + 최종 merge 4회)
+3. (사용자) 5/11 (월) 09:00 — Eugene 4번 결정만 (RDS/ALB/gw01 confirm + merge)
 
 ### 막힌 것
-- 없음
+- 없음 (Claude 재시작 대기 중)
 
 ### 사람 판단 필요
-- 월요일(5/11) 09:00 IAM 권한 부여 시점
-- 개발팀 / QA 팀 메시지 발송 시점
+- Claude 재시작 후 write PAT 검증 (예: 테스트 push)
+- 5/11 09:00 작업 시작 시점
+- 5/11 작업 중 confirm 게이트 3회 + 최종 merge 결정
 - (1주 후, 5/18 경) Neo4j 다운사이징 결정
 - (2주 후, 5/25 경) Savings Plan 약정 결정
 - D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
@@ -82,13 +83,21 @@
 - [x] 일요일 모니터링 → 화요일 자율 cron (`schedule` 스킬, 매 30분 + Telegram) ✅ 2026-05-07
 - [x] RDS / was01·02 자동 abort 룰 도입 ✅ 2026-05-07
 - [x] AWS CLI 직접 조회로 8 인스턴스 / AMI / SG / Subnet / TG ARN 매핑 ✅ 2026-05-07
-- [ ] (사용자) 개발팀에 dev-team-notice-2026-05-09.md 전달 (날짜 5/11로 갱신 필요)
+- [x] Terraform IaC 발견 (박정환 실장 메시지) → v2(CLI) deprecated ✅ 2026-05-08
+- [x] GitLab terraform repo 클론 + 분석 (~/Downloads/coding/anchor-terraform) ✅ 2026-05-08
+- [x] 박정환 5/6 commit `b32b590` 패턴 답습 → tfvars 단일 파일 수정 ✅ 2026-05-08
+- [x] v3 작성 (Terraform 기반) — Eugene plan/apply 7회 + confirm 3회 ✅ 2026-05-08
+- [x] Level 2 자동화 결정 (write PAT 추가 시 Claude commit/push/apply) ✅ 2026-05-08
+- [x] ~/.zshenv 토큰 정리 + 새 write PAT 등록 (Claude 재시작 대기) ✅ 2026-05-08
+- [ ] (Claude) v3 → v4 갱신 (Level 2 반영, 사람 = 4회 결정만)
+- [ ] (사용자) 개발팀에 dev-team-notice-2026-05-09.md 전달 (날짜 5/11로 갱신)
 - [ ] (사용자) QA 팀 메시지 발송 → 새 TF QA checklist 회수
 - [ ] (Claude) Tier 1 비교 분석 — 새 TF QA의 AMBIGUOUS_DOC / 모호 동사 / 빈 셀 측정
-- [ ] (2026-05-11 월) AWS 일괄 작업 — work-guide-2026-05-11-v2.md 따라 (사용자 IAM 권한 부여 → Claude 자동 작업)
+- [ ] (2026-05-11 월) AWS 일괄 작업 — work-guide-2026-05-11-v4 따라 (Eugene 4회 결정)
 - [ ] (2026-05-12 화) 화요일 자율 cron 모니터링 트리거
 - [ ] (2026-05-18 경) CloudWatch 메모리 데이터 분석 → Neo4j 다운사이징
 - [ ] (2026-05-25 경) Savings Plan 1년 약정 결정
+- [ ] ASG/Launch Template Terraform 신규 모듈 (Phase 1.5, 별도 PR)
 - [ ] Tier 2: TF 모듈 spec 재생성 + e2e 비교 (Tier 1 통과 시)
 - [ ] Tier 3: 11모듈 전체 v4 적용 + anchor v2 진입 readiness
 - [ ] 신서비스(anchor v2 등) 적용 시작 — framework v3.1 + prompt v4 활용

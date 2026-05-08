@@ -5,6 +5,37 @@
 
 ---
 
+## Session 2026-05-08 18:41 — backlog 정리 + 파일 구조 재배치 (.harness archive / docs reports·source / anchor-aws archive)
+
+### 작업 요약
+- backlog.md 정리 (16개 → 7개 → 6개):
+  - 노이즈 5건 (NONE 메모 자동 생성 부산물) 삭제
+  - 중복 3쌍 정리 (D-2/D-3, AMBIGUOUS_DOC, CI 스케줄)
+  - 진행 중/완료된 4건 (dev-tax-pub01, AMBIGUOUS_DOC 리뷰, anchor v2 검증, HOME staging umbrella) — 5/11 작업 또는 Tier 1로 흡수
+  - 의도적 중단 2건 (e2e-v2 보조 자동화, YAML config 도구) 삭제
+  - AWS 리전 변경 항목 삭제 (이미 서울 사용 중)
+  - Tier 1 fresh consumer 항목 삭제 (별도 워크스페이스로 이전 — backlog 추적 X)
+  - 형식 통일: 모든 항목 `## YYYY-MM-DD: 제목`
+- 파일 구조 재배치:
+  - `.harness/fix-progress.md` → `.harness/archive/fix-progress-2026-04-28.md` (활성 상태 전용 정리)
+  - `docs/anchor-web-e2e-info.md` (root) → 삭제 (`source/`와 100% 중복)
+  - `docs/feature-catalog.md` → `docs/source/feature-catalog.md` (참조 자료 통합)
+  - `docs/reports/` 신설 + 5개 timestamped 리포트 이동:
+    - `ambiguous-review-2026-05-06.md`
+    - `verify-samples-2026-04-30/05-02/05-05/05-05-c4.md`
+  - `docs/anchor-aws/archive/` 신설 + 10개 deprecated 이동 (gitignore라 git 추적 X):
+    - 4개 work-guides (v1~v3, 2026-05-09)
+    - 2개 cost-optimization (16-04, 16-28 진화 버전)
+    - 4개 executive-proposal (17-27, 17-38, 17-42, 17-49)
+- 결과: docs/anchor-aws/ root에 6개 현행 문서만 (v4 + 최종 cost/executive + agent guide + dev notice + gitlab issue)
+
+### 다음 액션
+1. (사용자) 별도 워크스페이스 생성 + anchor 백엔드/프론트 fresh clone → Tier 1 4단계 검증 진행
+2. (2026-05-11 월 09:00) "월요일 작업 시작해" 트리거 → Eugene 4회 결정 (RDS/ALB/gw01 confirm + merge)
+3. (작업 후) ANCHOR_GITLAB_TOKEN revoke 또는 2026-06-07 자동 만료
+
+---
+
 ## Session 2026-05-08 18:25 — Tier 1 검증 방법 재검토 → fresh consumer simulation 방향 결정
 
 ### 작업 요약

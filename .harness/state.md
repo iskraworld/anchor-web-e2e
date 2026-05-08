@@ -4,17 +4,17 @@
 
 ---
 
-## 마지막 실행: 2026-05-08 18:25
-## 마지막 업데이트: 2026-05-08 18:25
+## 마지막 실행: 2026-05-08 18:41
+## 마지막 업데이트: 2026-05-08 18:41
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **5/11 월요일 AWS 작업 대기** + **Tier 1 검증은 별도 워크스페이스에서 fresh consumer simulation으로 진행 결정**
+- **5/11 월요일 AWS 작업 대기** + **하네스/문서 구조 정리 완료** (활성/안정/리포트/archive 분리)
 
 ### 이어서 할 것
-1. (사용자) 별도 워크스페이스 생성 (예: `~/Downloads/coding/anchor-v2-test/`) → anchor 백엔드/프론트 fresh clone → 새 Claude 세션에서 Tier 1 4단계 검증 진행
-2. (2026-05-11 월 09:00) 현 워크스페이스로 돌아와서 "월요일 작업 시작해" 트리거 → AWS 일괄 작업 (Eugene 4회 결정)
-3. (작업 후) ANCHOR_GITLAB_TOKEN 만료 또는 revoke (2026-06-07 자동 만료)
+1. (사용자) 별도 워크스페이스 생성 + anchor 백엔드/프론트 fresh clone → Tier 1 4단계 검증 (별도 Claude 세션)
+2. (2026-05-11 월 09:00) "월요일 작업 시작해" 트리거 → AWS 일괄 작업 (Eugene 4회 결정)
+3. (작업 후) ANCHOR_GITLAB_TOKEN revoke 또는 2026-06-07 자동 만료
 
 ### 막힌 것
 - 없음
@@ -98,7 +98,9 @@
 - [x] v4 §11 Smoke test baseline + auto abort 룰 명시 ✅ 2026-05-08
 - [x] worklog.md, state.md, decision.md 업데이트 ✅ 2026-05-08
 - [x] Tier 1 검증 방법 변경 — fresh consumer simulation 방향 결정 ✅ 2026-05-08
-- [ ] (사용자) 별도 워크스페이스 생성 + anchor 백엔드/프론트 fresh clone → 새 Claude 세션에서 Tier 1 4단계 검증
+- [x] backlog 정리 — 16개 → 6개 (NONE/중복/완료/오버엔지 제거) ✅ 2026-05-08
+- [x] 파일 구조 재배치 — .harness archive / docs reports·source / anchor-aws archive ✅ 2026-05-08
+- [ ] (사용자) 별도 워크스페이스 + anchor 백엔드/프론트 fresh clone → Tier 1 4단계 검증
 - [ ] (사용자) 기획자/FE 답변 받으면 v4 §11 추가 시나리오 보강
 - [ ] (사용자) 개발팀에 dev-team-notice-2026-05-09.md 전달 (날짜 5/11로 갱신)
 - [ ] (사용자) QA 팀 메시지 발송 → 새 TF QA checklist 회수 (Tier 1 검증용 input)

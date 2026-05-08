@@ -5,6 +5,28 @@
 
 ---
 
+## 2026-05-08: 파일 구조 분리 원칙 (활성/안정/리포트/archive)
+
+- **선택**: 4가지 카테고리로 명시적 분리 — `.harness/`는 활성 상태만, `docs/source/`는 안정 참조, `docs/reports/`는 timestamped 자동 생성물, `*/archive/`는 deprecated/완료 보존
+- **대안 검토**:
+  - A) **현재 유지** (모두 root에 평면 배치): 단순. 단 16+ 파일이 root에 쌓이면서 중복/deprecated 분간 어려움
+  - B) **카테고리별 분리** (선택): `.harness` 4개 활성 파일만 / `docs/source/` 안정 / `docs/reports/` 자동 생성 / `*/archive/` 옛 버전. 발견성 ↑, 정합성 ↑
+  - C) **타임스탬프 기반 분리만**: 옛 것 다 archive로. 단 안정 vs 자동 생성 구별 안 됨 → 동급 취급
+- **선택 이유**:
+  - `.harness/`는 워치/하네스 시스템이 매 세션 갱신 — 다른 형식 파일 섞이면 노이즈
+  - timestamped 리포트(verify-samples-2026-04-30 같은)는 안정 문서와 다른 생명주기 → 격리
+  - deprecated 파일(work-guide v1~v3)은 history 보존하되 root에서 안 보이게
+  - 신규 진입자 (anchor v2 적용 시) 어디서 무엇을 봐야 하는지 명확
+- **영향 범위**:
+  - `.harness/fix-progress.md` → `archive/`
+  - `docs/anchor-web-e2e-info.md` → 삭제 (중복)
+  - `docs/feature-catalog.md` → `source/`
+  - `docs/reports/` 신설 + 5개 리포트 이동
+  - `docs/anchor-aws/archive/` 신설 + 10개 deprecated 이동
+- **되돌리는 방법**: git revert (커밋 fe5797d) — 모두 git rename으로 history 보존됨
+
+---
+
 ## 2026-05-08: Tier 1 검증 방법 변경 — anchor-web-e2e 재실행 → fresh consumer simulation
 
 - **선택**: 별도 워크스페이스에서 anchor 백엔드/프론트 fresh clone + e2e-framework-init + A-2/C-1 docs/checklist/e2e 처음부터 생성

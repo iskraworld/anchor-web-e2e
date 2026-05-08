@@ -5,6 +5,28 @@
 
 ---
 
+## Session 2026-05-08 18:25 — Tier 1 검증 방법 재검토 → fresh consumer simulation 방향 결정
+
+### 작업 요약
+- 기존 Tier 1 재실행 계획 (anchor-web-e2e에서 새 TF QA 결과 받아 분석) 검토
+- 한계 식별: anchor-web-e2e는 이미 모든 artifact가 갖춰진 상태 → 새 TF QA만 갈아끼우면 **doc 생성 prompt v4 효과만** 측정 가능, framework consumer 워크플로 검증 불가
+- 사용자 제안 채택: **fresh consumer journey simulation** — anchor 백엔드/프론트 fresh clone → e2e-framework-init 스킬로 consumer 셋업 → A-2/C-1 docs + QA checklist + e2e 처음부터 생성
+- 검증 범위 4단계로 확장:
+  1. framework 설치 워크플로 (e2e-framework-init 스킬 동작)
+  2. A-2/C-1 docs 생성 (v4 prompt, AMBIGUOUS_DOC 비율)
+  3. QA checklist 생성 (모호 동사 / 빈 셀)
+  4. E2E 실행 (실제 PASS?)
+- anchor-web-e2e는 source/baseline으로 보존 (오염 X) — 풀테스트 797 PASS / 0 FAIL 유지
+- 현 세션 정지 결정 — 별도 워크스페이스 생성하여 새 Claude 세션에서 진행
+
+### 다음 액션
+1. (사용자) 별도 워크스페이스 생성 (예: `~/Downloads/coding/anchor-v2-test/`)
+2. (사용자) anchor 백엔드 + 프론트 GitLab URL 확보 → fresh clone
+3. (사용자) 새 워크스페이스에서 새 Claude 세션 시작 → Tier 1 4단계 검증 진행
+4. (현 워크스페이스) 5/11 09:00 AWS 작업 시점에 다시 돌아와서 "월요일 작업 시작해" 트리거
+
+---
+
 ## Session 2026-05-08 15:59 — 워크로그 기록 & 결정사항 반영
 
 ### 작업 요약

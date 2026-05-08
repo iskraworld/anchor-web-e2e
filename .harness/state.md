@@ -4,25 +4,26 @@
 
 ---
 
-## 마지막 실행: 2026-05-08 15:59
-## 마지막 업데이트: 2026-05-08 15:59
+## 마지막 실행: 2026-05-08 18:25
+## 마지막 업데이트: 2026-05-08 18:25
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **5/11 월요일 AWS 일괄 작업 대기** — 기획자/FE 시나리오 답변 대기 중
+- **5/11 월요일 AWS 작업 대기** + **Tier 1 검증은 별도 워크스페이스에서 fresh consumer simulation으로 진행 결정**
 
 ### 이어서 할 것
-1. (사용자) 기획자/FE 팀 smoke test 추가 시나리오 답변 → v4 §11 시나리오 보강
-2. (2026-05-11 월 09:00) AWS 일괄 작업 — work-guide-2026-05-11-v4 따라 진행 (Eugene 4회 결정)
+1. (사용자) 별도 워크스페이스 생성 (예: `~/Downloads/coding/anchor-v2-test/`) → anchor 백엔드/프론트 fresh clone → 새 Claude 세션에서 Tier 1 4단계 검증 진행
+2. (2026-05-11 월 09:00) 현 워크스페이스로 돌아와서 "월요일 작업 시작해" 트리거 → AWS 일괄 작업 (Eugene 4회 결정)
 3. (작업 후) ANCHOR_GITLAB_TOKEN 만료 또는 revoke (2026-06-07 자동 만료)
 
 ### 막힌 것
 - 없음
 
 ### 사람 판단 필요
-- 기획자/FE 답변 받으면 추가 smoke test 시나리오 결정
-- 5/11 09:00 작업 시작 시점
+- 별도 워크스페이스 생성 시점 (Tier 1 검증 시작)
+- anchor 백엔드/프론트 GitLab URL 확보
 - 5/11 작업 중 confirm 게이트 3회 + 최종 merge 결정
+- 기획자/FE 답변 받으면 추가 smoke test 시나리오 결정
 - (1주 후, 5/18 경) Neo4j 다운사이징 결정
 - (2주 후, 5/25 경) Savings Plan 약정 결정
 - (정식 오픈 시) GitLab Issue #1 8개 항목 복구 결정
@@ -96,10 +97,11 @@
 - [x] D-2/D-3 skip placeholder 제거 — baseline 단순화 ✅ 2026-05-08
 - [x] v4 §11 Smoke test baseline + auto abort 룰 명시 ✅ 2026-05-08
 - [x] worklog.md, state.md, decision.md 업데이트 ✅ 2026-05-08
+- [x] Tier 1 검증 방법 변경 — fresh consumer simulation 방향 결정 ✅ 2026-05-08
+- [ ] (사용자) 별도 워크스페이스 생성 + anchor 백엔드/프론트 fresh clone → 새 Claude 세션에서 Tier 1 4단계 검증
 - [ ] (사용자) 기획자/FE 답변 받으면 v4 §11 추가 시나리오 보강
 - [ ] (사용자) 개발팀에 dev-team-notice-2026-05-09.md 전달 (날짜 5/11로 갱신)
-- [ ] (사용자) QA 팀 메시지 발송 → 새 TF QA checklist 회수
-- [ ] (Claude) Tier 1 비교 분석 — 새 TF QA의 AMBIGUOUS_DOC / 모호 동사 / 빈 셀 측정
+- [ ] (사용자) QA 팀 메시지 발송 → 새 TF QA checklist 회수 (Tier 1 검증용 input)
 - [ ] (2026-05-11 월) AWS 일괄 작업 — work-guide-2026-05-11-v4 따라 (Eugene 4회 결정)
 - [ ] (2026-05-12 화) 화요일 자율 cron 모니터링 트리거
 - [ ] (2026-05-18 경) CloudWatch 메모리 데이터 분석 → Neo4j 다운사이징

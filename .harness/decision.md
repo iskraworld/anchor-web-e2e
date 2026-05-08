@@ -5,6 +5,25 @@
 
 ---
 
+## 2026-05-08: Tier 1 검증 방법 변경 — anchor-web-e2e 재실행 → fresh consumer simulation
+
+- **선택**: 별도 워크스페이스에서 anchor 백엔드/프론트 fresh clone + e2e-framework-init + A-2/C-1 docs/checklist/e2e 처음부터 생성
+- **대안 검토**:
+  - A) anchor-web-e2e에서 새 TF QA 결과만 분석: 빠름. 단 doc 생성 prompt v4 효과만 측정 가능, framework consumer 워크플로 검증 불가
+  - B) **fresh consumer journey simulation**: 4단계(framework 설치 / docs / checklist / e2e) 모두 검증 가능. 시간 더 걸림
+- **선택 이유**:
+  - 진짜 검증 목적은 "신서비스(anchor v2 등)가 framework 받았을 때 잘 되나?"
+  - anchor-web-e2e는 이미 모든 artifact가 갖춰져있어 fresh consumer 시뮬레이션 안 됨
+  - 시간 비용 < 검증 신뢰도 (신서비스 도입 readiness 직접 측정)
+  - anchor-web-e2e는 source/baseline (797 PASS) 그대로 보존 — 오염 X
+- **영향 범위**:
+  - 별도 워크스페이스 생성 (예: `~/Downloads/coding/anchor-v2-test/`)
+  - 새 Claude 세션에서 진행 (현 anchor-web-e2e 세션은 5/11 작업 트리거용으로 유지)
+  - state.md "이어서 할 것" 변경: Tier 1 검증 방법 명시
+- **되돌리는 방법**: 새 워크스페이스 삭제 + 원래 계획(A안)으로 복귀
+
+---
+
 ## 2026-05-08: 정식 오픈 시 복구 체크리스트 = GitLab Issue (Source of truth)
 
 - **선택**: GitLab terraform repo issue #1로 8개 항목 통합 추적 + tfvars 코멘트 보조 인덱스 + v4 문서 표

@@ -31,8 +31,8 @@
 - ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
 
 ### 백로그 요약
-- 대기 중: 7개
-- 최근 추가: 2026-05-08 — Tier 1 검증 fresh consumer simulation
+- 대기 중: 6개
+- 최근 추가: 2026-05-08 — ANCHOR_GITLAB_TOKEN 만료/revoke
 
 ### 진행 상황
 - [x] Phase 0~3 e2e-v2 가이드 완성

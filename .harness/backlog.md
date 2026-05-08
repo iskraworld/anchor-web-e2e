@@ -48,22 +48,6 @@
 - **필요한 것**: 5/11 AWS 작업 + Tier 1 검증 종료
 - **이전 검토**: 토큰 발급 시 read+write 스코프, 만료 2026-06-07 (한 달)
 
-## 2026-05-08: Tier 1 검증 — fresh consumer simulation
-
-- **백로그 이유**: 별도 워크스페이스 + anchor 백엔드/프론트 fresh clone + e2e-framework-init 셋업이 필요한 큰 작업. 5/11 AWS 작업과 분리하여 별도 진행
-- **할 것**:
-  1. 별도 워크스페이스 생성 (예: `~/Downloads/coding/anchor-v2-test/`)
-  2. anchor 백엔드/프론트 GitLab repo fresh clone
-  3. 새 Claude 세션에서 `e2e-framework-init` 스킬로 framework 카피
-  4. A-2, C-1 docs 신규 생성 (v4 prompt 적용)
-  5. QA checklist 신규 생성
-  6. e2e 실행 → AMBIGUOUS_DOC / 모호 동사 / 빈 셀 / PASS 율 측정
-  7. anchor-web-e2e baseline (797 PASS) vs 비교 → 70%+ 감소 검증
-- **필요한 것**: anchor 백엔드/프론트 GitLab URL, 로컬 실행 환경 또는 staging 접근, 새 Claude 세션
-- **이전 검토**: 5/8 결정 — 기존 anchor-web-e2e 재실행은 framework consumer 워크플로 검증 불가 → fresh consumer simulation으로 변경 (decision.md 기록)
-- **관련 파일**: `~/Downloads/coding/e2e-framework/`, `qa-doc-generation-prompt.md` v4
-- **참고**: anchor-web-e2e는 source/baseline (797 PASS / 0 FAIL) 그대로 보존, 오염 X
-
 <!-- 새 항목은 여기 위에 추가 -->
 
 ---

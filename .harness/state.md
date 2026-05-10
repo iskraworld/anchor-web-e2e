@@ -4,16 +4,16 @@
 
 ---
 
-## 마지막 실행: 2026-05-08 18:41
-## 마지막 업데이트: 2026-05-08 18:41
+## 마지막 실행: 2026-05-10 21:16
+## 마지막 업데이트: 2026-05-10 21:16
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **5/11 월요일 AWS 작업 대기** + **하네스/문서 구조 정리 완료** (활성/안정/리포트/archive 분리)
+- **5/11 월요일 AWS 작업 가이드 v4 — 3 이터레이션 리뷰 완료** (Critical 4건 사전 차단, 총 21건 수정 → 0건 도달)
 
 ### 이어서 할 것
-1. (사용자) 별도 워크스페이스 생성 + anchor 백엔드/프론트 fresh clone → Tier 1 4단계 검증 (별도 Claude 세션)
-2. (2026-05-11 월 09:00) "월요일 작업 시작해" 트리거 → AWS 일괄 작업 (Eugene 4회 결정)
+1. (2026-05-11 월 09:00) "월요일 작업 시작해" 트리거 → 수정된 v4 가이드로 작업 진행 (Eugene 4회 결정)
+2. (사용자) 별도 워크스페이스 생성 + anchor 백엔드/프론트 fresh clone → Tier 1 4단계 검증 (별도 Claude 세션)
 3. (작업 후) ANCHOR_GITLAB_TOKEN revoke 또는 2026-06-07 자동 만료
 
 ### 막힌 것
@@ -22,11 +22,12 @@
 ### 사람 판단 필요
 - 별도 워크스페이스 생성 시점 (Tier 1 검증 시작)
 - anchor 백엔드/프론트 GitLab URL 확보
-- 5/11 작업 중 confirm 게이트 3회 + 최종 merge 결정
+- 5/11 작업 중 confirm 게이트 3회 + 최종 merge 결정 (총 4회 응답)
 - 기획자/FE 답변 받으면 추가 smoke test 시나리오 결정
 - (1주 후, 5/18 경) Neo4j 다운사이징 결정
 - (2주 후, 5/25 경) Savings Plan 약정 결정
-- (정식 오픈 시) GitLab Issue #1 8개 항목 복구 결정
+- (정식 오픈 시) GitLab Issue #1 8개 항목 + 인프라 1 항목 복구 결정
+- (선택) dev-tax-pub01 EIP 할당 PR — 매 재기동 .env.local 갱신 부담 제거
 - D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후 spec 신규 작성)
 - ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
 
@@ -98,21 +99,4 @@
 - [x] v4 §11 Smoke test baseline + auto abort 룰 명시 ✅ 2026-05-08
 - [x] worklog.md, state.md, decision.md 업데이트 ✅ 2026-05-08
 - [x] Tier 1 검증 방법 변경 — fresh consumer simulation 방향 결정 ✅ 2026-05-08
-- [x] backlog 정리 — 16개 → 6개 (NONE/중복/완료/오버엔지 제거) ✅ 2026-05-08
-- [x] 파일 구조 재배치 — .harness archive / docs reports·source / anchor-aws archive ✅ 2026-05-08
-- [ ] (사용자) 별도 워크스페이스 + anchor 백엔드/프론트 fresh clone → Tier 1 4단계 검증
-- [ ] (사용자) 기획자/FE 답변 받으면 v4 §11 추가 시나리오 보강
-- [ ] (사용자) 개발팀에 dev-team-notice-2026-05-09.md 전달 (날짜 5/11로 갱신)
-- [ ] (사용자) QA 팀 메시지 발송 → 새 TF QA checklist 회수 (Tier 1 검증용 input)
-- [ ] (2026-05-11 월) AWS 일괄 작업 — work-guide-2026-05-11-v4 따라 (Eugene 4회 결정)
-- [ ] (2026-05-12 화) 화요일 자율 cron 모니터링 트리거
-- [ ] (2026-05-18 경) CloudWatch 메모리 데이터 분석 → Neo4j 다운사이징
-- [ ] (2026-05-25 경) Savings Plan 1년 약정 결정
-- [ ] (정식 오픈 시) GitLab Issue #1 — 8개 복구 항목 적용
-- [ ] ASG/Launch Template Terraform 신규 모듈 (Phase 1.5, 별도 PR)
-- [ ] Tier 2: TF 모듈 spec 재생성 + e2e 비교 (Tier 1 통과 시)
-- [ ] Tier 3: 11모듈 전체 v4 적용 + anchor v2 진입 readiness
-- [ ] 신서비스(anchor v2 등) 적용 시작 — framework v3.1 + prompt v4 활용
-- [ ] HOME staging BLOCKED 11건 재테스트 (staging 회복 후)
-- [ ] D-2/D-3 BLOCKED 해제 (UI 출시 후 spec 신규 작성)
-- [ ] ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
+- [x] v4 3-iteration 리뷰 (AWS read-only + 모범 사례) — 21건 오류 수정, Critical 4건 사전 차단 ✅ 2026-05-10

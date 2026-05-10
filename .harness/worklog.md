@@ -5,6 +5,38 @@
 
 ---
 
+## Session 2026-05-10 21:16 — work-guide-2026-05-11-v4.md 3-iteration 리뷰 (AWS read-only + 모범 사례)
+
+### 작업 요약
+- **목적**: 5/11 월요일 작업 가이드 v4 를 AWS 콘솔 read-only 데이터 + 인터넷 마이그레이션 모범 사례로 검증, 문서 오류 0건까지 이터레이션 (최대 4회)
+- **AWS 실행 0건** (사용자 지시 — 모든 검증 read-only API 로만)
+- **이터레이션 3회로 21건 오류 수정 → 0건 달성** (Iteration 4 생략)
+- **Critical 4건** (그대로 09:00 작업 시작 시 §0 즉시 실패 위험):
+  - E01 Terraform repo 경로 오류 — `~/Downloads/coding/anchor-terraform` → 실제 `~/Downloads/coding/iskra-anchor/anchor-terraform`
+  - E02 `ahchor-web-e2e` 오타 → `anchor-web-e2e`
+  - E03 `secrets.tfvars` 부재 미고지 — `.gitignore` 차단으로 로컬 부재, 모든 `terraform plan/apply` 실패. §0 에 사전 가드 추가
+  - E04 dev-tax-pub01 stop+start 시 public IP 변경 — auto-assigned IP `13.125.186.195` (EIP 아님). §11 smoke test SUT 가 unreachable IP 가리키게 됨. §2 에 .env.local 자동 갱신 + 앱 부팅 헬스체크 추가
+- **High 2건**:
+  - E05 RDS 다운타임 1~2분 → 2~5분 (단일 AZ, 최대 10분), auto-rollback 트리거 3분 → 7분
+  - E06 gw01 timeout 300초 → 600초 (EC2 stop/modify/start + GitLab 부팅 합산)
+- **Medium 4건**: smoke test 17.1초 baseline 통일, ElastiCache scale-down 수 초 끊김 명시, §10 sed 명령 보강 (코멘트 한 번에 추가), §11 smoke test 가 confirm 게이트 아님 명시
+- **Low 11건**: 다운타임/timeout 일관성 정합 다수 (4회 결정 표, §10 표기, v3→v4 비교, 비상대응 표 escalation, §5 아이콘 ⏸→🤖, dev-tax-gw01 명시, 복구 체크리스트 카운트)
+- **AWS read-only 검증 데이터**: EC2 8 인스턴스, RDS akrr-tax-db01 (db.t4g.small/MultiAZ:false), ElastiCache akrr-tax-redis (cache.t4g.small/단일 노드/AutoFailover:disabled), ALB neo4j01 30일 RequestCount=0 ✓, NLB nlb-neo4j01 (Bolt 7687) 분리 유지 확인, EIP 매핑 (dev-tax-pub01 만 amazon-issued 확인)
+- **Terraform 검증**: 실제 경로 확인 (`/Users/eugene/Downloads/coding/iskra-anchor/anchor-terraform`), tfvars 라인 매핑 (264/266/268/270/274-278/281-287/290-295/324/334) 모두 sed 패턴과 일치, `secrets.tfvars` 부재 + `.gitignore` 차단 패턴 확인, `b32b590` 커밋 (5/6 작업) 패턴 답습 검증
+- **인터넷 모범 사례 4 쿼리**: ElastiCache Redis 단일 노드 scale-down (수 초 끊김), RDS modify db instance class (단일 AZ 다운타임 미공시 / 일반 2~5분), Terraform aws_instance instance_type (in-place stop/modify/start), EC2 modify-instance-attribute (2~5분 표준, 최대 10분, non-EIP IP release)
+- **출력물**: `docs/anchor-aws/review-2026-05-10/iteration-1.md` (12건), `iteration-2.md` (6건), `iteration-3.md` (3건), `final-report.md` (통합)
+- **수정된 본문**: `docs/anchor-aws/work-guide-2026-05-11-v4.md` (Edit 다수 회 적용)
+
+### 실패한 시도
+- 없음 (이터레이션 시작 전 AWS read-only 데이터·인터넷 조사를 충분히 수집하여 1차 fix 가 정확히 적용됨, 2/3차는 일관성 정합만 마무리)
+
+### 다음 액션
+- 5/11 월요일 09:00 — Eugene "월요일 작업 시작해" 트리거 → 수정된 v4 문서 따라 진행 (Critical 4 사전 차단 완료)
+- (선택) dev-tax-pub01 EIP 할당+associate 별도 PR — 매 재기동마다 .env.local 갱신 부담 제거 (월 ~$3.6, attached 시 무료)
+- (선택) GitLab Issue #1 본문에 "+ 인프라 1 (alb-neo4j01)" 명기 검토
+
+---
+
 ## Session 2026-05-08 18:41 — backlog 정리 + 파일 구조 재배치 (.harness archive / docs reports·source / anchor-aws archive)
 
 ### 작업 요약

@@ -5,6 +5,25 @@
 
 ---
 
+## 2026-05-10: §2 dev-tax-pub01 IP 변경 대응 — 옵션 B (.env.local 자동 갱신) 선택
+
+- **선택**: 옵션 B — §2 본문에 stop+start 후 새 public IP 를 읽어 `.env.local` 의 `ANCHOR_BASE_URL` 을 sed 로 자동 치환. 추가 confirm 게이트 없음 (Eugene 4회 결정 구조 유지)
+- **대안 검토**:
+  - **옵션 A (EIP 할당+associate)**: 현재 IP 를 EIP 로 승격하여 stop/start 후에도 동일 IP 유지. 비용 월 ~$3.6 (associate 안 된 상태), attach 시 무료. 한 번 설정 후 영구 효과
+  - **옵션 B (.env.local 자동 갱신)**: 매 작업마다 새 IP 로 갱신. 비용 0. 향후 dev-tax-pub01 재기동마다 동일 작업 필요
+  - **옵션 C (둘 다 confirm 게이트로 선택)**: 처음 작성 시도. Eugene 결정 4회 → 5회로 늘어남
+- **선택 이유**:
+  - 글로벌 CLAUDE.md "묻지 말고 진행" 원칙 — IP 변경은 가역적이고 코드/명령으로 검증 가능 → 옵션 묻지 않고 자동 적용
+  - 비용 0 (옵션 B) — 베타 단계 비용 최적화 목적과 일치
+  - Eugene 4회 결정 구조 (header line 3 약속) 보존
+  - 옵션 A 는 별도 권고 (장기 개선 PR) 로 §2 본문 끝에 명시 — 향후 Eugene 이 선택 가능
+- **영향 범위**:
+  - `docs/anchor-aws/work-guide-2026-05-11-v4.md` §2 본문 — stop/modify/start 후 NEW_IP 읽어 sed 치환 + curl 헬스체크 추가
+  - `/Users/eugene/Downloads/coding/anchor-web-e2e/.env.local` — 5/11 작업 중 자동 갱신됨
+- **되돌리는 방법**:
+  - 옵션 A 로 전환: dev-tax-pub01 에 EIP 할당+associate 별도 PR 작성, §2 의 sed 단계 제거. (백로그 권고로 등록됨)
+  - 자동 갱신 자체 제거: §2 의 sed 단계 삭제 후 매 작업마다 .env.local 수동 편집으로 회귀
+
 ## 2026-05-08: 파일 구조 분리 원칙 (활성/안정/리포트/archive)
 
 - **선택**: 4가지 카테고리로 명시적 분리 — `.harness/`는 활성 상태만, `docs/source/`는 안정 참조, `docs/reports/`는 timestamped 자동 생성물, `*/archive/`는 deprecated/완료 보존

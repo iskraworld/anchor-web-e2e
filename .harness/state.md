@@ -4,32 +4,33 @@
 
 ---
 
-## 마지막 실행: 2026-05-11 13:20
-## 마지막 업데이트: 2026-05-11 13:20
+## 마지막 실행: 2026-05-11 13:52
+## 마지막 업데이트: 2026-05-11 13:52
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **5/11 AWS 다운사이즈 완료** — -$343/월 절감 / 28 smoke pass / main merge / dev-tax-pub01 OOM 회귀 r5.large 롤백으로 해소
+- **5/11 AWS 다운사이즈 + 완료 리포트 2건 작성 마무리** — Eugene 공유 단계
 
 ### 이어서 할 것
-1. (Eugene 5/12 화) 간이 메트릭 확인 — §13 cron 셋업 보류 결정, 화요일 한 번 직접 확인
-2. (~1주 후, 5/18 경) Neo4j 다운사이즈 검토 — 메모리 데이터 분석 + sizing 권고 후 진행
-3. (~2주 후, 5/25 경) Savings Plan 약정 검토
+1. (Eugene) 완료 리포트 공유 — 내부 팀용 + 발주사용 (각각 메신저/메일/Notion)
+2. (5/12 화) 메트릭 한 번 확인 — §13 cron 셋업 보류
+3. (~1주 후, 5/18 경) Neo4j 다운사이즈 검토
 
 ### 막힌 것
 - 없음
 
 ### 사람 판단 필요
-- 5/12 화요일 간이 모니터링 (메트릭 한 번 확인)
+- 완료 리포트 2건 공유 — 채널/포맷 선택 (메신저/메일/Notion)
+- 5/12 화요일 간이 모니터링
 - (1주 후) Neo4j 다운사이즈 결정
 - (2주 후) Savings Plan 약정 결정
-- (정식 오픈 시) GitLab Issue #1 복구 체크리스트 8개 + 인프라 1 (alb-neo4j01)
-- (선택) dev-tax-pub01 에 EIP 할당 별도 PR — 매 재기동 .env.local 갱신 부담 제거 (현재 IP `3.38.210.124`)
+- (정식 오픈 시) GitLab Issue #1 복구 체크리스트 9개
+- (선택) dev-tax-pub01 EIP 할당 별도 PR
 - (오늘~6/7) ANCHOR_GITLAB_TOKEN revoke 또는 자동 만료
-- (오늘~) `claude-cost-readonly` 의 인라인 정책 (`anchor-rightsize-2026-05-11` + `anchor-ssm-diagnostic-2026-05-11` + SG 액션) 회수 — 1주 한정 임시 정책
-- Tier 1 검증 시작 시점 (별도 워크스페이스)
-- D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
-- ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
+- (오늘~) `claude-cost-readonly` 인라인 정책 (`anchor-rightsize-2026-05-11` + `anchor-ssm-diagnostic-2026-05-11`) 회수
+- Tier 1 검증 시작 시점
+- D-2/D-3 BLOCKED 해제 (UI 출시 후)
+- ER PDF/링크 버튼 테스트 재활성화
 
 ### 백로그 요약
 - 대기 중: 7개
@@ -104,6 +105,9 @@
 - [x] dev-tax-pub01 OOM 회귀 진단 + r5.large 롤백 (Neo4j RestartCount 1121 → 0) ✅ 2026-05-11
 - [x] 인프라 prerequisite 해결 (terraform 설치, secrets.tfvars, IAM 인라인 정책, GitLab Maintainer + PAT api scope) ✅ 2026-05-11
 - [x] alb-neo4j01 삭제 보류 → 백로그 등재 ✅ 2026-05-11
+- [x] 내부 팀용 완료 리포트 작성 (10절 구조) ✅ 2026-05-11
+- [x] 발주사용 완료 리포트 작성 (제안서 톤 매칭) ✅ 2026-05-11
+- [ ] (Eugene) 완료 리포트 2건 공유
 - [ ] (5/12) 화요일 간이 메트릭 확인
 - [ ] (5/18 경) Neo4j 다운사이즈 결정
 - [ ] (5/25 경) Savings Plan 약정 결정

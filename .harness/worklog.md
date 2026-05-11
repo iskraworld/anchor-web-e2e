@@ -5,6 +5,29 @@
 
 ---
 
+## Session 2026-05-11 19:02 — eugene-followups 우선순위 재조정 + 사전 체크리스트 적용 (5/12 야간 3건 묶음 예정)
+
+### 작업 요약
+- **eugene-followups-2026-05-11.md 우선순위 재조정** (베타 + 비용 절감 우선 원칙):
+  - "즉시 (1주 이내)" 섹션 제거 → IP 변경 안내는 `[x]` 완료 처리 (2026-05-11 전체 공지), EIP 할당은 "보류 (정식 오픈 시 재검토)" 신설 섹션으로 이동 (월 $3.6 추가비용)
+  - "개발 환경 컴포넌트 분리" 도 보류 섹션 이동 (신규 EC2 비용 발생, 베타 단계 r5.large 로 즉시 문제 없음)
+- **5/12 야간 작업 3건 묶음 일정 확정** (구 "단기 2~4주" → "예정 작업 2026-05-12 야간"):
+  - WAS heap 표준화 + ElastiCache micro + alb-neo4j01 삭제
+  - 박정환 실장 ALB 우려 문의 발송 ("akrr-tax-alb-neo4j01 / 30일간 쓰인적 없어서 삭제하려고 하는데 우려 있을까?") → 응답 후 묶음 진행
+- **다운사이즈 사전 체크리스트 적용** (5/11 회귀 회고 체크리스트 기준):
+  - **AWS CLI 메트릭 수집** (AWS_PROFILE=anchor, 30일 lookback):
+    - ElastiCache `akrr-tax-redis-001`: BytesUsedForCache max 10.5MB (2% of micro 0.5GB) / Evictions 0건 / CPU max 15.4% p99 10.9% / SwapUsage 평시 0.2MB (5/11 micro 시도 시 25.6MB spike, 정상) / DatabaseMemoryUsagePercentage max 1.73% / CurrConnections peak 9 / NetworkBytesIn peak 1.16 MB/sec → **7/7 차원 통과**
+    - ALB `akrr-tax-alb-neo4j01`: 30일 RequestCount 23건 (5/10 단일일자 — 검증 트래픽 추정) / ActiveConnectionCount max 0/일 / Listeners HTTP:80 + HTTPS:443 → akrr-tax-neo4j-http-tg HTTP:7474 / NLB akrr-tax-nlb-neo4j01 active 확인 → 데이터 기준 안전, 박정환 confirm 필요
+  - **별건 발견**: ElastiCache CacheHitRate 2.28% (hits 7 / misses 300) — 캐시가 거의 기능하지 않는 패턴. 다운사이즈 안전성과는 무관하나 코드 측 점검 필요. 개발팀 전달 권장
+- **분석 스크립트**: `/tmp/analyze_metrics.py`, `/tmp/analyze_alb.py` (재사용 가능, 일회성 작성)
+
+### 다음 액션
+1. (5/12 화 낮) 간이 메트릭 확인
+2. (5/12 화 야간) 3건 묶음 작업 — 박정환 응답 수령 후 진행 (WAS heap → 1시간 → ElastiCache micro → 1시간 → ALB 삭제)
+3. (5/12 야간 작업 전) smoke test 28/28 baseline 재확인 + ElastiCache 메트릭 스냅샷
+
+---
+
 ## Session 2026-05-11 15:52 — Savings Plan 분석 가이드 + 다운사이즈 사전 체크리스트 (5/11 회귀 회고)
 
 ### 작업 요약

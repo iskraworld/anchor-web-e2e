@@ -5,6 +5,26 @@
 
 ---
 
+## Session 2026-05-11 14:34 — 완료 리포트 §7 분리: Eugene 개인 follow-up 파일 신설
+
+### 작업 요약
+- 13:52 세션에서 `completion-report-2026-05-11.md` §7.1~7.3 (Eugene 본인 follow-up) 을 본문에서 제외했으나 별도 정리 없이 삭제만 한 상태였음
+- JSONL 세션 로그에서 원본 7.1~7.3 내용 복원
+- **신규 파일**: `docs/anchor-aws/eugene-followups-2026-05-11.md` (gitignore 대상, 본인 작업용)
+  - **즉시 (~5/18)**: dev-tax-pub01 IP 변경 안내 / 개발 환경 컴포넌트 분리 검토
+  - **단기 (~6/8)**: ElastiCache micro 재검토 / alb-neo4j01 삭제 결정 / WAS heap 표준화
+  - **중기 (~7/11)**: Savings Plan 약정 / Neo4j 메모리 분석·사이징
+  - 각 항목에 잠재 절감액·조건·진행 위치 보강
+  - Savings Plan 위치 가이드 추가 (AWS Console → Billing → Savings Plans, Cost Explorer 추천 흐름)
+- 중복 회피: `alb-neo4j01 삭제`는 `.harness/backlog.md` 등재 상태 → follow-up 파일에서는 "백로그 등재됨" 표기만
+
+### 다음 액션
+1. (Eugene) 완료 리포트 2건 공유 (변동 없음)
+2. (5/12 화) 메트릭 한 번 확인
+3. (5/18 경) Neo4j 다운사이즈 결정
+
+---
+
 ## Session 2026-05-11 13:52 — 5/11 작업 완료 리포트 2건 작성 (내부 팀용 + 발주사용)
 
 ### 작업 요약

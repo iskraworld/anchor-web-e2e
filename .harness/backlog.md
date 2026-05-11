@@ -4,6 +4,18 @@
 
 ## 대기 중
 
+## 2026-05-11: alb-neo4j01 미사용 ALB 삭제 (보류 → 백로그)
+
+- **백로그 이유**: 5/11 작업 중 §9 단계에서 비가역성 우려로 보류 결정. 절감액 작음(~$16/월 ALB hourly) 대비 재생성 비용·시간(~3분) 트레이드오프
+- **할 것**: tfvars 의 3 블록에서 `alb-neo4j01` 관련 라인 4개 제거 후 apply. 정확한 위치:
+  - `load_balancers` (line 274~278): `alb-neo4j01` 1줄
+  - `lb_listeners` (line 281~287): `neo4j-http` + `neo4j-https` 2줄
+  - `target_groups` (line 290~295): `neo4j-http-tg` 1줄
+- **필요한 것**: 향후 Neo4j HTTP UI 외부 접근 영구 불필요 확인 / 박정환 실장 사전 확인
+- **이전 검토**: 30일 RequestCount = 0 검증 완료 (2026-05-10). NLB `nlb-neo4j01` (Bolt 7687) 은 별개로 유지되어 Neo4j-WAS 연결성 무관. Neo4j 인스턴스 `i-003db424b45f31fea` 도 유지
+- **관련 파일**: `/Users/eugene/Downloads/coding/iskra-anchor/anchor-terraform/environments/prod/terraform.tfvars` (라인 274-295)
+- **참고**: 가이드 `docs/anchor-aws/work-guide-2026-05-11-v4.md` §9 — diff 형태로 정확한 제거 라인 명시되어 있음
+
 ## 2026-04-28: ER PDF·링크 버튼 테스트 재활성화
 
 - **백로그 이유**: ER-1-05/1-06/2-05/2-06 — PDF 저장·링크 추출 버튼이 현재 UI에 미구현. 버튼 미노출로 테스트가 timeout됨 → `test.skip()`으로 임시 전환

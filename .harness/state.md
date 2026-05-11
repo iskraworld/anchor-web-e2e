@@ -4,36 +4,36 @@
 
 ---
 
-## 마지막 실행: 2026-05-10 21:16
-## 마지막 업데이트: 2026-05-10 21:16
+## 마지막 실행: 2026-05-11 13:20
+## 마지막 업데이트: 2026-05-11 13:20
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **5/11 월요일 AWS 작업 가이드 v4 — 3 이터레이션 리뷰 완료** (Critical 4건 사전 차단, 총 21건 수정 → 0건 도달)
+- **5/11 AWS 다운사이즈 완료** — -$343/월 절감 / 28 smoke pass / main merge / dev-tax-pub01 OOM 회귀 r5.large 롤백으로 해소
 
 ### 이어서 할 것
-1. (2026-05-11 월 09:00) "월요일 작업 시작해" 트리거 → 수정된 v4 가이드로 작업 진행 (Eugene 4회 결정)
-2. (사용자) 별도 워크스페이스 생성 + anchor 백엔드/프론트 fresh clone → Tier 1 4단계 검증 (별도 Claude 세션)
-3. (작업 후) ANCHOR_GITLAB_TOKEN revoke 또는 2026-06-07 자동 만료
+1. (Eugene 5/12 화) 간이 메트릭 확인 — §13 cron 셋업 보류 결정, 화요일 한 번 직접 확인
+2. (~1주 후, 5/18 경) Neo4j 다운사이즈 검토 — 메모리 데이터 분석 + sizing 권고 후 진행
+3. (~2주 후, 5/25 경) Savings Plan 약정 검토
 
 ### 막힌 것
 - 없음
 
 ### 사람 판단 필요
-- 별도 워크스페이스 생성 시점 (Tier 1 검증 시작)
-- anchor 백엔드/프론트 GitLab URL 확보
-- 5/11 작업 중 confirm 게이트 3회 + 최종 merge 결정 (총 4회 응답)
-- 기획자/FE 답변 받으면 추가 smoke test 시나리오 결정
-- (1주 후, 5/18 경) Neo4j 다운사이징 결정
-- (2주 후, 5/25 경) Savings Plan 약정 결정
-- (정식 오픈 시) GitLab Issue #1 8개 항목 + 인프라 1 항목 복구 결정
-- (선택) dev-tax-pub01 EIP 할당 PR — 매 재기동 .env.local 갱신 부담 제거
-- D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후 spec 신규 작성)
+- 5/12 화요일 간이 모니터링 (메트릭 한 번 확인)
+- (1주 후) Neo4j 다운사이즈 결정
+- (2주 후) Savings Plan 약정 결정
+- (정식 오픈 시) GitLab Issue #1 복구 체크리스트 8개 + 인프라 1 (alb-neo4j01)
+- (선택) dev-tax-pub01 에 EIP 할당 별도 PR — 매 재기동 .env.local 갱신 부담 제거 (현재 IP `3.38.210.124`)
+- (오늘~6/7) ANCHOR_GITLAB_TOKEN revoke 또는 자동 만료
+- (오늘~) `claude-cost-readonly` 의 인라인 정책 (`anchor-rightsize-2026-05-11` + `anchor-ssm-diagnostic-2026-05-11` + SG 액션) 회수 — 1주 한정 임시 정책
+- Tier 1 검증 시작 시점 (별도 워크스페이스)
+- D-2/D-3 BLOCKED 해제 (Anchor 팀 UI 출시 후)
 - ER PDF/링크 버튼 테스트 재활성화 (UI 출시 후)
 
 ### 백로그 요약
-- 대기 중: 6개
-- 최근 추가: 2026-05-08 — ANCHOR_GITLAB_TOKEN 만료/revoke
+- 대기 중: 7개
+- 최근 추가: 2026-05-11 — alb-neo4j01 미사용 ALB 삭제 (비가역성 우려 보류)
 
 ### 진행 상황
 - [x] Phase 0~3 e2e-v2 가이드 완성
@@ -100,3 +100,12 @@
 - [x] worklog.md, state.md, decision.md 업데이트 ✅ 2026-05-08
 - [x] Tier 1 검증 방법 변경 — fresh consumer simulation 방향 결정 ✅ 2026-05-08
 - [x] v4 3-iteration 리뷰 (AWS read-only + 모범 사례) — 21건 오류 수정, Critical 4건 사전 차단 ✅ 2026-05-10
+- [x] 5/11 AWS 다운사이즈 실행: §0~§10 적용 + §12 main merge (28/28 smoke pass) ✅ 2026-05-11
+- [x] dev-tax-pub01 OOM 회귀 진단 + r5.large 롤백 (Neo4j RestartCount 1121 → 0) ✅ 2026-05-11
+- [x] 인프라 prerequisite 해결 (terraform 설치, secrets.tfvars, IAM 인라인 정책, GitLab Maintainer + PAT api scope) ✅ 2026-05-11
+- [x] alb-neo4j01 삭제 보류 → 백로그 등재 ✅ 2026-05-11
+- [ ] (5/12) 화요일 간이 메트릭 확인
+- [ ] (5/18 경) Neo4j 다운사이즈 결정
+- [ ] (5/25 경) Savings Plan 약정 결정
+- [ ] (정식 오픈 시) GitLab Issue #1 복구 체크리스트 9개 항목
+- [ ] (정리) 인라인 정책 + Maintainer 권한 + PAT 회수

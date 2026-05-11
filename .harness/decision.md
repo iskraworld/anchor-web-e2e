@@ -5,6 +5,62 @@
 
 ---
 
+## 2026-05-11: dev-tax-pub01 r5.large 롤백 — OOM 발견 후 메모리 우선 인스턴스 선택
+
+- **선택**: dev-tax-pub01 을 `t3.medium` → **`r5.large`** (16GB RAM / 2 vCPU / ~$93/월)
+- **대안 검토**:
+  - **A. `c6i.2xlarge` 원복** (16GB / 8 vCPU / ~$278/월) — 가장 보수적, 절감 효과 0
+  - **B. `r5.large`** (16GB / 2 vCPU / ~$93/월) — 메모리 동일, vCPU 절반, 비용 1/3
+  - **C. `t3.xlarge`** (16GB / 4 vCPU / ~$130/월) — 중간선
+  - **D. `t3.large`** (8GB / 2 vCPU / ~$73/월) — 메모리 절반, OOM 마진 작음
+- **선택 이유**:
+  - SSM dmesg 로그상 OOM Killer 가 Neo4j JVM(UID 7474) 사살 → `anchor-neo4j` RestartCount 1121회
+  - dev-tax-pub01 = all-in-one 개발 스택 (frontend + WAS + MySQL + Redis + Neo4j) 합산 ~4GB 초과
+  - 메모리만 회복하면 충분 — vCPU 는 dev 환경 트래픽 작음, 8 vCPU 불필요
+  - r5 패밀리 = 메모리 최적화 (vCPU 당 RAM 8GB), 동일 가격대 t3.xlarge 보다 메모리 효율 좋음
+  - 비용 -$185/월 절감 (c6i.2xlarge $278 → r5.large $93)
+- **영향 범위**:
+  - AWS: dev-tax-pub01 인스턴스 (i-06d86c8ca634e43be)
+  - public IP 변경: `43.203.247.213` → `3.38.210.124`
+  - `.env.local` ANCHOR_BASE_URL Eugene 수동 갱신
+  - terraform 미관리 (TF 외부) — IaC 추적 없음
+- **되돌리는 방법**:
+  - stop → modify-instance-attribute (원래 c6i.2xlarge 또는 다른 타입) → start → .env.local IP 갱신
+  - 추후 dev-tax-pub01 IaC 화 시 tfvars 에 등재 권고
+
+## 2026-05-11: §9 alb-neo4j01 삭제 보류 — 비가역성 우선 (백로그 등재)
+
+- **선택**: 5/11 작업에서 ALB 삭제 **보류**, 백로그 등재 (-$16/월 절감 포기)
+- **대안 검토**:
+  - **A. 가이드대로 삭제** (terraform apply 4 destroy) — $16/월 절감, 재생성 비가역적 ~3분
+  - **B. 보류 + 백로그** (이번 결정) — 절감 0, 미사용 자원 그대로 유지
+  - **C. -target 으로 다른 변경만 진행** (가이드 우회) — 동일 effect, 명시성 떨어짐
+- **선택 이유**:
+  - Eugene 판단: "비용 크지 않으면 비가역적이니 백로그에 두고 나중에 삭제"
+  - 절감액 작음 ($16/월) vs 재생성 비용·시간 트레이드오프
+  - 30일 RequestCount = 0 확인되긴 했지만 향후 Neo4j HTTP UI 외부 접근 영구 불필요 확신 부족
+  - 정식 오픈 결정 시점에 함께 재검토 가능
+- **영향 범위**:
+  - terraform.tfvars (load_balancers/lb_listeners/target_groups) — 변경 안 함
+  - AWS 자원 (alb-neo4j01, neo4j-http-tg, neo4j-https 리스너) — 유지
+- **되돌리는 방법**: backlog.md `2026-05-11: alb-neo4j01 미사용 ALB 삭제` 항목 → 가이드 §9 그대로 진행
+
+## 2026-05-11: §4/§6 ElastiCache·RDS modify 호출 — AWS CLI 직접 우회
+
+- **선택**: terraform apply 결과가 "modify 완료" 라고 보고하지만 실제 AWS 변경 없을 때 → **AWS CLI 로 `modify-replication-group --apply-immediately` / `modify-db-instance --apply-immediately` 직접 호출**로 우회
+- **대안 검토**:
+  - **A. terraform 모듈 패치** (apply_immediately=true, 또는 force_destroy 옵션 추가) — 정도, but 모듈 변경은 다른 환경 영향
+  - **B. AWS CLI 직접 호출** (이번 결정) — 한 번만 우회, 모듈 손대지 않음
+  - **C. terraform `taint` 후 재apply** — overkill, replace 가 됨
+- **선택 이유**:
+  - terraform-provider-aws 의 modify 호출 idempotent 처리 이슈 (state 만 보고 diff 없다고 판단해 호출 안 함)
+  - 5/11 작업 시급성 + 모듈 변경 위험 회피
+  - AWS CLI 호출 후에도 terraform state 가 동기화됨 (다음 plan 이 no-changes)
+- **영향 범위**:
+  - 작업 흐름: §4 (ElastiCache micro), §6 (RDS micro), Fix D-1 (ElastiCache small) 3차례 적용
+  - 코드 변경 없음
+- **되돌리는 방법**: 향후 같은 패턴 발견 시 동일 우회 적용. 영구 해결은 modules/rds·modules/elasticache 에 `apply_immediately = var.apply_immediately`(default true) 추가하는 별도 PR.
+
 ## 2026-05-10: §2 dev-tax-pub01 IP 변경 대응 — 옵션 B (.env.local 자동 갱신) 선택
 
 - **선택**: 옵션 B — §2 본문에 stop+start 후 새 public IP 를 읽어 `.env.local` 의 `ANCHOR_BASE_URL` 을 sed 로 자동 치환. 추가 confirm 게이트 없음 (Eugene 4회 결정 구조 유지)

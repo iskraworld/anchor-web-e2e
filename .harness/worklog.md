@@ -5,6 +5,31 @@
 
 ---
 
+## Session 2026-05-11 15:52 — Savings Plan 분석 가이드 + 다운사이즈 사전 체크리스트 (5/11 회귀 회고)
+
+### 작업 요약
+- **Savings Plan 구매 분석기 가이드**:
+  - "분석 실행" 비활성 원인 진단 → EC2 Instance SP 는 패밀리 선택 필수 (Compute SP 는 불필요)
+  - Compute SP / 1년 / 선결제 없음 옵션으로 재선택 권장 (베타 단계 + 추가 다운사이즈 가능성 고려)
+  - 1차 분석 결과 ($0.952/시간, $187.99/월 절감, 20%) 해석 + 함정 설명 — 29일 룩백이 다운사이즈 이전 데이터 위주라 권장액 30~40% 과대
+  - 재분석 시점 2026-05-25 로 권장 (29일 룩백 절반 이상이 다운사이즈 후 데이터로 채워짐)
+- **다운사이즈 사전 체크리스트 신설** (5/11 회귀 회고 기반):
+  - 출처: nOps, TechTarget, AWS Whitepaper, ServerScheduler, Infralyst, AWS Compute Optimizer 공식, Cloudchipr 등 10개 DevOps 리소스 종합
+  - 4가지 차원 (CPU/메모리/디스크/네트워크) + 임계값 (P95/P99) + 데이터 소스
+  - 컨테이너 호스트 추가 확인 (docker stats / JVM heap_info / dmesg OOM 이력 명령)
+  - 워크로드별 메트릭: RDS (InnoDB Buffer Pool Hit Ratio ≥ 99% 등), Redis (Evictions, BytesUsedForCache), Application (ALB P99)
+  - 변경 절차: 변경 1개씩 1시간 간격, 카나리, 정량 롤백 트리거 (5/11 위반 사항 명시)
+  - 회귀 시 진단 순서: OS 로그 → 컨테이너 → 가장 큰 다운사이즈부터 의심 (5/11 의 Redis 우선 의심 실수 명시)
+  - 5/18 Neo4j 다운사이즈에 적용할 5조건 + Graviton(r7g/r8g) 추가 절감 가능성
+- **저장 위치**: `docs/anchor-aws/eugene-followups-2026-05-11.md` (gitignore, 개인용)
+
+### 다음 액션
+1. (5/12 화) 메트릭 한 번 확인
+2. (5/18 경) Neo4j 다운사이즈 결정 — eugene-followups 의 체크리스트 §5 적용
+3. (5/25 경) Savings Plan 재분석 → 권장액 $0.60~0.70/hr 수준이면 약정
+
+---
+
 ## Session 2026-05-11 14:34 — 완료 리포트 §7 분리: Eugene 개인 follow-up 파일 신설
 
 ### 작업 요약

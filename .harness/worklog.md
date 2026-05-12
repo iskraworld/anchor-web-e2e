@@ -5,6 +5,63 @@
 
 ---
 
+## Session 2026-05-12 19:12 — 5/12 야간 작업 실행 완료 (-$50/월 추가, 누적 -$393/월)
+
+### 작업 요약
+
+#### 1. ElastiCache 다운사이즈 실행
+- **사전 baseline smoke test**: 28/28 / 19.1초
+- tfvars line 336: `cache.t4g.small` → `cache.t4g.micro` 변경
+- `terraform apply -lock=false` → in-place modify 성공, 단 `apply_immediately=false` 라 Pending 상태로 큐잉됨
+- AWS CLI 강제 적용: `aws elasticache modify-replication-group --cache-node-type cache.t4g.micro --apply-immediately`
+- 백그라운드 폴링 (`/tmp/wait_redis.sh`) 으로 modifying → available 전환 대기 (~수 분)
+- 최종: `cache.t4g.micro` available 확인 → smoke test 28/28 / 19.4초 PASS
+
+#### 2. ALB 삭제 실행 (1차 실패 → 권한 보강 후 성공)
+- 1차 `terraform apply` 시 IAM AccessDenied: `elasticloadbalancing:DeleteListener` / `DeregisterTargets` 등 누락 — 5/11 정책이 ALB delete 권한 미포함 (5/11 ALB 삭제 보류였으므로 권한 안 넣음)
+- Eugene 에게 인라인 정책에 ELBv2 delete 권한 추가 JSON 전달 (`AnchorAlbDelete20260512` Sid, Resource ARN 으로 alb-neo4j01 + neo4j-http-tg 만 명시 제한)
+- Eugene 가 2048자 제한으로 일부 기존 권한 삭제 후 추가 완료
+- 2차 `terraform apply` → 5개 리소스 destroy 성공:
+  - ALB `akrr-tax-alb-neo4j01`
+  - Listener neo4j-http (port 80)
+  - Listener neo4j-https (port 443)
+  - Target group `akrr-tax-neo4j-http-tg`
+  - Target attachment (neo4j01)
+- NLB `akrr-tax-nlb-neo4j01` (Bolt 7687) + Neo4j 인스턴스 그대로 유지 확인
+
+#### 3. Terraform main merge + push
+- 작업 branch `rightsize-2026-05-12` → main fast-forward (`274d3f3..9f7f9c4`)
+- GitLab `tax/terraform` push 완료, branch 정리
+
+#### 4. 최종 smoke test
+- 28/28 / 19.6초 PASS (baseline 19.1초 대비 +0.5초, 정상 cold-cache 범위)
+
+#### 5. eugene-followups 정리
+- ElastiCache + ALB 항목 `[x]` 완료 처리, 5/12 결과 메트릭 기록
+- **WAS heap 표준화 항목 드롭** — 5/11 회귀 원인이 아니었고 다운사이즈 사전 체크리스트가 같은 방어 효과 제공
+- **권한 회수 신설 (2026-05-20 경)** — Neo4j 5/18 작업 후 일괄 revoke 플랜
+- 누적 절감 표기 갱신: **-$393/월** (연 약 -$4,716)
+
+#### 6. IAM 정책 트림 (5/12 끝)
+- Eugene 가 현재 IAM 정책 공유 → Neo4j 5/18 최소 권한으로 트림 제안
+- **제거**: AnchorAlbDelete (완료), ElastiCacheResize (완료), SecurityGroupRules (Neo4j 무관), CloudWatchRead (ReadOnlyAccess 중복)
+- **신규**: `Neo4jInstanceResize` — `ec2:ModifyInstanceAttribute` / `StopInstances` / `StartInstances` 를 Neo4j 인스턴스 ARN(`i-003db424b45f31fea`) 단일 리소스로 제한
+- **유지**: Terraform state (S3/DDB), SSMNeo4jDiagnostic (SendCommand + GetCommandInvocation)
+- 1900자 → ~1300자 (2048 제한 여유 확보)
+- Eugene 교체 적용 완료 → blast radius: anchor 계정 전체 → Neo4j 인스턴스 1대 + Terraform state 로 축소
+
+### 실패한 시도
+- ElastiCache: `apply_immediately=false` 라 terraform apply 만으로는 즉시 적용 안 됨 → AWS CLI 강제 필요했음 (5/11 RDS 와 같은 패턴, 모듈 디폴트 차이)
+- ALB delete 1차: 권한 누락으로 AccessDenied → 정책 보강 필요 (5/11 시점 ALB 삭제 보류였으므로 권한 미포함이었던 것)
+
+### 다음 액션
+1. (5/12~5/18) CloudWatch Agent 메모리 데이터 1주 누적
+2. (5/18 경) Neo4j 다운사이즈 결정 — 사전 체크리스트 §5/18 (5조건) 적용
+3. (5/20 경) Neo4j 안정성 확인 후 인라인 정책 + GitLab Maintainer 일괄 revoke
+4. (5/25 경) Savings Plan 재분석
+
+---
+
 ## Session 2026-05-12 15:59 — 워크로그 & 상태 업데이트
 
 ### 작업 요약

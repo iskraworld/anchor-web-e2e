@@ -5,6 +5,65 @@
 
 ---
 
+## 2026-05-12: WAS heap 설정 표준화 드롭 — 필요성 없음
+
+- **선택**: eugene-followups 의 "WAS heap 표준화" 항목을 작업하지 않고 **드롭**
+- **대안 검토**:
+  - A) 백엔드 repo Dockerfile/배포 스크립트에 코멘트 추가 (문서) — 30분, 0 위험
+  - B) `-Xmx` 하드코딩 제거 → `-XX:MaxRAMPercentage=50.0` 자동화 — 1~2시간, smoke test 검증 필요
+  - C) **드롭** (선택)
+- **선택 이유**:
+  - 5/11 회귀의 진짜 원인은 **dev-tax-pub01 Neo4j 메모리** 였고 WAS heap 아니었음 (회고 오해석)
+  - 현재 prod WAS `-Xms1G -Xmx1G` (t3.small 2GB) / dev WAS `-Xms1G -Xmx2G` 모두 잘 작동 중
+  - 향후 WAS 인스턴스 사이즈 변경 시의 위험은 이미 만든 [[다운사이즈 사전 체크리스트]] §1 (메모리 차원 P95/P99/swap) + §2 (컨테이너 호스트 docker stats) 가 검출함
+  - 안 읽을 문서 추가는 노이즈
+- **영향 범위**: 백엔드 repo 의 Dockerfile/배포 스크립트/runbook 변경 없음
+- **되돌리는 방법**: 향후 WAS 메모리 관련 장애 발생 시 재검토. 다운사이즈 사전 체크리스트 적용으로 막아지는 한 불필요
+
+---
+
+## 2026-05-12: IAM 권한 회수 타이밍 — 5/20 일괄 (Neo4j 작업 종료 후)
+
+- **선택**: claude-cost-readonly 인라인 정책 + GitLab Maintainer 권한을 **5/20 경 일괄 revoke** (Neo4j 5/18 작업 + 1~2일 안정성 확인 후)
+- **대안 검토**:
+  - A) 5/12 작업 종료 후 즉시 revoke + 5/18 Neo4j 작업 시 재부여 — 0일 elevated, IAM Console 작업 2회
+  - B) **5/20 일괄 revoke** (선택) — 8일 elevated, IAM Console 작업 1회
+  - C) 베타→정식 전환까지 유지 — 수주 elevated, 작업 1회 (너무 길다)
+- **선택 이유**:
+  - 기존 정책 (`anchor-rightsize-2026-05-11`) 의 EC2 modify 권한이 5/18 Neo4j 다운사이즈에 그대로 재활용됨 → 추가 부여 불필요
+  - claude-cost-readonly 자격증명은 Eugene 로컬 `~/.aws/credentials` 외 노출 없고 자동화/CI 사용 없음 → 8일 elevated 실제 위험 매우 낮음
+  - Eugene 의 IAM Console 작업 부담 최소화
+- **추가 조치 (5/12 19시 트림)**:
+  - 5/12 작업 직후 정책을 Neo4j 5/18 최소 권한으로 트림 (ALB delete / ElastiCache modify / SG / CloudWatch 제거)
+  - EC2 modify 를 Neo4j 인스턴스 ARN(`i-003db424b45f31fea`) 단일 리소스로 제한
+  - blast radius: anchor 계정 전체 → Neo4j 1대 + Terraform state 로 축소
+- **영향 범위**: IAM Console (`claude-cost-readonly` 인라인 정책), GitLab Maintainer (Eugene), ANCHOR_GITLAB_TOKEN (자동 만료 2026-06-07)
+- **되돌리는 방법**: 권한 부족 발생 시 IAM Console 에서 같은 JSON 재부여 (eugene-followups 에 JSON 보존되어 있음)
+
+---
+
+## 2026-05-12: 5/12 야간 묶음 작업 — 1시간 간격 규칙 절충 (smoke test 매 단계 검증)
+
+- **선택**: ElastiCache micro + ALB 삭제를 **단일 terraform apply 묶음**으로 진행, 단 변경마다 smoke test 검증
+- **대안 검토**:
+  - A) 다운사이즈 체크리스트 §4 원칙대로 변경 1개씩 + 1시간 간격 — 안전, 시간 ~2시간
+  - B) **묶음 apply + 매 단계 smoke** (선택) — 빠름, 시간 ~30분, 회귀 시 역순 롤백
+- **선택 이유**:
+  - ALB 삭제는 unused HTTP UI 라우팅 제거 (서비스 데이터 경로 무관) → "다운사이즈" 카테고리 아님, 회귀 가능성 매우 낮음
+  - ElastiCache micro 는 사전 체크 7/7 통과 + 5/11 1차 시도에서 회귀 무관 데이터로 입증됨
+  - 두 변경의 영향 경로가 독립적 → 회귀 시 어느 쪽이 원인인지 격리 가능
+  - 베타 단계 야간 작업 시간 단축 우선
+- **결과 검증**:
+  - Baseline (small + ALB): 19.1초 / 28 PASS
+  - Redis modifying 중 (small 유지): 19.3초 / 28 PASS
+  - Redis micro 완료 후: 19.4초 / 28 PASS
+  - ALB 삭제 후 최종: 19.6초 / 28 PASS
+  - 모든 단계 0 회귀
+- **영향 범위**: 프로덕션 AWS — ElastiCache 1개 modify + ALB 5 리소스 destroy
+- **되돌리는 방법**: 회귀 발생 시 (1) ALB 가 원인이면 tfvars 4줄 복원 + 재생성 ~3분 / (2) ElastiCache 가 원인이면 micro→small 복원 — 사전 정의된 롤백 트리거 발동 안 함
+
+---
+
 ## 2026-05-11: dev-tax-pub01 r5.large 롤백 — OOM 발견 후 메모리 우선 인스턴스 선택
 
 - **선택**: dev-tax-pub01 을 `t3.medium` → **`r5.large`** (16GB RAM / 2 vCPU / ~$93/월)

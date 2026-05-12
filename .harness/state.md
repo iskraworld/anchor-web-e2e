@@ -4,30 +4,29 @@
 
 ---
 
-## 마지막 실행: 2026-05-12 15:59
-## 마지막 업데이트: 2026-05-11 19:02
+## 마지막 실행: 2026-05-12 19:12
+## 마지막 업데이트: 2026-05-12 19:12
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **5/12 야간 3건 묶음 작업 준비 완료** — WAS heap + ElastiCache micro + ALB 삭제, 박정환 응답 대기
+- **5/12 야간 작업 완료** (-$50/월 추가 / 누적 -$393/월) — 5/18 Neo4j 다운사이즈 결정 + 5/20 권한 회수 대기
 
 ### 이어서 할 것
-1. (5/12 화 낮) 간이 메트릭 확인
-2. (5/12 화 야간) 3건 묶음 작업 — 박정환 응답 수령 후 진행 (변경 1개씩 1시간 간격)
-3. (~2주 후, 5/25 경) Savings Plan 재분석 → 권장액 $0.60~0.70/hr 수준이면 약정
+1. (5/12~5/18) CloudWatch Agent 메모리 데이터 1주 누적
+2. (5/18 경) Neo4j 다운사이즈 결정 — 사전 체크리스트 §5/18 (5조건) 적용
+3. (5/20 경) Neo4j 안정성 확인 후 인라인 정책 + GitLab Maintainer 일괄 revoke
 
 ### 막힌 것
-- **alb-neo4j01 삭제 — 박정환 실장 응답 대기 중** (5/11 문의 발송)
+- 없음
 
 ### 사람 판단 필요
-- 박정환 응답 (alb-neo4j01 삭제 우려 여부)
-- 5/12 화요일 간이 모니터링
-- (1주 후, 5/18) Neo4j 다운사이즈 결정 — 사전 체크리스트 §5 (5조건) 적용
+- 5/12 화 야간 작업 안정성 모니터링 (5/13 낮 한 번 더 메트릭 확인 권장)
+- (1주 후, 5/18) Neo4j 다운사이즈 결정 — 4차원 + JVM heap/pagecache + OOM 이력 확인
+- (5/20 경) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
 - (2주 후, 5/25) Savings Plan 약정 결정
 - (정식 오픈 시) GitLab Issue #1 복구 체크리스트 9개
 - (선택) dev-tax-pub01 EIP 할당 별도 PR — 정식 오픈 시 재검토
-- (오늘~6/7) ANCHOR_GITLAB_TOKEN revoke 또는 자동 만료
-- (오늘~) `claude-cost-readonly` 인라인 정책 (`anchor-rightsize-2026-05-11` + `anchor-ssm-diagnostic-2026-05-11`) 회수
+- (2026-06-07) ANCHOR_GITLAB_TOKEN 자동 만료 또는 즉시 revoke
 - ElastiCache CacheHitRate 2.28% — 개발팀에 코드 측 점검 전달
 - Tier 1 검증 시작 시점
 - D-2/D-3 BLOCKED 해제 (UI 출시 후)
@@ -115,10 +114,16 @@
 - [x] eugene-followups 우선순위 재조정 — 즉시 항목 제거, 보류(정식 오픈) 섹션 신설, 5/12 야간 묶음 일정 확정 ✅ 2026-05-11
 - [x] 다운사이즈 사전 체크리스트 적용 (ElastiCache 7/7 차원 통과, ALB 30일 23건 trace-only) ✅ 2026-05-11
 - [x] CacheHitRate 2.28% 비정상 패턴 발견 (별건) ✅ 2026-05-11
-- [ ] (5/12) 화요일 간이 메트릭 확인
-- [ ] (5/12 야간) 3건 묶음 작업 — 박정환 응답 후 진행
-- [ ] (5/18 경) Neo4j 다운사이즈 결정 — 사전 체크리스트 §5 (5조건) 적용
+- [x] 박정환 ALB 삭제 confirm 수령 ✅ 2026-05-12
+- [x] 5/12 야간 작업 실행: ElastiCache `small`→`micro` (terraform + AWS CLI 강제 apply_immediately) ✅ 2026-05-12
+- [x] 5/12 야간 작업 실행: alb-neo4j01 삭제 (5 리소스 destroy, IAM ELBv2 권한 보강 후 2차 apply 성공) ✅ 2026-05-12
+- [x] Terraform `tax/terraform` main merge + push (`274d3f3..9f7f9c4`) ✅ 2026-05-12
+- [x] 5/12 야간 smoke test — 변경마다 28/28 PASS (19.1→19.6초) ✅ 2026-05-12
+- [x] WAS heap 표준화 드롭 결정 (다운사이즈 사전 체크리스트로 같은 방어 효과) ✅ 2026-05-12
+- [x] IAM 정책 Neo4j 최소 권한 트림 (ALB/ElastiCache/SG/CloudWatch 제거, Neo4j EC2 modify ARN 제한) ✅ 2026-05-12
+- [ ] (5/12~5/18) CloudWatch Agent 메모리 데이터 1주 누적
+- [ ] (5/18 경) Neo4j 다운사이즈 결정 — 사전 체크리스트 §5/18 (5조건) 적용
+- [ ] (5/20 경) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
 - [ ] (5/25 경) Savings Plan 재분석 → 약정 결정
 - [ ] (정식 오픈 시) GitLab Issue #1 복구 체크리스트 9개 항목
-- [ ] (정리) 인라인 정책 + Maintainer 권한 + PAT 회수
 - [ ] ElastiCache CacheHitRate 2.28% 원인 파악 (개발팀 전달 예정)

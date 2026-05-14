@@ -5,6 +5,27 @@
 
 ---
 
+```markdown
+## Session 2026-05-14 15:59 — EIP 할당 드롭 결정 및 워크로그 기록
+
+### 작업 요약
+- 프로젝트 설정·상태 파일 검토 (permissions, worklog, decision.md)
+- followups 문서 업데이트 (2026-05-11)
+- worklog, state.md, decision.md 작성/수정
+- git 커밋 및 푸시
+- EIP 할당 인벤토리 분석 결과 기록
+
+### 주요 결정
+- EIP 할당 영구 드롭 (비용·복잡도 대비 이득 없음)
+- EIP 인벤토리 분석 오류 회고 기록
+
+### 다음 액션
+- **2026-05-18**: CloudWatch Agent 메모리 데이터 1주 누적 검토
+- **~2026-05-18**: Neo4j 다운사이즈 결정 (5조건 체크리스트 적용)
+- **~2026-05-20**: IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
+```
+
+
 ## Session 2026-05-14 09:16 — dev-tax-pub01 EIP 할당 검토 후 미진행 결정 + EIP 분석 오류 회고
 
 ### 작업 요약

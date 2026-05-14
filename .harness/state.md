@@ -4,12 +4,12 @@
 
 ---
 
-## 마지막 실행: 2026-05-12 19:12
-## 마지막 업데이트: 2026-05-12 19:12
+## 마지막 실행: 2026-05-14 09:16
+## 마지막 업데이트: 2026-05-14 09:16
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **5/12 야간 작업 완료** (-$50/월 추가 / 누적 -$393/월) — 5/18 Neo4j 다운사이즈 결정 + 5/20 권한 회수 대기
+- **5/12 야간 작업 후 안정화 모니터링 + 5/18 Neo4j 다운사이즈 결정 대기** (누적 -$393/월)
 
 ### 이어서 할 것
 1. (5/12~5/18) CloudWatch Agent 메모리 데이터 1주 누적
@@ -20,12 +20,10 @@
 - 없음
 
 ### 사람 판단 필요
-- 5/12 화 야간 작업 안정성 모니터링 (5/13 낮 한 번 더 메트릭 확인 권장)
 - (1주 후, 5/18) Neo4j 다운사이즈 결정 — 4차원 + JVM heap/pagecache + OOM 이력 확인
 - (5/20 경) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
 - (2주 후, 5/25) Savings Plan 약정 결정
 - (정식 오픈 시) GitLab Issue #1 복구 체크리스트 9개
-- (선택) dev-tax-pub01 EIP 할당 별도 PR — 정식 오픈 시 재검토
 - (2026-06-07) ANCHOR_GITLAB_TOKEN 자동 만료 또는 즉시 revoke
 - ElastiCache CacheHitRate 2.28% — 개발팀에 코드 측 점검 전달
 - Tier 1 검증 시작 시점
@@ -121,6 +119,8 @@
 - [x] 5/12 야간 smoke test — 변경마다 28/28 PASS (19.1→19.6초) ✅ 2026-05-12
 - [x] WAS heap 표준화 드롭 결정 (다운사이즈 사전 체크리스트로 같은 방어 효과) ✅ 2026-05-12
 - [x] IAM 정책 Neo4j 최소 권한 트림 (ALB/ElastiCache/SG/CloudWatch 제거, Neo4j EC2 modify ARN 제한) ✅ 2026-05-12
+- [x] dev-tax-pub01 EIP 할당 영구 드롭 결정 — 사용처 없음 + 2024 AWS 가격 변경으로 비용 차이 무 ✅ 2026-05-14
+- [x] EIP 인벤토리 정확 분석 — 7개 "unattached" 가 실제로는 ALB/NAT 사용 중 (NetworkInterface 확인 필요 교훈) ✅ 2026-05-14
 - [ ] (5/12~5/18) CloudWatch Agent 메모리 데이터 1주 누적
 - [ ] (5/18 경) Neo4j 다운사이즈 결정 — 사전 체크리스트 §5/18 (5조건) 적용
 - [ ] (5/20 경) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke

@@ -5,6 +5,23 @@
 
 ---
 
+## 2026-05-14: dev-tax-pub01 EIP 할당 드롭 — 사용처 없음
+
+- **선택**: eugene-followups "dev-tax-pub01 EIP 할당" 항목을 **영구 드롭** (재검토 보류 아님)
+- **대안 검토**:
+  - A) 신규 EIP 할당 + dev-tax-pub01 attach — 안정 IP 확보
+  - B) 기존 unattached EIP 재사용 — (조사 결과 unattached 가 없음, 7개 모두 ALB/NAT 사용 중이었음)
+  - C) **할당 안 함** (선택)
+- **선택 이유**:
+  - dev-tax-pub01 IP 직접 접속 사용처 없음 — 운영/개발 모두 도메인 또는 내부망 경로로 접근
+  - 2024년 AWS 가격 변경으로 auto-assigned IPv4 도 EIP 와 동일하게 $3.6/월 과금 → 비용 무차이
+  - 안정성 이득(IP 변경 빈도 0) 의 실효가 사용처 없으니 무의미
+  - EIP 부여 시 신규 IP 로 바뀌어 `.env.local` / CONTEXT.md / 개발팀 공지 부담만 발생
+- **영향 범위**: 변경 없음. 향후 dev-tax-pub01 재기동 시 public IP 가 또 바뀔 수 있음 — 그때 또 한 번 갱신
+- **되돌리는 방법**: 향후 외부 IP allowlist / 모니터링 등 IP 고정 요구사항 발생 시 재검토. Console 에서 EIP allocate + associate 1분 작업
+
+---
+
 ## 2026-05-12: WAS heap 설정 표준화 드롭 — 필요성 없음
 
 - **선택**: eugene-followups 의 "WAS heap 표준화" 항목을 작업하지 않고 **드롭**

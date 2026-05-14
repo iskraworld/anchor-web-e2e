@@ -5,6 +5,37 @@
 
 ---
 
+## Session 2026-05-14 09:16 — dev-tax-pub01 EIP 할당 검토 후 미진행 결정 + EIP 분석 오류 회고
+
+### 작업 요약
+- **요청**: dev-tax-pub01 에 EIP 할당 진행 (5/11 follow-up 보류 항목 재개)
+- **사전 분석**:
+  - dev-tax-pub01 instance `i-06d86c8ca634e43be` (r5.large, running) 현재 public IP `3.38.210.124` (auto-assigned)
+  - **비용 정정**: 2024년 AWS 가격 변경으로 auto-assigned IPv4 도 시간당 과금 ($0.005/hr = ~$3.6/월). 즉 EIP 로 바꿔도 **비용 동일** (안정성만 이득)
+- **EIP 인벤토리 분석 시도**:
+  - 1차 분석에서 `describe-addresses` 의 `InstanceId: None` 7개를 "unattached / 월 $25 낭비" 로 보고 → **오판**
+  - 사용자 의심으로 NetworkInterface ID 까지 확인한 결과 **전부 사용 중**:
+    - 4개: 운영/개발 ALB (akrr-tax-alb-web01 / akrd-tax-alb-web01 / akrd-tax-alb-was01 — AZ a/c 각각) — Cloudflare 화이트리스트용 BYOIP 추정
+    - 1개: dev-tax-nat-gw NAT Gateway (`43.203.29.65`)
+    - 2개: 추가 ALB ENI
+  - **자동 학습**: EIP "사용 안 함" 판별 시 InstanceId 만 보면 안 됨 → 반드시 NetworkInterfaceId + describe-network-interfaces 까지 확인 필요. ALB/NAT 는 ENI 단위로 EIP 보유 가능
+- **최종 결정**: **EIP 할당 안 함**
+  - 이유: dev-tax-pub01 IP 직접 접속 사용처 없음 (도메인/내부망 경로로 접근) → EIP 의 안정성 이득 = 실효 없음
+  - 부수 효과: 신규 IP 부여 → `.env.local` / CONTEXT.md / 개발팀 공지 발생만 있고 이득 없음
+- **eugene-followups 갱신**: EIP 항목 `[x]` 영구 종결 (재검토 보류가 아닌 명시적 NO), 사유 + 비용 정정 함께 기록
+
+### 실패한 시도
+- 1차 EIP 분석: `describe-addresses` 의 `InstanceId` 필드 단독으로 unattached 판정 → 7개 중 7개 전부 ALB/NAT 가 사용 중이었음. ENI 까지 확인했어야 함
+- "월 -$25 낭비 발견" 보고 → 사용자 의심 + 재확인으로 정정
+
+### 다음 액션
+1. (5/12~5/18) CloudWatch Agent 메모리 데이터 1주 누적
+2. (5/18 경) Neo4j 다운사이즈 결정 — 사전 체크리스트 §5/18 (5조건) 적용
+3. (5/20 경) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
+4. (5/25 경) Savings Plan 재분석
+
+---
+
 ## Session 2026-05-12 19:12 — 5/12 야간 작업 실행 완료 (-$50/월 추가, 누적 -$393/월)
 
 ### 작업 요약

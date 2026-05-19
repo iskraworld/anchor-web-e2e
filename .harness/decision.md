@@ -5,6 +5,43 @@
 
 ---
 
+## 2026-05-19: Neo4j 다운사이즈 드롭 — 안전성 우선, 절감액 비대칭
+
+- **선택**: Neo4j (akrr-tax-neo4j01, r6i.large 16GB) **r6i.large 유지**, 다운사이즈 안 함
+- **대안 검토**:
+  - A) **t3.large (8GB)** — -$29/월, 메모리 절반, AMI 변경 불필요
+  - B) **r6a.large (16GB AMD)** — -$11/월, 메모리 유지, 매우 안전
+  - C) **t4g.large (8GB ARM)** — -$44/월, AMI 교체 필요, Graviton 전환
+  - D) **r6i.large 유지** (선택)
+- **선택 이유**:
+  - 데이터상 t3.large 까지 모든 차원 임계 통과 (CPU P95 3.7%, 메모리 P95 17.5%, EBS/네트워크 모두 baseline 의 25% 이내)
+  - 그러나 절감 최대 $29/월 = 누적 -$393/월 대비 7% 추가에 그침
+  - **CPU max 51.2% 1회 스폿** 발견 (30일 중) → 정기 배치 작업 추정 → t3 burst credit 소진 / OOM 위험 잠재
+  - Neo4j 권장은 "전체 DB 가 page cache 에 들어가는 게 이상적" — 현재 page cache 1GB / 그래프 데이터 7.5GB. 메모리 다운사이즈는 권장 반대 방향
+  - 베타 잔여 작업 대비 작업 리스크 비대칭
+- **영향 범위**: 변경 없음. Neo4j r6i.large 유지
+- **별건 검토 가치 (다운사이즈와 무관)**:
+  - Neo4j page cache 1GB → 적정값(4~8GB) 튜닝 — 성능 향상 잠재. 운영팀 협의
+  - CPU 51.2% 스폿의 정체 (배치 작업 종류/주기) — Neo4j 운영 가시성
+- **되돌리는 방법**: 향후 트래픽 증가 + 모니터링 결과 명확히 underutilized 확인 시 재검토. 동일 체크리스트 재적용
+
+---
+
+## 2026-05-19: 권한 회수 타이밍 변경 — 5/20 → 5/25 (Savings Plan 작업과 일괄)
+
+- **선택**: claude-cost-readonly 인라인 정책 + GitLab Maintainer 회수를 **5/25 경 Savings Plan 작업 후 일괄 진행**
+- **대안 검토**:
+  - A) **즉시 회수** — Neo4j 다운사이즈 안 하기로 결정됐으니 더 미룰 이유 없음
+  - B) **5/25 경 일괄** (선택) — SP 작업과 묶음, IAM Console 한 번
+- **선택 이유**:
+  - 기술적으로는 Savings Plan 약정이 Billing Console 작업이라 IAM 인라인 정책 무관
+  - 단지 회수 타이밍을 묶어 IAM Console 작업 1회로 정리 (운영 편의)
+  - 이미 5/12 트림된 상태라 elevated 권한 범위는 매우 좁음 (Neo4j ARN 제한 + S3/DDB + SSM SendCommand 만)
+- **영향 범위**: claude-cost-readonly elevated 기간 5/11~5/25 (총 14일)
+- **되돌리는 방법**: 5/25 이전이라도 즉시 회수 결정하면 Console 1분 작업
+
+---
+
 ## 2026-05-14: EIP 할당 영구 드롭
 
 - **선택**: EIP 할당 제거 및 인벤토리에서 삭제

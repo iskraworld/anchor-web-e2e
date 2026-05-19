@@ -4,35 +4,36 @@
 
 ---
 
-## 마지막 실행: 2026-05-14 15:59
-## 마지막 업데이트: 2026-05-14 15:59
+## 마지막 실행: 2026-05-19 20:29
+## 마지막 업데이트: 2026-05-19 20:29
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- **5/12 야간 작업 후 안정화 모니터링 + 5/18 Neo4j 다운사이즈 결정 대기** (누적 -$393/월)
+- **베타 다운사이즈 단계 사실상 종료** — 누적 -$393/월. 남은 큰 절감은 Savings Plan (5/25 재분석)만
 
 ### 이어서 할 것
-1. (5/12~5/18) CloudWatch Agent 메모리 데이터 1주 누적
-2. (5/18 경) Neo4j 다운사이즈 결정 — 사전 체크리스트 §5/18 (5조건) 적용
-3. (5/20 경) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
+1. (5/25 경) Savings Plan 재분석 → 권장액 $0.60~0.70/hr 수준이면 약정 검토
+2. (5/25 경, SP 작업 후) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
+3. (별건 후순위) Neo4j page cache 1GB → 적정값 튜닝 — 운영팀 협의
 
 ### 막힌 것
 - 없음
 
 ### 사람 판단 필요
-- (1주 후, 5/18) Neo4j 다운사이즈 결정 — 4차원 + JVM heap/pagecache + OOM 이력 확인
-- (5/20 경) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
-- (2주 후, 5/25) Savings Plan 약정 결정
+- (5/25 경) Savings Plan 약정 결정
+- (5/25 경) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
 - (정식 오픈 시) GitLab Issue #1 복구 체크리스트 9개
 - (2026-06-07) ANCHOR_GITLAB_TOKEN 자동 만료 또는 즉시 revoke
 - ElastiCache CacheHitRate 2.28% — 개발팀에 코드 측 점검 전달
+- Neo4j page cache 1GB vs 데이터 7.5GB — 운영팀 협의로 튜닝 (성능 영향, 후순위)
+- Neo4j CPU 51.2% 1회 스폿 정체 확인 (배치 작업 추정)
 - Tier 1 검증 시작 시점
 - D-2/D-3 BLOCKED 해제 (UI 출시 후)
 - ER PDF/링크 버튼 테스트 재활성화
 
 ### 백로그 요약
 - 대기 중: 7개
-- 최근 추가: 2026-05-11 — alb-neo4j01 미사용 ALB 삭제 (비가역성 우려 보류)
+- 최근 추가: 2026-05-11 — alb-neo4j01 미사용 ALB 삭제 (비가역성 우려 보류 → 5/12 처리됨)
 
 ### 진행 상황
 - [x] Phase 0~3 e2e-v2 가이드 완성
@@ -105,25 +106,23 @@
 - [x] alb-neo4j01 삭제 보류 → 백로그 등재 ✅ 2026-05-11
 - [x] 내부 팀용 완료 리포트 작성 (10절 구조) ✅ 2026-05-11
 - [x] 발주사용 완료 리포트 작성 (제안서 톤 매칭) ✅ 2026-05-11
-- [x] Eugene 개인 follow-up 파일 분리 — eugene-followups-2026-05-11.md (즉시/단기/중기 3단계 7개 항목) ✅ 2026-05-11
-- [x] Savings Plan 1차 분석 ($0.952/hr, -$187.99/월 권장) + 함정 진단 (29일 룩백 다운사이즈 이전 데이터 위주, 30~40% 과대) ✅ 2026-05-11
-- [x] 다운사이즈 사전 체크리스트 신설 (4차원 + 컨테이너 + 워크로드별 + 변경 절차 + 회귀 진단, DevOps 모범 사례 10개 출처 종합) ✅ 2026-05-11
-- [x] dev-tax-pub01 IP 변경 (`13.125.186.195` → `3.38.210.124`) 전체 공지 완료 ✅ 2026-05-11
-- [x] eugene-followups 우선순위 재조정 — 즉시 항목 제거, 보류(정식 오픈) 섹션 신설, 5/12 야간 묶음 일정 확정 ✅ 2026-05-11
-- [x] 다운사이즈 사전 체크리스트 적용 (ElastiCache 7/7 차원 통과, ALB 30일 23건 trace-only) ✅ 2026-05-11
-- [x] CacheHitRate 2.28% 비정상 패턴 발견 (별건) ✅ 2026-05-11
+- [x] Eugene 개인 follow-up 파일 분리 — eugene-followups-2026-05-11.md ✅ 2026-05-11
+- [x] Savings Plan 1차 분석 + 함정 진단 ✅ 2026-05-11
+- [x] 다운사이즈 사전 체크리스트 신설 (DevOps 모범 사례 10개 출처 종합) ✅ 2026-05-11
+- [x] dev-tax-pub01 IP 변경 전체 공지 완료 ✅ 2026-05-11
 - [x] 박정환 ALB 삭제 confirm 수령 ✅ 2026-05-12
-- [x] 5/12 야간 작업 실행: ElastiCache `small`→`micro` (terraform + AWS CLI 강제 apply_immediately) ✅ 2026-05-12
-- [x] 5/12 야간 작업 실행: alb-neo4j01 삭제 (5 리소스 destroy, IAM ELBv2 권한 보강 후 2차 apply 성공) ✅ 2026-05-12
+- [x] 5/12 야간 작업 실행: ElastiCache micro + alb-neo4j01 삭제 ✅ 2026-05-12
 - [x] Terraform `tax/terraform` main merge + push (`274d3f3..9f7f9c4`) ✅ 2026-05-12
-- [x] 5/12 야간 smoke test — 변경마다 28/28 PASS (19.1→19.6초) ✅ 2026-05-12
-- [x] WAS heap 표준화 드롭 결정 (다운사이즈 사전 체크리스트로 같은 방어 효과) ✅ 2026-05-12
-- [x] IAM 정책 Neo4j 최소 권한 트림 (ALB/ElastiCache/SG/CloudWatch 제거, Neo4j EC2 modify ARN 제한) ✅ 2026-05-12
-- [x] dev-tax-pub01 EIP 할당 영구 드롭 결정 — 사용처 없음 + 2024 AWS 가격 변경으로 비용 차이 무 ✅ 2026-05-14
-- [x] EIP 인벤토리 정확 분석 — 7개 "unattached" 가 실제로는 ALB/NAT 사용 중 (NetworkInterface 확인 필요 교훈) ✅ 2026-05-14
-- [ ] (5/12~5/18) CloudWatch Agent 메모리 데이터 1주 누적
-- [ ] (5/18 경) Neo4j 다운사이즈 결정 — 사전 체크리스트 §5/18 (5조건) 적용
-- [ ] (5/20 경) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
+- [x] WAS heap 표준화 드롭 결정 ✅ 2026-05-12
+- [x] IAM 정책 Neo4j 최소 권한 트림 ✅ 2026-05-12
+- [x] dev-tax-pub01 EIP 할당 영구 드롭 결정 ✅ 2026-05-14
+- [x] EIP 인벤토리 정확 분석 — NetworkInterface 확인 필요 교훈 ✅ 2026-05-14
+- [x] Neo4j 다운사이즈 사전 체크리스트 전체 적용 (CPU/메모리/디스크/네트워크 30일 + JVM + store + OOM + Graviton) ✅ 2026-05-19
+- [x] Neo4j 다운사이즈 안 하기로 결정 (절감 비대칭 + 배치 작업 + page cache 정책) ✅ 2026-05-19
+- [x] 권한 회수 타이밍 5/20 → 5/25 (Savings Plan 작업과 일괄) ✅ 2026-05-19
+- [x] worklog.md 547 라인 → archive/worklog-2026-05-19.md 이동 ✅ 2026-05-19
 - [ ] (5/25 경) Savings Plan 재분석 → 약정 결정
+- [ ] (5/25 경) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
+- [ ] (별건 후순위) Neo4j page cache 1GB → 적정값 튜닝 검토
+- [ ] (별건) ElastiCache CacheHitRate 2.28% 원인 파악
 - [ ] (정식 오픈 시) GitLab Issue #1 복구 체크리스트 9개 항목
-- [ ] ElastiCache CacheHitRate 2.28% 원인 파악 (개발팀 전달 예정)

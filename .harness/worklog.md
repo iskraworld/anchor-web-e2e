@@ -5,6 +5,20 @@
 
 ---
 
+## Session 2026-05-25 15:59 — Savings Plan 재분석 및 클라이언트 옵션 제시
+
+### 작업 요약
+- Savings Plan 구조 재분석
+- 클라이언트용 옵션 B 제시
+- 선택 사유를 decision.md에 기록
+- state.md를 "Savings Plan 응답 대기" 상태로 갱신 후 git 커밋/푸시
+
+### 다음 액션
+- **클라이언트 응답 대기**: Y 선택 시 SP 카트 추가 → Checkout 진행
+- **IAM 인라인 정책 + GitLab Maintainer 일괄 revoke** (클라이언트 응답과 무관하게 병렬 처리 가능)
+- **Neo4j page cache 튜닝** (운영팀 협의 필요, 후순위)
+
+
 ## Session 2026-05-25 14:24 — Savings Plan 재분석 + 클라이언트 제시 (응답 대기)
 
 ### 작업 요약

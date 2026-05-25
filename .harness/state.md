@@ -4,24 +4,24 @@
 
 ---
 
-## 마지막 실행: 2026-05-20 15:59
-## 마지막 업데이트: 2026-05-20 15:59
+## 마지막 실행: 2026-05-25 14:24
+## 마지막 업데이트: 2026-05-25 14:24
 ## 현재 모드: bypassPermissions
 
 ### 현재 집중
-- 없음
+- **Savings Plan 약정 — 클라이언트 응답 대기 중** (권장 $0.373/hr / -$107/월 옵션 B 제시)
 
 ### 이어서 할 것
-1. (5/25 경) Savings Plan 재분석 → 권장액 $0.60~0.70/hr 수준이면 약정 검토
-2. (5/25 경, SP 작업 후) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
+1. (클라이언트 응답 후) Y 진행 시: AWS Console → SP 카트 추가 → Checkout
+2. (응답과 별개) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
 3. (별건 후순위) Neo4j page cache 1GB → 적정값 튜닝 — 운영팀 협의
 
 ### 막힌 것
-- 없음
+- **Savings Plan 약정 — 클라이언트 confirm 대기 중** (2026-05-25 옵션 B 발송)
 
 ### 사람 판단 필요
-- (5/25 경) Savings Plan 약정 결정
-- (5/25 경) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
+- 클라이언트 SP 진행 결정 (Y/N)
+- IAM 인라인 정책 + GitLab Maintainer 일괄 revoke (SP 결정과 독립)
 - (정식 오픈 시) GitLab Issue #1 복구 체크리스트 9개
 - (2026-06-07) ANCHOR_GITLAB_TOKEN 자동 만료 또는 즉시 revoke
 - ElastiCache CacheHitRate 2.28% — 개발팀에 코드 측 점검 전달
@@ -33,7 +33,7 @@
 
 ### 백로그 요약
 - 대기 중: 7개
-- 최근 추가: 2026-05-11 — alb-neo4j01 미사용 ALB 삭제 (비가역성 우려 보류 → 5/12 처리됨)
+- 최근 추가: 2026-05-11 — alb-neo4j01 미사용 ALB 삭제 (5/12 처리됨)
 
 ### 진행 상황
 - [x] Phase 0~3 e2e-v2 가이드 완성
@@ -117,13 +117,16 @@
 - [x] IAM 정책 Neo4j 최소 권한 트림 ✅ 2026-05-12
 - [x] dev-tax-pub01 EIP 할당 영구 드롭 결정 ✅ 2026-05-14
 - [x] EIP 인벤토리 정확 분석 — NetworkInterface 확인 필요 교훈 ✅ 2026-05-14
-- [x] Neo4j 다운사이즈 사전 체크리스트 전체 적용 (CPU/메모리/디스크/네트워크 30일 + JVM + store + OOM + Graviton) ✅ 2026-05-19
+- [x] Neo4j 다운사이즈 사전 체크리스트 전체 적용 ✅ 2026-05-19
 - [x] Neo4j 다운사이즈 안 하기로 결정 (절감 비대칭 + 배치 작업 + page cache 정책) ✅ 2026-05-19
 - [x] 권한 회수 타이밍 5/20 → 5/25 (Savings Plan 작업과 일괄) ✅ 2026-05-19
 - [x] worklog.md 547 라인 → archive/worklog-2026-05-19.md 이동 ✅ 2026-05-19
 - [x] state.md 베타 다운사이즈 단계 종료 명시 + decision.md 2건 추가 ✅ 2026-05-20
-- [ ] (5/25 경) Savings Plan 재분석 → 약정 결정
-- [ ] (5/25 경) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
+- [x] Savings Plan 재분석 (13일 lookback, $0.373/hr, -$107/월, 27%) ✅ 2026-05-25
+- [x] 옵션 비교 (A 보수 / B 권장 / C lookback 변경) → Eugene 옵션 B 채택 ✅ 2026-05-25
+- [x] 클라이언트에 SP 권장 옵션 (-$107/월) 제시 ✅ 2026-05-25
+- [ ] (클라이언트 응답 후) SP 카트 추가 → Checkout
+- [ ] (응답과 별개) IAM 인라인 정책 + GitLab Maintainer 일괄 revoke
 - [ ] (별건 후순위) Neo4j page cache 1GB → 적정값 튜닝 검토
 - [ ] (별건) ElastiCache CacheHitRate 2.28% 원인 파악
 - [ ] (정식 오픈 시) GitLab Issue #1 복구 체크리스트 9개 항목
